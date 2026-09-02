@@ -1,8 +1,12 @@
+<!-- /index.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
     <title>교재팀 대시보드</title>
 
     <style>
@@ -53,9 +57,19 @@
             font-weight: 700;
         }
 
+        h1,
+        h2 {
+            margin-top: 0;
+        }
+
         h1 {
-            margin: 0 0 8px;
+            margin-bottom: 8px;
             font-size: 28px;
+        }
+
+        h2 {
+            margin-bottom: 6px;
+            font-size: 21px;
         }
 
         .description {
@@ -88,7 +102,6 @@
         }
 
         button {
-            width: 100%;
             height: 48px;
             border: 0;
             border-radius: 9px;
@@ -98,6 +111,7 @@
         }
 
         .primary-button {
+            width: 100%;
             color: #ffffff;
             background: #2563eb;
         }
@@ -146,46 +160,189 @@
             background: #334155;
         }
 
+        .logout-button:hover {
+            background: #475569;
+        }
+
         main {
-            max-width: 1200px;
+            max-width: 1440px;
             margin: 0 auto;
             padding: 32px 24px;
         }
 
-        .welcome-card {
-            padding: 28px;
+        .account-card,
+        .table-card {
+            padding: 24px;
             background: #ffffff;
             border-radius: 14px;
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         }
 
+        .account-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .account-title {
+            margin: 0 0 8px;
+            font-size: 19px;
+        }
+
+        .user-email {
+            margin: 0;
+            color: #64748b;
+        }
+
         .access-badge {
             display: inline-block;
-            margin-top: 14px;
             padding: 7px 12px;
             border-radius: 999px;
             color: #1d4ed8;
             background: #dbeafe;
             font-size: 14px;
             font-weight: 700;
+            white-space: nowrap;
         }
 
-        .next-message {
-            margin-top: 24px;
-            padding: 20px;
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            padding: 26px;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .summary-label {
+            margin: 0 0 12px;
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .summary-value {
+            margin: 0;
+            color: #0f172a;
+            font-size: 36px;
+            font-weight: 800;
+        }
+
+        .summary-unit {
+            margin-left: 5px;
+            color: #64748b;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .table-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .table-description {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .data-status {
+            margin: 0 0 16px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .data-status.error {
+            color: #dc2626;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1180px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        th {
             color: #475569;
             background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
         }
 
-        @media (max-width: 600px) {
+        td {
+            color: #334155;
+            font-size: 14px;
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left;
+        }
+
+        .total-column {
+            color: #1d4ed8;
+            background: #eff6ff;
+            font-weight: 700;
+        }
+
+        .empty-row td {
+            height: 120px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
             .login-card {
                 padding: 28px 22px;
             }
 
             header {
                 padding: 16px 20px;
+            }
+
+            main {
+                padding: 24px 16px;
+            }
+
+            .account-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-value {
+                font-size: 31px;
+            }
+
+            .table-header {
+                flex-direction: column;
             }
         }
     </style>
@@ -252,22 +409,84 @@
         </header>
 
         <main>
-            <div class="welcome-card">
-                <h1 id="welcomeTitle">
-                    교재팀 대시보드에 로그인되었습니다.
-                </h1>
+            <section class="account-card">
+                <div>
+                    <h2 class="account-title">
+                        출고현황 조회
+                    </h2>
 
-                <p id="userEmail"></p>
+                    <p id="userEmail" class="user-email"></p>
+                </div>
 
                 <span class="access-badge">
                     조회 전용
                 </span>
+            </section>
 
-                <div class="next-message">
-                    Firebase 로그인이 정상적으로 완료되었습니다.
-                    다음 단계에서 출고현황 조회 기능을 추가합니다.
+            <section class="summary-grid">
+                <article class="summary-card">
+                    <p class="summary-label">전체 출고 건수</p>
+
+                    <p class="summary-value">
+                        <span id="totalOrders">0</span>
+                        <span class="summary-unit">건</span>
+                    </p>
+                </article>
+
+                <article class="summary-card">
+                    <p class="summary-label">전체 출고 권수</p>
+
+                    <p class="summary-value">
+                        <span id="totalBooks">0</span>
+                        <span class="summary-unit">권</span>
+                    </p>
+                </article>
+            </section>
+
+            <section class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h2>일자별 출고현황</h2>
+
+                        <p class="table-description">
+                            Firestore 원본 자료를 불러와 건수와 권수를
+                            자동으로 계산합니다.
+                        </p>
+                    </div>
                 </div>
-            </div>
+
+                <p id="dataStatus" class="data-status">
+                    출고자료를 불러오고 있습니다.
+                </p>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>출고일</th>
+                                <th>인강 건수</th>
+                                <th>인강 권수</th>
+                                <th>재발송 건수</th>
+                                <th>재발송 권수</th>
+                                <th>유니스터디 건수</th>
+                                <th>유니스터디 권수</th>
+                                <th>서점 건수</th>
+                                <th>서점 권수</th>
+                                <th class="total-column">전체 건수</th>
+                                <th class="total-column">전체 권수</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="shippingTableBody">
+                            <tr class="empty-row">
+                                <td colspan="11">
+                                    출고자료를 불러오고 있습니다.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </section>
 
@@ -284,7 +503,9 @@
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
         import {
-            getFirestore
+            getFirestore,
+            collection,
+            getDocs
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -299,6 +520,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        const numberFormatter = new Intl.NumberFormat("ko-KR");
 
         const loadingView =
             document.getElementById("loadingView");
@@ -321,65 +544,364 @@
         const logoutButton =
             document.getElementById("logoutButton");
 
+        const totalOrdersElement =
+            document.getElementById("totalOrders");
+
+        const totalBooksElement =
+            document.getElementById("totalBooks");
+
+        const dataStatusElement =
+            document.getElementById("dataStatus");
+
+        const shippingTableBody =
+            document.getElementById("shippingTableBody");
+
         function showView(view) {
             loadingView.hidden = view !== "loading";
             loginView.hidden = view !== "login";
             dashboardView.hidden = view !== "dashboard";
         }
 
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
+        function getNumber(value) {
+            const convertedValue = Number(value);
 
-            const email =
-                document.getElementById("email").value.trim();
-
-            const password =
-                document.getElementById("password").value;
-
-            loginMessage.textContent = "";
-            loginButton.disabled = true;
-            loginButton.textContent = "로그인 중...";
-
-            try {
-                await signInWithEmailAndPassword(
-                    auth,
-                    email,
-                    password
-                );
-
-                loginForm.reset();
-            } catch (error) {
-                console.error(error);
-
-                loginMessage.textContent =
-                    "이메일 또는 비밀번호를 확인해 주십시오.";
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = "로그인";
+            if (!Number.isFinite(convertedValue)) {
+                return 0;
             }
-        });
 
-        logoutButton.addEventListener("click", async () => {
-            await signOut(auth);
-        });
+            return convertedValue;
+        }
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                showView("login");
+        function formatNumber(value) {
+            return numberFormatter.format(getNumber(value));
+        }
+
+        function getShippingDate(row) {
+            return String(
+                row.shipping_date || row.documentId || ""
+            );
+        }
+
+        function formatDate(dateText) {
+            const parts = String(dateText).split("-");
+
+            if (parts.length !== 3) {
+                return dateText;
+            }
+
+            return (
+                parts[0] +
+                "." +
+                String(Number(parts[1])) +
+                "." +
+                String(Number(parts[2]))
+            );
+        }
+
+        function calculateRow(row) {
+            const lectureOrders =
+                getNumber(row.lecture_orders);
+
+            const lectureBooks =
+                getNumber(row.lecture_books);
+
+            const resendOrders =
+                getNumber(row.resend_orders);
+
+            const resendBooks =
+                getNumber(row.resend_books);
+
+            const unistudyOrders =
+                getNumber(row.unistudy_orders);
+
+            const unistudyBooks =
+                getNumber(row.unistudy_books);
+
+            const bookstoreOrders =
+                getNumber(row.bookstore_orders);
+
+            const bookstoreBooks =
+                getNumber(row.bookstore_books);
+
+            return {
+                shippingDate: getShippingDate(row),
+                lectureOrders: lectureOrders,
+                lectureBooks: lectureBooks,
+                resendOrders: resendOrders,
+                resendBooks: resendBooks,
+                unistudyOrders: unistudyOrders,
+                unistudyBooks: unistudyBooks,
+                bookstoreOrders: bookstoreOrders,
+                bookstoreBooks: bookstoreBooks,
+                totalOrders:
+                    lectureOrders +
+                    resendOrders +
+                    unistudyOrders +
+                    bookstoreOrders,
+                totalBooks:
+                    lectureBooks +
+                    resendBooks +
+                    unistudyBooks +
+                    bookstoreBooks
+            };
+        }
+
+        function createTableCell(text, className) {
+            const cell = document.createElement("td");
+
+            cell.textContent = text;
+
+            if (className) {
+                cell.className = className;
+            }
+
+            return cell;
+        }
+
+        function renderShippingTable(rows) {
+            shippingTableBody.textContent = "";
+
+            if (rows.length === 0) {
+                const emptyRow = document.createElement("tr");
+                const emptyCell = document.createElement("td");
+
+                emptyRow.className = "empty-row";
+                emptyCell.colSpan = 11;
+                emptyCell.textContent =
+                    "등록된 출고자료가 없습니다.";
+
+                emptyRow.appendChild(emptyCell);
+                shippingTableBody.appendChild(emptyRow);
+
                 return;
             }
 
-            document.getElementById(
-                "welcomeTitle"
-            ).textContent =
-                "교재팀 대시보드에 로그인되었습니다.";
+            rows.forEach(function (row) {
+                const tableRow = document.createElement("tr");
 
-            document.getElementById(
-                "userEmail"
-            ).textContent = user.email;
+                tableRow.appendChild(
+                    createTableCell(
+                        formatDate(row.shippingDate)
+                    )
+                );
 
-            showView("dashboard");
-        });
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.lectureOrders)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.lectureBooks)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.resendOrders)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.resendBooks)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.unistudyOrders)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.unistudyBooks)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.bookstoreOrders)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.bookstoreBooks)
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.totalOrders),
+                        "total-column"
+                    )
+                );
+
+                tableRow.appendChild(
+                    createTableCell(
+                        formatNumber(row.totalBooks),
+                        "total-column"
+                    )
+                );
+
+                shippingTableBody.appendChild(tableRow);
+            });
+        }
+
+        function renderSummary(rows) {
+            const totals = rows.reduce(
+                function (result, row) {
+                    result.orders += row.totalOrders;
+                    result.books += row.totalBooks;
+
+                    return result;
+                },
+                {
+                    orders: 0,
+                    books: 0
+                }
+            );
+
+            totalOrdersElement.textContent =
+                formatNumber(totals.orders);
+
+            totalBooksElement.textContent =
+                formatNumber(totals.books);
+        }
+
+        async function loadShippingData() {
+            dataStatusElement.classList.remove("error");
+            dataStatusElement.textContent =
+                "출고자료를 불러오고 있습니다.";
+
+            try {
+                const snapshot = await getDocs(
+                    collection(db, "shippingDaily")
+                );
+
+                const rows = snapshot.docs
+                    .map(function (documentSnapshot) {
+                        return calculateRow({
+                            documentId: documentSnapshot.id,
+                            ...documentSnapshot.data()
+                        });
+                    })
+                    .sort(function (firstRow, secondRow) {
+                        return secondRow.shippingDate.localeCompare(
+                            firstRow.shippingDate
+                        );
+                    });
+
+                renderSummary(rows);
+                renderShippingTable(rows);
+
+                dataStatusElement.textContent =
+                    "총 " +
+                    formatNumber(rows.length) +
+                    "일의 출고자료를 불러왔습니다.";
+            } catch (error) {
+                console.error(
+                    "[loadShippingData]",
+                    error
+                );
+
+                totalOrdersElement.textContent = "0";
+                totalBooksElement.textContent = "0";
+
+                shippingTableBody.innerHTML =
+                    '<tr class="empty-row">' +
+                    '<td colspan="11">' +
+                    '출고자료를 불러오지 못했습니다.' +
+                    '</td>' +
+                    '</tr>';
+
+                dataStatusElement.classList.add("error");
+                dataStatusElement.textContent =
+                    "출고자료를 불러오지 못했습니다. " +
+                    "Firestore 설정과 보안 규칙을 확인해 주십시오.";
+            }
+        }
+
+        loginForm.addEventListener(
+            "submit",
+            async function (event) {
+                event.preventDefault();
+
+                const email =
+                    document
+                        .getElementById("email")
+                        .value
+                        .trim();
+
+                const password =
+                    document
+                        .getElementById("password")
+                        .value;
+
+                loginMessage.textContent = "";
+                loginButton.disabled = true;
+                loginButton.textContent = "로그인 중...";
+
+                try {
+                    await signInWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+                    loginForm.reset();
+                } catch (error) {
+                    console.error(
+                        "[login]",
+                        error
+                    );
+
+                    loginMessage.textContent =
+                        "이메일 또는 비밀번호를 확인해 주십시오.";
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.textContent = "로그인";
+                }
+            }
+        );
+
+        logoutButton.addEventListener(
+            "click",
+            async function () {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error(
+                        "[logout]",
+                        error
+                    );
+                }
+            }
+        );
+
+        onAuthStateChanged(
+            auth,
+            async function (user) {
+                if (!user) {
+                    totalOrdersElement.textContent = "0";
+                    totalBooksElement.textContent = "0";
+
+                    showView("login");
+                    return;
+                }
+
+                document.getElementById(
+                    "userEmail"
+                ).textContent = user.email;
+
+                showView("dashboard");
+
+                await loadShippingData();
+            }
+        );
     </script>
 </body>
 </html>
