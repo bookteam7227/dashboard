@@ -3,11 +3,15 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
+
     <title>교재팀 대시보드</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
     <style>
         * {
@@ -26,12 +30,33 @@
             display: none !important;
         }
 
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
         .center-screen {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
+        }
+
+        .loading {
+            color: #475569;
+            font-size: 18px;
         }
 
         .login-card {
@@ -58,7 +83,8 @@
         }
 
         h1,
-        h2 {
+        h2,
+        p {
             margin-top: 0;
         }
 
@@ -73,19 +99,19 @@
         }
 
         .description {
-            margin: 0 0 28px;
+            margin-bottom: 28px;
             color: #64748b;
             line-height: 1.6;
         }
 
-        label {
+        .login-card label {
             display: block;
             margin-bottom: 8px;
             font-size: 14px;
             font-weight: 700;
         }
 
-        input {
+        .login-card input {
             width: 100%;
             height: 48px;
             margin-bottom: 18px;
@@ -95,34 +121,24 @@
             font-size: 16px;
         }
 
-        input:focus {
+        .login-card input:focus {
             outline: none;
             border-color: #2563eb;
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
 
-        button {
-            height: 48px;
-            border: 0;
-            border-radius: 9px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
         .primary-button {
             width: 100%;
+            height: 48px;
+            border-radius: 9px;
             color: #ffffff;
             background: #2563eb;
+            font-size: 16px;
+            font-weight: 700;
         }
 
         .primary-button:hover {
             background: #1d4ed8;
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: wait;
         }
 
         .message {
@@ -131,11 +147,6 @@
             color: #dc2626;
             font-size: 14px;
             text-align: center;
-        }
-
-        .loading {
-            color: #475569;
-            font-size: 18px;
         }
 
         header {
@@ -153,11 +164,13 @@
         }
 
         .logout-button {
-            width: auto;
             height: 40px;
             padding: 0 18px;
+            border-radius: 9px;
             color: #ffffff;
             background: #334155;
+            font-size: 15px;
+            font-weight: 700;
         }
 
         .logout-button:hover {
@@ -170,152 +183,221 @@
             padding: 32px 24px;
         }
 
-        .account-card,
-        .table-card {
+        .filter-card,
+        .chart-card {
             padding: 24px;
             background: #ffffff;
             border-radius: 14px;
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         }
 
-        .account-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+        .filter-card {
             margin-bottom: 24px;
         }
 
-        .account-title {
-            margin: 0 0 8px;
-            font-size: 19px;
+        .filter-title {
+            margin-bottom: 6px;
+            font-size: 21px;
         }
 
-        .user-email {
-            margin: 0;
-            color: #64748b;
-        }
-
-        .access-badge {
-            display: inline-block;
-            padding: 7px 12px;
-            border-radius: 999px;
-            color: #1d4ed8;
-            background: #dbeafe;
-            font-size: 14px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .summary-card {
-            padding: 26px;
-            background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-        }
-
-        .summary-label {
-            margin: 0 0 12px;
-            color: #64748b;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .summary-value {
-            margin: 0;
-            color: #0f172a;
-            font-size: 36px;
-            font-weight: 800;
-        }
-
-        .summary-unit {
-            margin-left: 5px;
-            color: #64748b;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .table-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 20px;
+        .filter-description {
             margin-bottom: 20px;
-        }
-
-        .table-description {
-            margin: 0;
             color: #64748b;
             font-size: 14px;
             line-height: 1.6;
         }
 
-        .data-status {
-            margin: 0 0 16px;
-            color: #64748b;
-            font-size: 14px;
+        .filter-grid {
+            display: grid;
+            grid-template-columns:
+                minmax(170px, 1fr)
+                minmax(170px, 1fr)
+                auto
+                minmax(190px, 1fr);
+            gap: 14px;
+            align-items: end;
         }
 
-        .data-status.error {
-            color: #dc2626;
-        }
-
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            min-width: 1180px;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 14px 12px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        th {
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
             color: #475569;
-            background: #f8fafc;
             font-size: 13px;
             font-weight: 700;
         }
 
-        td {
-            color: #334155;
+        .filter-control {
+            width: 100%;
+            height: 44px;
+            padding: 0 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            color: #1f2937;
+            background: #ffffff;
             font-size: 14px;
         }
 
-        th:first-child,
-        td:first-child {
-            text-align: left;
+        .filter-control:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
 
-        .total-column {
-            color: #1d4ed8;
-            background: #eff6ff;
+        .search-button {
+            height: 44px;
+            padding: 0 22px;
+            border-radius: 9px;
+            color: #ffffff;
+            background: #2563eb;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .search-button:hover {
+            background: #1d4ed8;
+        }
+
+        .period-status {
+            margin: 18px 0 0;
+            color: #475569;
+            font-size: 14px;
             font-weight: 700;
         }
 
-        .empty-row td {
-            height: 120px;
-            color: #64748b;
-            text-align: center;
+        .period-status.error {
+            color: #dc2626;
         }
 
-        @media (max-width: 700px) {
+        .chart-card + .chart-card {
+            margin-top: 24px;
+        }
+
+        .chart-header {
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            margin-bottom: 6px;
+            font-size: 21px;
+        }
+
+        .chart-description {
+            margin-bottom: 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-top: 16px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .legend-line {
+            width: 28px;
+            height: 3px;
+            border-radius: 999px;
+        }
+
+        .legend-current {
+            background: #1d4ed8;
+        }
+
+        .legend-previous {
+            background: #9ca3af;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 360px;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            z-index: 20;
+            min-width: 230px;
+            padding: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            color: #1f2937;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, calc(-100% - 12px));
+            transition: opacity 0.1s ease;
+        }
+
+        .tooltip-title {
+            margin-bottom: 10px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #0f172a;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .tooltip-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-top: 7px;
+            font-size: 13px;
+        }
+
+        .tooltip-label {
+            color: #64748b;
+        }
+
+        .tooltip-value {
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .tooltip-current {
+            color: #1d4ed8;
+        }
+
+        .tooltip-previous {
+            color: #6b7280;
+        }
+
+        .tooltip-positive {
+            color: #dc2626;
+        }
+
+        .tooltip-negative {
+            color: #2563eb;
+        }
+
+        .tooltip-neutral {
+            color: #64748b;
+        }
+
+        @media (max-width: 900px) {
+            .filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .search-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
             .login-card {
                 padding: 28px 22px;
             }
@@ -328,21 +410,18 @@
                 padding: 24px 16px;
             }
 
-            .account-card {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .summary-grid {
+            .filter-grid {
                 grid-template-columns: 1fr;
             }
 
-            .summary-value {
-                font-size: 31px;
+            .chart-canvas-container {
+                height: 320px;
             }
 
-            .table-header {
+            .chart-legend {
+                align-items: flex-start;
                 flex-direction: column;
+                gap: 8px;
             }
         }
     </style>
@@ -350,7 +429,9 @@
 
 <body>
     <section id="loadingView" class="center-screen">
-        <p class="loading">로그인 상태를 확인하고 있습니다.</p>
+        <p class="loading">
+            로그인 상태를 확인하고 있습니다.
+        </p>
     </section>
 
     <section id="loginView" class="center-screen" hidden>
@@ -397,7 +478,9 @@
 
     <section id="dashboardView" hidden>
         <header>
-            <div class="header-title">교재팀 대시보드</div>
+            <div class="header-title">
+                교재팀 대시보드
+            </div>
 
             <button
                 id="logoutButton"
@@ -409,82 +492,130 @@
         </header>
 
         <main>
-            <section class="account-card">
-                <div>
-                    <h2 class="account-title">
-                        출고현황 조회
-                    </h2>
+            <section class="filter-card">
+                <h2 class="filter-title">
+                    출고현황 검색
+                </h2>
 
-                    <p id="userEmail" class="user-email"></p>
-                </div>
+                <p class="filter-description">
+                    조회기간을 직접 지정하거나 월을 선택할 수 있습니다.
+                </p>
 
-                <span class="access-badge">
-                    조회 전용
-                </span>
-            </section>
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="startDate">
+                            시작일
+                        </label>
 
-            <section class="summary-grid">
-                <article class="summary-card">
-                    <p class="summary-label">전체 출고 건수</p>
+                        <input
+                            id="startDate"
+                            class="filter-control"
+                            type="date"
+                        >
+                    </div>
 
-                    <p class="summary-value">
-                        <span id="totalOrders">0</span>
-                        <span class="summary-unit">건</span>
-                    </p>
-                </article>
+                    <div class="filter-group">
+                        <label for="endDate">
+                            종료일
+                        </label>
 
-                <article class="summary-card">
-                    <p class="summary-label">전체 출고 권수</p>
+                        <input
+                            id="endDate"
+                            class="filter-control"
+                            type="date"
+                        >
+                    </div>
 
-                    <p class="summary-value">
-                        <span id="totalBooks">0</span>
-                        <span class="summary-unit">권</span>
-                    </p>
-                </article>
-            </section>
+                    <button
+                        id="searchButton"
+                        class="search-button"
+                        type="button"
+                    >
+                        기간 검색
+                    </button>
 
-            <section class="table-card">
-                <div class="table-header">
-                    <div>
-                        <h2>일자별 출고현황</h2>
+                    <div class="filter-group">
+                        <label for="monthSelect">
+                            월별 조회
+                        </label>
 
-                        <p class="table-description">
-                            Firestore 원본 자료를 불러와 건수와 권수를
-                            자동으로 계산합니다.
-                        </p>
+                        <select
+                            id="monthSelect"
+                            class="filter-control"
+                        >
+                            <option value="">
+                                월을 선택해 주십시오
+                            </option>
+                        </select>
                     </div>
                 </div>
 
-                <p id="dataStatus" class="data-status">
+                <p id="periodStatus" class="period-status">
                     출고자료를 불러오고 있습니다.
                 </p>
+            </section>
 
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>출고일</th>
-                                <th>인강 건수</th>
-                                <th>인강 권수</th>
-                                <th>재발송 건수</th>
-                                <th>재발송 권수</th>
-                                <th>유니스터디 건수</th>
-                                <th>유니스터디 권수</th>
-                                <th>서점 건수</th>
-                                <th>서점 권수</th>
-                                <th class="total-column">전체 건수</th>
-                                <th class="total-column">전체 권수</th>
-                            </tr>
-                        </thead>
+            <section class="chart-card">
+                <div class="chart-header">
+                    <h2 class="chart-title">
+                        전체 출고 건수
+                    </h2>
 
-                        <tbody id="shippingTableBody">
-                            <tr class="empty-row">
-                                <td colspan="11">
-                                    출고자료를 불러오고 있습니다.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <p class="chart-description">
+                        금년과 전년 동기간의 일자별 전체 출고 건수입니다.
+                    </p>
+
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span
+                                class="legend-line legend-current"
+                            ></span>
+                            <span>금년</span>
+                        </div>
+
+                        <div class="legend-item">
+                            <span
+                                class="legend-line legend-previous"
+                            ></span>
+                            <span>전년 동기간</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-canvas-container">
+                    <canvas id="ordersChart"></canvas>
+                </div>
+            </section>
+
+            <section class="chart-card">
+                <div class="chart-header">
+                    <h2 class="chart-title">
+                        전체 출고 권수
+                    </h2>
+
+                    <p class="chart-description">
+                        금년과 전년 동기간의 일자별 전체 출고 권수입니다.
+                    </p>
+
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span
+                                class="legend-line legend-current"
+                            ></span>
+                            <span>금년</span>
+                        </div>
+
+                        <div class="legend-item">
+                            <span
+                                class="legend-line legend-previous"
+                            ></span>
+                            <span>전년 동기간</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-canvas-container">
+                    <canvas id="booksChart"></canvas>
                 </div>
             </section>
         </main>
@@ -539,17 +670,31 @@
         const logoutButton =
             document.getElementById("logoutButton");
 
-        const totalOrdersElement =
-            document.getElementById("totalOrders");
+        const startDateInput =
+            document.getElementById("startDate");
 
-        const totalBooksElement =
-            document.getElementById("totalBooks");
+        const endDateInput =
+            document.getElementById("endDate");
 
-        const dataStatusElement =
-            document.getElementById("dataStatus");
+        const searchButton =
+            document.getElementById("searchButton");
 
-        const shippingTableBody =
-            document.getElementById("shippingTableBody");
+        const monthSelect =
+            document.getElementById("monthSelect");
+
+        const periodStatus =
+            document.getElementById("periodStatus");
+
+        const ordersCanvas =
+            document.getElementById("ordersChart");
+
+        const booksCanvas =
+            document.getElementById("booksChart");
+
+        const shippingDataMap = new Map();
+
+        let ordersChart = null;
+        let booksChart = null;
 
         function showView(view) {
             loadingView.hidden = view !== "loading";
@@ -571,68 +716,185 @@
             return numberFormatter.format(getNumber(value));
         }
 
-        function getShippingDate(row) {
-            return String(
-                row.shipping_date || row.documentId || ""
+        function padNumber(value) {
+            return String(value).padStart(2, "0");
+        }
+
+        function dateToId(date) {
+            return (
+                date.getFullYear() +
+                "-" +
+                padNumber(date.getMonth() + 1) +
+                "-" +
+                padNumber(date.getDate())
             );
         }
 
-        function formatDate(dateText) {
-            const parts = String(dateText).split("-");
+        function parseDateId(dateId) {
+            const parts = String(dateId).split("-");
 
             if (parts.length !== 3) {
-                return dateText;
+                return null;
+            }
+
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            const day = Number(parts[2]);
+
+            const date = new Date(
+                year,
+                month - 1,
+                day
+            );
+
+            if (
+                date.getFullYear() !== year ||
+                date.getMonth() + 1 !== month ||
+                date.getDate() !== day
+            ) {
+                return null;
+            }
+
+            return date;
+        }
+
+        function addDays(date, numberOfDays) {
+            const result = new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            );
+
+            result.setDate(
+                result.getDate() + numberOfDays
+            );
+
+            return result;
+        }
+
+        function isLeapYear(year) {
+            return (
+                year % 400 === 0 ||
+                (
+                    year % 4 === 0 &&
+                    year % 100 !== 0
+                )
+            );
+        }
+
+        function getPreviousYearDateId(dateId) {
+            const parts = String(dateId).split("-");
+
+            if (parts.length.length !== 3) {
+                return "";
+            }
+
+            const currentYear = Number(parts[0]);
+            const month = Number(parts[1]);
+            const day = Number(parts[2]);
+            const previousYear = currentYear - 1;
+
+            if (
+                month === 2 &&
+                day === 29 &&
+                !isLeapYear(previousYear)
+            ) {
+                return (
+                    previousYear +
+                    "-02-28"
+                );
             }
 
             return (
-                parts[0] +
-                "." +
-                String(Number(parts[1])) +
-                "." +
-                String(Number(parts[2]))
+                previousYear +
+                "-" +
+                padNumber(month) +
+                "-" +
+                padNumber(day)
             );
         }
 
-        function calculateRow(row) {
+        function formatFullDate(dateId) {
+            const date = parseDateId(dateId);
+
+            if (!date) {
+                return dateId;
+            }
+
+            return (
+                date.getFullYear() +
+                "." +
+                (date.getMonth() + 1) +
+                "." +
+                date.getDate()
+            );
+        }
+
+        function formatChartDate(dateId) {
+            const date = parseDateId(dateId);
+
+            if (!date) {
+                return dateId;
+            }
+
+            return (
+                (date.getMonth() + 1) +
+                "." +
+                date.getDate()
+            );
+        }
+
+        function getDateRange(startDateId, endDateId) {
+            const startDate = parseDateId(startDateId);
+            const endDate = parseDateId(endDateId);
+
+            if (!startDate || !endDate) {
+                return [];
+            }
+
+            const dateIds = [];
+            let currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                dateIds.push(dateToId(currentDate));
+                currentDate = addDays(currentDate, 1);
+            }
+
+            return dateIds;
+        }
+
+        function calculateShippingData(rawData) {
             const lectureOrders =
-                getNumber(row.lecture_orders);
+                getNumber(rawData.lecture_orders);
 
             const lectureBooks =
-                getNumber(row.lecture_books);
+                getNumber(rawData.lecture_books);
 
             const resendOrders =
-                getNumber(row.resend_orders);
+                getNumber(rawData.resend_orders);
 
             const resendBooks =
-                getNumber(row.resend_books);
+                getNumber(rawData.resend_books);
 
             const unistudyOrders =
-                getNumber(row.unistudy_orders);
+                getNumber(rawData.unistudy_orders);
 
             const unistudyBooks =
-                getNumber(row.unistudy_books);
+                getNumber(rawData.unistudy_books);
 
             const bookstoreOrders =
-                getNumber(row.bookstore_orders);
+                getNumber(rawData.bookstore_orders);
 
             const bookstoreBooks =
-                getNumber(row.bookstore_books);
+                getNumber(rawData.bookstore_books);
 
             return {
-                shippingDate: getShippingDate(row),
-                lectureOrders: lectureOrders,
-                lectureBooks: lectureBooks,
-                resendOrders: resendOrders,
-                resendBooks: resendBooks,
-                unistudyOrders: unistudyOrders,
-                unistudyBooks: unistudyBooks,
-                bookstoreOrders: bookstoreOrders,
-                bookstoreBooks: bookstoreBooks,
                 totalOrders:
                     lectureOrders +
                     resendOrders +
                     unistudyOrders +
                     bookstoreOrders,
+
                 totalBooks:
                     lectureBooks +
                     resendBooks +
@@ -641,184 +903,723 @@
             };
         }
 
-        function createTableCell(text, className) {
-            const cell = document.createElement("td");
+        function getShippingValue(
+            dateId,
+            fieldName
+        ) {
+            const row = shippingDataMap.get(dateId);
 
-            cell.textContent = text;
-
-            if (className) {
-                cell.className = className;
+            if (!row) {
+                return 0;
             }
 
-            return cell;
+            return getNumber(row[fieldName]);
         }
 
-        function renderShippingTable(rows) {
-            shippingTableBody.textContent = "";
+        function getComparisonClass(changeValue) {
+            if (changeValue > 0) {
+                return "tooltip-positive";
+            }
 
-            if (rows.length === 0) {
-                const emptyRow = document.createElement("tr");
-                const emptyCell = document.createElement("td");
+            if (changeValue < 0) {
+                return "tooltip-negative";
+            }
 
-                emptyRow.className = "empty-row";
-                emptyCell.colSpan = 11;
-                emptyCell.textContent =
-                    "등록된 출고자료가 없습니다.";
+            return "tooltip-neutral";
+        }
 
-                emptyRow.appendChild(emptyCell);
-                shippingTableBody.appendChild(emptyRow);
+        function formatSignedValue(
+            value,
+            unit
+        ) {
+            const numberValue = getNumber(value);
+            const sign = numberValue > 0 ? "+" : "";
+
+            return (
+                sign +
+                formatNumber(numberValue) +
+                unit
+            );
+        }
+
+        function calculateChangeRate(
+            currentValue,
+            previousValue
+        ) {
+            if (previousValue === 0) {
+                if (currentValue === 0) {
+                    return {
+                        text: "0.0%",
+                        className: "tooltip-neutral"
+                    };
+                }
+
+                return {
+                    text: "산정 불가",
+                    className: "tooltip-neutral"
+                };
+            }
+
+            const rate =
+                (
+                    (
+                        currentValue -
+                        previousValue
+                    ) /
+                    previousValue
+                ) *
+                100;
+
+            const sign = rate > 0 ? "+" : "";
+
+            return {
+                text:
+                    sign +
+                    rate.toFixed(1) +
+                    "%",
+
+                className:
+                    getComparisonClass(rate)
+            };
+        }
+
+        function getOrCreateTooltip(chart) {
+            const container =
+                chart.canvas.parentNode;
+
+            let tooltipElement =
+                container.querySelector(
+                    ".chart-tooltip"
+                );
+
+            if (!tooltipElement) {
+                tooltipElement =
+                    document.createElement("div");
+
+                tooltipElement.className =
+                    "chart-tooltip";
+
+                container.appendChild(
+                    tooltipElement
+                );
+            }
+
+            return tooltipElement;
+        }
+
+        function renderExternalTooltip(
+            context,
+            unit
+        ) {
+            const chart = context.chart;
+            const tooltip = context.tooltip;
+            const tooltipElement =
+                getOrCreateTooltip(chart);
+
+            if (
+                tooltip.opacity === 0 ||
+                !tooltip.dataPoints ||
+                tooltip.dataPoints.length === 0
+            ) {
+                tooltipElement.style.opacity = 0;
+                return;
+            }
+
+            const dataIndex =
+                tooltip.dataPoints[0].dataIndex;
+
+            const comparison =
+                chart.comparisonRows[dataIndex];
+
+            if (!comparison) {
+                tooltipElement.style.opacity = 0;
+                return;
+            }
+
+            const currentValue =
+                comparison.currentValue;
+
+            const previousValue =
+                comparison.previousValue;
+
+            const changeValue =
+                currentValue - previousValue;
+
+            const changeClass =
+                getComparisonClass(changeValue);
+
+            const rate =
+                calculateChangeRate(
+                    currentValue,
+                    previousValue
+                );
+
+            tooltipElement.innerHTML =
+                '<div class="tooltip-title">' +
+                    formatFullDate(
+                        comparison.currentDate
+                    ) +
+                    " / 전년 " +
+                    formatFullDate(
+                        comparison.previousDate
+                    ) +
+                "</div>" +
+
+                '<div class="tooltip-row">' +
+                    '<span class="tooltip-label">' +
+                        "금년" +
+                    "</span>" +
+                    '<span class="tooltip-value tooltip-current">' +
+                        formatNumber(currentValue) +
+                        unit +
+                    "</span>" +
+                "</div>" +
+
+                '<div class="tooltip-row">' +
+                    '<span class="tooltip-label">' +
+                        "전년" +
+                    "</span>" +
+                    '<span class="tooltip-value tooltip-previous">' +
+                        formatNumber(previousValue) +
+                        unit +
+                    "</span>" +
+                "</div>" +
+
+                '<div class="tooltip-row">' +
+                    '<span class="tooltip-label">' +
+                        "증감" +
+                    "</span>" +
+                    '<span class="tooltip-value ' +
+                        changeClass +
+                    '">' +
+                        formatSignedValue(
+                            changeValue,
+                            unit
+                        ) +
+                    "</span>" +
+                "</div>" +
+
+                '<div class="tooltip-row">' +
+                    '<span class="tooltip-label">' +
+                        "증감률" +
+                    "</span>" +
+                    '<span class="tooltip-value ' +
+                        rate.className +
+                    '">' +
+                        rate.text +
+                    "</span>" +
+                "</div>";
+
+            const canvasPosition =
+                chart.canvas.getBoundingClientRect();
+
+            const containerPosition =
+                chart.canvas
+                    .parentNode
+                    .getBoundingClientRect();
+
+            let left =
+                canvasPosition.left -
+                containerPosition.left +
+                tooltip.caretX;
+
+            const top =
+                canvasPosition.top -
+                containerPosition.top +
+                tooltip.caretY;
+
+            const tooltipWidth =
+                tooltipElement.offsetWidth || 230;
+
+            const minimumLeft =
+                tooltipWidth / 2 + 8;
+
+            const maximumLeft =
+                containerPosition.width -
+                tooltipWidth / 2 -
+                8;
+
+            left = Math.max(
+                minimumLeft,
+                Math.min(left, maximumLeft)
+            );
+
+            tooltipElement.style.opacity = 1;
+            tooltipElement.style.left =
+                left + "px";
+
+            tooltipElement.style.top =
+                top + "px";
+        }
+
+        function createChart(
+            canvas,
+            currentValues,
+            previousValues,
+            comparisonRows,
+            unit
+        ) {
+            const labels =
+                comparisonRows.map(function (row) {
+                    return formatChartDate(
+                        row.currentDate
+                    );
+                });
+
+            const chart = new Chart(
+                canvas,
+                {
+                    type: "line",
+
+                    data: {
+                        labels: labels,
+
+                        datasets: [
+                            {
+                                label: "금년",
+                                data: currentValues,
+                                borderColor: "#1d4ed8",
+                                backgroundColor: "#1d4ed8",
+                                borderWidth: 3,
+                                pointRadius: 2,
+                                pointHoverRadius: 6,
+                                pointBorderWidth: 0,
+                                tension: 0.25,
+                                fill: false
+                            },
+                            {
+                                label: "전년 동기간",
+                                data: previousValues,
+                                borderColor: "#9ca3af",
+                                backgroundColor: "#9ca3af",
+                                borderWidth: 2,
+                                pointRadius: 2,
+                                pointHoverRadius: 6,
+                                pointBorderWidth: 0,
+                                tension: 0.25,
+                                fill: false
+                            }
+                        ]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        interaction: {
+                            mode: "index",
+                            intersect: true
+                        },
+
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+
+                            tooltip: {
+                                enabled: false,
+
+                                external: function (context) {
+                                    renderExternalTooltip(
+                                        context,
+                                        unit
+                                    );
+                                }
+                            }
+                        },
+
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+
+                                ticks: {
+                                    color: "#64748b",
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 16
+                                }
+                            },
+
+                            y: {
+                                beginAtZero: true,
+
+                                grid: {
+                                    color: "#e2e8f0"
+                                },
+
+                                ticks: {
+                                    color: "#64748b",
+
+                                    callback: function (value) {
+                                        return formatNumber(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+            chart.comparisonRows =
+                comparisonRows;
+
+            return chart;
+        }
+
+        function renderCharts(
+            startDateId,
+            endDateId
+        ) {
+            const currentDateIds =
+                getDateRange(
+                    startDateId,
+                    endDateId
+                );
+
+            const comparisonRows =
+                currentDateIds.map(
+                    function (currentDateId) {
+                        const previousDateId =
+                            getPreviousYearDateId(
+                                currentDateId
+                            );
+
+                        return {
+                            currentDate:
+                                currentDateId,
+
+                            previousDate:
+                                previousDateId,
+
+                            currentOrders:
+                                getShippingValue(
+                                    currentDateId,
+                                    "totalOrders"
+                                ),
+
+                            previousOrders:
+                                getShippingValue(
+                                    previousDateId,
+                                    "totalOrders"
+                                ),
+
+                            currentBooks:
+                                getShippingValue(
+                                    currentDateId,
+                                    "totalBooks"
+                                ),
+
+                            previousBooks:
+                                getShippingValue(
+                                    previousDateId,
+                                    "totalBooks"
+                                )
+                        };
+                    }
+                );
+
+            if (ordersChart) {
+                ordersChart.destroy();
+            }
+
+            if (booksChart) {
+                booksChart.destroy();
+            }
+
+            const orderComparisonRows =
+                comparisonRows.map(function (row) {
+                    return {
+                        currentDate: row.currentDate,
+                        previousDate: row.previousDate,
+                        currentValue: row.currentOrders,
+                        previousValue: row.previousOrders
+                    };
+                });
+
+            const bookComparisonRows =
+                comparisonRows.map(function (row) {
+                    return {
+                        currentDate: row.currentDate,
+                        previousDate: row.previousDate,
+                        currentValue: row.currentBooks,
+                        previousValue: row.previousBooks
+                    };
+                });
+
+            ordersChart = createChart(
+                ordersCanvas,
+                orderComparisonRows.map(
+                    function (row) {
+                        return row.currentValue;
+                    }
+                ),
+                orderComparisonRows.map(
+                    function (row) {
+                        return row.previousValue;
+                    }
+                ),
+                orderComparisonRows,
+                "건"
+            );
+
+            booksChart = createChart(
+                booksCanvas,
+                bookComparisonRows.map(
+                    function (row) {
+                        return row.currentValue;
+                    }
+                ),
+                bookComparisonRows.map(
+                    function (row) {
+                        return row.previousValue;
+                    }
+                ),
+                bookComparisonRows,
+                "권"
+            );
+
+            periodStatus.classList.remove("error");
+
+            periodStatus.textContent =
+                formatFullDate(startDateId) +
+                " ~ " +
+                formatFullDate(endDateId) +
+                " / 전년 동기간 비교";
+        }
+
+        function populateMonthSelect() {
+            const monthSet = new Set();
+
+            shippingDataMap.forEach(
+                function (value, dateId) {
+                    if (
+                        typeof dateId === "string" &&
+                        dateId.length >= 7
+                    ) {
+                        monthSet.add(
+                            dateId.substring(0, 7)
+                        );
+                    }
+                }
+            );
+
+            const currentMonth =
+                dateToId(new Date()).substring(0, 7);
+
+            monthSet.add(currentMonth);
+
+            const sortedMonths =
+                Array.from(monthSet).sort(
+                    function (first, second) {
+                        return second.localeCompare(first);
+                    }
+                );
+
+            monthSelect.innerHTML =
+                '<option value="">' +
+                    "월을 선택해 주십시오" +
+                "</option>";
+
+            sortedMonths.forEach(
+                function (monthId) {
+                    const parts =
+                        monthId.split("-");
+
+                    const option =
+                        document.createElement("option");
+
+                    option.value = monthId;
+
+                    option.textContent =
+                        parts[0] +
+                        "년 " +
+                        Number(parts[1]) +
+                        "월";
+
+                    monthSelect.appendChild(option);
+                }
+            );
+        }
+
+        function applyDefaultPeriod() {
+            const today = new Date();
+            const startDate =
+                addDays(today, -90);
+
+            const startDateId =
+                dateToId(startDate);
+
+            const endDateId =
+                dateToId(today);
+
+            startDateInput.value =
+                startDateId;
+
+            endDateInput.value =
+                endDateId;
+
+            monthSelect.value = "";
+
+            renderCharts(
+                startDateId,
+                endDateId
+            );
+        }
+
+        function searchByManualPeriod() {
+            const startDateId =
+                startDateInput.value;
+
+            const endDateId =
+                endDateInput.value;
+
+            const startDate =
+                parseDateId(startDateId);
+
+            const endDate =
+                parseDateId(endDateId);
+
+            if (!startDate || !endDate) {
+                periodStatus.classList.add("error");
+
+                periodStatus.textContent =
+                    "시작일과 종료일을 모두 입력해 주십시오.";
 
                 return;
             }
 
-            rows.forEach(function (row) {
-                const tableRow = document.createElement("tr");
+            if (startDate > endDate) {
+                periodStatus.classList.add("error");
 
-                tableRow.appendChild(
-                    createTableCell(
-                        formatDate(row.shippingDate)
-                    )
-                );
+                periodStatus.textContent =
+                    "시작일은 종료일보다 늦을 수 없습니다.";
 
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.lectureOrders)
-                    )
-                );
+                return;
+            }
 
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.lectureBooks)
-                    )
-                );
+            monthSelect.value = "";
 
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.resendOrders)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.resendBooks)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.unistudyOrders)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.unistudyBooks)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.bookstoreOrders)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.bookstoreBooks)
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.totalOrders),
-                        "total-column"
-                    )
-                );
-
-                tableRow.appendChild(
-                    createTableCell(
-                        formatNumber(row.totalBooks),
-                        "total-column"
-                    )
-                );
-
-                shippingTableBody.appendChild(tableRow);
-            });
+            renderCharts(
+                startDateId,
+                endDateId
+            );
         }
 
-        function renderSummary(rows) {
-            const totals = rows.reduce(
-                function (result, row) {
-                    result.orders += row.totalOrders;
-                    result.books += row.totalBooks;
+        function searchByMonth(monthId) {
+            if (!monthId) {
+                return;
+            }
 
-                    return result;
-                },
-                {
-                    orders: 0,
-                    books: 0
-                }
+            const parts = monthId.split("-");
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+
+            const lastDay =
+                new Date(
+                    year,
+                    month,
+                    0
+                ).getDate();
+
+            const startDateId =
+                year +
+                "-" +
+                padNumber(month) +
+                "-01";
+
+            const endDateId =
+                year +
+                "-" +
+                padNumber(month) +
+                "-" +
+                padNumber(lastDay);
+
+            startDateInput.value =
+                startDateId;
+
+            endDateInput.value =
+                endDateId;
+
+            renderCharts(
+                startDateId,
+                endDateId
             );
-
-            totalOrdersElement.textContent =
-                formatNumber(totals.orders);
-
-            totalBooksElement.textContent =
-                formatNumber(totals.books);
         }
 
         async function loadShippingData() {
-            dataStatusElement.classList.remove("error");
-            dataStatusElement.textContent =
+            periodStatus.classList.remove("error");
+
+            periodStatus.textContent =
                 "출고자료를 불러오고 있습니다.";
 
             try {
+                if (typeof Chart === "undefined") {
+                    throw new Error(
+                        "Chart.js를 불러오지 못했습니다."
+                    );
+                }
+
                 const snapshot = await getDocs(
                     collection(db, "shippingDaily")
                 );
 
-                const rows = snapshot.docs
-                    .map(function (documentSnapshot) {
-                        return calculateRow({
-                            documentId: documentSnapshot.id,
-                            ...documentSnapshot.data()
-                        });
-                    })
-                    .sort(function (firstRow, secondRow) {
-                        return secondRow.shippingDate.localeCompare(
-                            firstRow.shippingDate
+                shippingDataMap.clear();
+
+                snapshot.docs.forEach(
+                    function (documentSnapshot) {
+                        const rawData =
+                            documentSnapshot.data();
+
+                        const shippingDate =
+                            String(
+                                rawData.shipping_date ||
+                                documentSnapshot.id
+                            );
+
+                        if (!parseDateId(shippingDate)) {
+                            return;
+                        }
+
+                        shippingDataMap.set(
+                            shippingDate,
+                            calculateShippingData(
+                                rawData
+                            )
                         );
-                    });
+                    }
+                );
 
-                renderSummary(rows);
-                renderShippingTable(rows);
-
-                dataStatusElement.textContent =
-                    "총 " +
-                    formatNumber(rows.length) +
-                    "일의 출고자료를 불러왔습니다.";
+                populateMonthSelect();
+                applyDefaultPeriod();
             } catch (error) {
                 console.error(
                     "[loadShippingData]",
                     error
                 );
 
-                totalOrdersElement.textContent = "0";
-                totalBooksElement.textContent = "0";
+                periodStatus.classList.add("error");
 
-                shippingTableBody.innerHTML =
-                    '<tr class="empty-row">' +
-                    '<td colspan="11">' +
-                    '출고자료를 불러오지 못했습니다.' +
-                    '</td>' +
-                    '</tr>';
-
-                dataStatusElement.classList.add("error");
-                dataStatusElement.textContent =
+                periodStatus.textContent =
                     "출고자료를 불러오지 못했습니다. " +
                     "Firestore 설정과 보안 규칙을 확인해 주십시오.";
             }
         }
+
+        searchButton.addEventListener(
+            "click",
+            searchByManualPeriod
+        );
+
+        monthSelect.addEventListener(
+            "change",
+            function () {
+                searchByMonth(
+                    monthSelect.value
+                );
+            }
+        );
 
         loginForm.addEventListener(
             "submit",
@@ -881,16 +1682,9 @@
             auth,
             async function (user) {
                 if (!user) {
-                    totalOrdersElement.textContent = "0";
-                    totalBooksElement.textContent = "0";
-
                     showView("login");
                     return;
                 }
-
-                document.getElementById(
-                    "userEmail"
-                ).textContent = user.email;
 
                 showView("dashboard");
 
