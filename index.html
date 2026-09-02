@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출고현황 대시보드</title>
+    <title>교재팀 대시보드</title>
 
     <style>
         * {
@@ -159,7 +159,7 @@
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         }
 
-        .role-badge {
+        .access-badge {
             display: inline-block;
             margin-top: 14px;
             padding: 7px 12px;
@@ -198,15 +198,17 @@
 
     <section id="loginView" class="center-screen" hidden>
         <div class="login-card">
-            <div class="logo">출</div>
+            <div class="logo">교</div>
 
-            <h1>출고현황 대시보드</h1>
+            <h1>교재팀 대시보드</h1>
+
             <p class="description">
                 등록된 계정으로 로그인해 주십시오.
             </p>
 
             <form id="loginForm">
                 <label for="email">이메일</label>
+
                 <input
                     id="email"
                     type="email"
@@ -215,6 +217,7 @@
                 >
 
                 <label for="password">비밀번호</label>
+
                 <input
                     id="password"
                     type="password"
@@ -237,29 +240,41 @@
 
     <section id="dashboardView" hidden>
         <header>
-            <div class="header-title">출고현황 대시보드</div>
-            <button id="logoutButton" class="logout-button">
+            <div class="header-title">교재팀 대시보드</div>
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
                 로그아웃
             </button>
         </header>
 
         <main>
             <div class="welcome-card">
-                <h1 id="welcomeTitle">로그인되었습니다.</h1>
+                <h1 id="welcomeTitle">
+                    교재팀 대시보드에 로그인되었습니다.
+                </h1>
+
                 <p id="userEmail"></p>
-                <span id="userRole" class="role-badge"></span>
+
+                <span class="access-badge">
+                    조회 전용
+                </span>
 
                 <div class="next-message">
-                    Firebase 로그인과 사용자 권한 연결이 정상적으로 완료되었습니다.
-                    다음 단계에서 출고현황 입력 및 조회 기능을 추가합니다.
+                    Firebase 로그인이 정상적으로 완료되었습니다.
+                    다음 단계에서 출고현황 조회 기능을 추가합니다.
                 </div>
             </div>
         </main>
     </section>
 
     <script type="module">
-        import { initializeApp }
-            from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
         import {
             getAuth,
@@ -269,9 +284,7 @@
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
         import {
-            getFirestore,
-            doc,
-            getDoc
+            getFirestore
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -287,14 +300,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const loadingView = document.getElementById("loadingView");
-        const loginView = document.getElementById("loginView");
-        const dashboardView = document.getElementById("dashboardView");
+        const loadingView =
+            document.getElementById("loadingView");
 
-        const loginForm = document.getElementById("loginForm");
-        const loginButton = document.getElementById("loginButton");
-        const loginMessage = document.getElementById("loginMessage");
-        const logoutButton = document.getElementById("logoutButton");
+        const loginView =
+            document.getElementById("loginView");
+
+        const dashboardView =
+            document.getElementById("dashboardView");
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const loginButton =
+            document.getElementById("loginButton");
+
+        const loginMessage =
+            document.getElementById("loginMessage");
+
+        const logoutButton =
+            document.getElementById("logoutButton");
 
         function showView(view) {
             loadingView.hidden = view !== "loading";
@@ -305,18 +330,27 @@
         loginForm.addEventListener("submit", async (event) => {
             event.preventDefault();
 
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                document.getElementById("password").value;
 
             loginMessage.textContent = "";
             loginButton.disabled = true;
             loginButton.textContent = "로그인 중...";
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
                 loginForm.reset();
             } catch (error) {
                 console.error(error);
+
                 loginMessage.textContent =
                     "이메일 또는 비밀번호를 확인해 주십시오.";
             } finally {
@@ -329,43 +363,22 @@
             await signOut(auth);
         });
 
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (!user) {
                 showView("login");
                 return;
             }
 
-            showView("loading");
+            document.getElementById(
+                "welcomeTitle"
+            ).textContent =
+                "교재팀 대시보드에 로그인되었습니다.";
 
-            try {
-                const userReference = doc(db, "users", user.uid);
-                const userSnapshot = await getDoc(userReference);
+            document.getElementById(
+                "userEmail"
+            ).textContent = user.email;
 
-                if (!userSnapshot.exists()) {
-                    throw new Error("사용자 권한 문서가 없습니다.");
-                }
-
-                const profile = userSnapshot.data();
-                const roleName =
-                    profile.role === "admin" ? "관리자" : "뷰어";
-
-                document.getElementById("welcomeTitle").textContent =
-                    `${profile.name || roleName} 계정으로 로그인되었습니다.`;
-
-                document.getElementById("userEmail").textContent =
-                    user.email;
-
-                document.getElementById("userRole").textContent =
-                    `권한: ${roleName}`;
-
-                showView("dashboard");
-            } catch (error) {
-                console.error(error);
-                await signOut(auth);
-                showView("login");
-                loginMessage.textContent =
-                    "사용자 권한 정보를 확인할 수 없습니다.";
-            }
+            showView("dashboard");
         });
     </script>
 </body>
