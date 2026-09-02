@@ -492,6 +492,10 @@
 
     <script type="module">
         import {
+            firebaseConfig
+        } from "./firebase-config.js";
+
+        import {
             initializeApp
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
@@ -507,15 +511,6 @@
             collection,
             getDocs
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDz3dud_kVAA__WtNJAbPf7FVhhUFzDFkI",
-            authDomain: "dashboard-b9f24.firebaseapp.com",
-            projectId: "dashboard-b9f24",
-            storageBucket: "dashboard-b9f24.firebasestorage.app",
-            messagingSenderId: "664038459364",
-            appId: "1:664038459364:web:764352895560f0a17029f1"
-        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
