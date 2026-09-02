@@ -14,16 +14,46 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
     <style>
+        :root {
+            --nav: #052b63;
+            --nav2: #073b7c;
+            --blue: #0d6efd;
+            --blue2: #1767d9;
+            --red: #ef3340;
+            --ink: #12213d;
+            --muted: #76839a;
+            --bg: #f3f6fa;
+            --card: #ffffff;
+            --line: #dfe6ef;
+            --soft: #f7f9fc;
+            --shadow: 0 6px 18px rgba(30, 55, 90, 0.08);
+        }
+
         * {
             box-sizing: border-box;
         }
 
+        html,
+        body,
+        button,
+        input,
+        select,
+        canvas {
+            font-family:
+                "Noto Sans KR",
+                "Malgun Gothic",
+                "Apple SD Gothic Neo",
+                Arial,
+                sans-serif;
+        }
+
         body {
             margin: 0;
-            min-height: 100vh;
-            font-family: Arial, "Noto Sans KR", sans-serif;
-            color: #1f2937;
-            background: #f3f6fb;
+            overflow-x: hidden;
+            color: var(--ink);
+            background: var(--bg);
+            font-size: 13px;
+            letter-spacing: -0.15px;
         }
 
         [hidden] {
@@ -42,270 +72,442 @@
         }
 
         button:disabled {
-            opacity: 0.6;
+            opacity: 0.55;
             cursor: wait;
         }
 
-        .center-screen {
-            min-height: 100vh;
+        .auth-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #edf3fb 0%,
+                    #f7f9fc 48%,
+                    #e9f1fb 100%
+                );
         }
 
-        .loading {
-            color: #475569;
-            font-size: 18px;
-        }
-
-        .login-card {
-            width: 100%;
-            max-width: 420px;
-            padding: 36px;
-            background: #ffffff;
+        .auth-card {
+            width: min(420px, 100%);
+            padding: 28px 28px 24px;
+            border: 1px solid #dce5f0;
             border-radius: 18px;
-            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
-        }
-
-        .logo {
-            width: 52px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 22px;
-            border-radius: 14px;
-            color: #ffffff;
-            background: #2563eb;
-            font-size: 25px;
-            font-weight: 700;
-        }
-
-        h1,
-        h2,
-        p {
-            margin-top: 0;
-        }
-
-        h1 {
-            margin-bottom: 8px;
-            font-size: 28px;
-        }
-
-        h2 {
-            margin-bottom: 6px;
-            font-size: 21px;
-        }
-
-        .description {
-            margin-bottom: 28px;
-            color: #64748b;
-            line-height: 1.6;
-        }
-
-        .login-card label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .login-card input {
-            width: 100%;
-            height: 48px;
-            margin-bottom: 18px;
-            padding: 0 14px;
-            border: 1px solid #cbd5e1;
-            border-radius: 9px;
-            font-size: 16px;
-        }
-
-        .login-card input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        }
-
-        .primary-button {
-            width: 100%;
-            height: 48px;
-            border-radius: 9px;
-            color: #ffffff;
-            background: #2563eb;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .primary-button:hover {
-            background: #1d4ed8;
-        }
-
-        .message {
-            min-height: 22px;
-            margin: 16px 0 0;
-            color: #dc2626;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 32px;
-            color: #ffffff;
-            background: #0f172a;
-        }
-
-        .header-title {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .logout-button {
-            height: 40px;
-            padding: 0 18px;
-            border-radius: 9px;
-            color: #ffffff;
-            background: #334155;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .logout-button:hover {
-            background: #475569;
-        }
-
-        main {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 32px 24px;
-        }
-
-        .filter-card,
-        .chart-card {
-            padding: 24px;
             background: #ffffff;
-            border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 22px 60px rgba(16, 42, 78, 0.18);
         }
 
-        .filter-card {
-            margin-bottom: 24px;
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 14px;
+            color: #37506f;
+            font-size: 12px;
+            font-weight: 900;
         }
 
-        .filter-title {
-            margin-bottom: 6px;
-            font-size: 21px;
+        .auth-logo-mark {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            overflow: hidden;
+            border-radius: 9px;
+            background: #0c5ecf;
         }
 
-        .filter-description {
-            margin-bottom: 20px;
-            color: #64748b;
-            font-size: 14px;
+        .auth-logo-mark img {
+            width: 26px;
+            height: 26px;
+            object-fit: contain;
+        }
+
+        .auth-title {
+            margin: 0 0 7px;
+            color: #10233f;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.7px;
+        }
+
+        .auth-desc {
+            margin-bottom: 18px;
+            color: #6e7f95;
+            font-size: 12px;
             line-height: 1.6;
         }
 
-        .filter-grid {
+        .auth-fields {
             display: grid;
-            grid-template-columns:
-                minmax(170px, 1fr)
-                minmax(170px, 1fr)
-                auto
-                minmax(190px, 1fr);
-            gap: 14px;
-            align-items: end;
+            gap: 10px;
         }
 
-        .filter-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #475569;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .filter-control {
+        .auth-fields input {
             width: 100%;
             height: 44px;
             padding: 0 12px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #d5deea;
             border-radius: 9px;
-            color: #1f2937;
+            outline: 0;
+            color: #17263e;
             background: #ffffff;
-            font-size: 14px;
+            font-weight: 700;
         }
 
-        .filter-control:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        .auth-fields input:focus {
+            border-color: #4a8df0;
+            box-shadow: 0 0 0 3px rgba(30, 111, 232, 0.1);
         }
 
-        .search-button {
+        .auth-login-btn {
             height: 44px;
-            padding: 0 22px;
+            margin-top: 2px;
             border-radius: 9px;
             color: #ffffff;
-            background: #2563eb;
-            font-size: 14px;
-            font-weight: 700;
+            background: #0f6fe8;
+            font-weight: 900;
+        }
+
+        .auth-status {
+            min-height: 18px;
+            margin-top: 10px;
+            color: #748399;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .auth-status.error {
+            color: #c83232;
+        }
+
+        .auth-note {
+            margin-top: 16px;
+            padding-top: 13px;
+            border-top: 1px solid #edf1f5;
+            color: #8793a4;
+            font-size: 10.5px;
+            line-height: 1.55;
+        }
+
+        .loading-view {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #65758b;
+            background: var(--bg);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 182px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .side {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            height: 100vh;
+            padding: 14px 10px;
+            color: #ffffff;
+            background:
+                linear-gradient(
+                    180deg,
+                    #03265a 0%,
+                    #073b7c 55%,
+                    #062d65 100%
+                );
+            box-shadow: 4px 0 16px rgba(3, 32, 71, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 56px;
+            padding: 0 10px 10px;
             white-space: nowrap;
         }
 
-        .search-button:hover {
-            background: #1d4ed8;
+        .brand-menu-symbol {
+            font-size: 15px;
+        }
+
+        .brand small {
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .brand-m-symbol {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .menu button {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 9px;
+            color: #ffffff;
+            background: transparent;
+            text-align: left;
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: -0.35px;
+        }
+
+        .menu button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu button.active {
+            background: #1673f8;
+        }
+
+        .main {
+            min-width: 0;
+            padding: 0 14px 20px;
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-height: 68px;
+            margin: 0 -14px 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--line);
+            background: #ffffff;
+        }
+
+        .title {
+            flex: 0 0 auto;
+            color: var(--ink);
+            font-size: 23px;
+            font-weight: 900;
+            letter-spacing: -0.8px;
+            white-space: nowrap;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .filters {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .datebox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 310px;
+            padding: 8px 12px;
+            border: 1px solid #d7e0eb;
+            border-radius: 9px;
+            background: #ffffff;
+        }
+
+        .datebox input {
+            min-width: 120px;
+            padding: 0;
+            border: 0;
+            outline: 0;
+            color: var(--ink);
+            background: transparent;
+            font-weight: 800;
+        }
+
+        .btn {
+            height: 40px;
+            padding: 0 15px;
+            border-radius: 8px;
+            font-weight: 800;
+        }
+
+        .primary {
+            color: #ffffff;
+            background: #0f6fe8;
+        }
+
+        .primary:hover {
+            background: #0b62cf;
+        }
+
+        .monthbox {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            height: 40px;
+            padding: 0 10px;
+            border: 1px solid #d7e0eb;
+            border-radius: 9px;
+            background: #ffffff;
+        }
+
+        .monthbox-label {
+            color: #617187;
+            font-size: 10.5px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .monthbox select {
+            min-width: 112px;
+            border: 0;
+            outline: 0;
+            color: #173c6e;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .session-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 6px 5px 9px;
+            border: 1px solid #dfe6ef;
+            border-radius: 9px;
+            background: #f8fafc;
+            white-space: nowrap;
+        }
+
+        .session-role {
+            padding: 4px 6px;
+            border-radius: 6px;
+            color: #0c5ecf;
+            background: #e8f1ff;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        .session-email {
+            max-width: 170px;
+            overflow: hidden;
+            color: #65758b;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-overflow: ellipsis;
+        }
+
+        .session-logout {
+            height: 28px;
+            padding: 0 8px;
+            border-radius: 6px;
+            color: #4d5c70;
+            background: #eef2f7;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .session-logout:hover {
+            color: #1f3d63;
+            background: #e2e8f0;
+        }
+
+        .period-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-height: 26px;
+            margin-bottom: 8px;
         }
 
         .period-status {
-            margin: 18px 0 0;
-            color: #475569;
-            font-size: 14px;
+            margin: 0;
+            color: #65778f;
+            font-size: 10.5px;
             font-weight: 700;
         }
 
         .period-status.error {
-            color: #dc2626;
+            color: #c83232;
         }
 
-        .chart-card + .chart-card {
-            margin-top: 24px;
+        .detail-chart-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            width: 100%;
         }
 
-        .chart-header {
-            margin-bottom: 20px;
+        .detail-chart-card {
+            width: 100%;
+            min-width: 0;
+            padding: 12px 14px 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: var(--shadow);
         }
 
-        .chart-title {
-            margin-bottom: 6px;
-            font-size: 21px;
+        .detail-chart-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .chart-description {
-            margin-bottom: 0;
-            color: #64748b;
-            font-size: 14px;
+        .detail-chart-title {
+            margin-bottom: 4px;
+            color: #14243f;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .detail-chart-sub {
+            margin-bottom: 8px;
+            color: #7a8798;
+            font-size: 10px;
         }
 
         .chart-legend {
             display: flex;
             align-items: center;
-            gap: 18px;
-            margin-top: 16px;
-            color: #475569;
-            font-size: 13px;
-            font-weight: 700;
+            gap: 12px;
+            color: #6d7d91;
+            font-size: 9.5px;
+            font-weight: 800;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .legend-line {
-            width: 28px;
+            width: 20px;
             height: 3px;
             border-radius: 999px;
         }
@@ -318,35 +520,43 @@
             background: #9ca3af;
         }
 
-        .chart-canvas-container {
+        .detail-chart-box {
             position: relative;
             width: 100%;
-            height: 360px;
+            height: 210px;
+            min-height: 210px;
+            max-height: 210px;
+        }
+
+        .detail-chart-box canvas {
+            width: 100% !important;
+            height: 210px !important;
+            max-height: 210px !important;
         }
 
         .chart-tooltip {
             position: absolute;
             z-index: 20;
-            min-width: 230px;
-            padding: 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
+            min-width: 220px;
+            padding: 12px;
+            border: 1px solid #dfe6ef;
+            border-radius: 9px;
             color: #1f2937;
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
             pointer-events: none;
             opacity: 0;
-            transform: translate(-50%, calc(-100% - 12px));
+            transform: translate(-50%, calc(-100% - 10px));
             transition: opacity 0.1s ease;
         }
 
         .tooltip-title {
-            margin-bottom: 10px;
-            padding-bottom: 9px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #e2e8f0;
-            color: #0f172a;
-            font-size: 13px;
-            font-weight: 800;
+            color: #14243f;
+            font-size: 11px;
+            font-weight: 900;
         }
 
         .tooltip-row {
@@ -354,16 +564,16 @@
             align-items: center;
             justify-content: space-between;
             gap: 18px;
-            margin-top: 7px;
-            font-size: 13px;
+            margin-top: 6px;
+            font-size: 11px;
         }
 
         .tooltip-label {
-            color: #64748b;
+            color: #748399;
         }
 
         .tooltip-value {
-            font-weight: 800;
+            font-weight: 900;
             white-space: nowrap;
         }
 
@@ -376,249 +586,334 @@
         }
 
         .tooltip-positive {
-            color: #dc2626;
+            color: var(--red);
         }
 
         .tooltip-negative {
-            color: #2563eb;
+            color: #1267de;
         }
 
         .tooltip-neutral {
-            color: #64748b;
+            color: #76839a;
+        }
+
+        @media (max-width: 1250px) {
+            .top {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .top-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filters {
+                justify-content: flex-start;
+            }
         }
 
         @media (max-width: 900px) {
-            .filter-grid {
-                grid-template-columns: 1fr 1fr;
+            .session-email {
+                display: none;
             }
 
-            .search-button {
-                width: 100%;
+            .datebox {
+                min-width: 0;
             }
         }
 
-        @media (max-width: 600px) {
-            .login-card {
-                padding: 28px 22px;
-            }
-
-            header {
-                padding: 16px 20px;
-            }
-
-            main {
-                padding: 24px 16px;
-            }
-
-            .filter-grid {
+        @media (max-width: 700px) {
+            .app {
                 grid-template-columns: 1fr;
             }
 
-            .chart-canvas-container {
-                height: 320px;
+            .side {
+                position: relative;
+                height: auto;
             }
 
-            .chart-legend {
-                align-items: flex-start;
+            .brand {
+                height: 48px;
+            }
+
+            .menu {
+                flex-direction: row;
+            }
+
+            .menu button {
+                width: auto;
+            }
+
+            .top-right,
+            .filters {
+                align-items: stretch;
                 flex-direction: column;
-                gap: 8px;
+                width: 100%;
+            }
+
+            .datebox,
+            .monthbox,
+            .session-chip {
+                width: 100%;
+            }
+
+            .datebox {
+                justify-content: space-between;
+            }
+
+            .monthbox select {
+                flex: 1;
+            }
+
+            .session-chip {
+                justify-content: flex-end;
             }
         }
     </style>
 </head>
 
 <body>
-    <section id="loadingView" class="center-screen">
-        <p class="loading">
-            로그인 상태를 확인하고 있습니다.
-        </p>
+    <section id="loadingView" class="loading-view">
+        로그인 상태를 확인하고 있습니다.
     </section>
 
-    <section id="loginView" class="center-screen" hidden>
-        <div class="login-card">
-            <div class="logo">교</div>
+    <section id="loginView" class="auth-gate" hidden>
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="auth-logo-mark">
+                    <img
+                        src="https://img.megastudy.net/common/mega_57.png"
+                        alt="Megastudy"
+                    >
+                </span>
 
-            <h1>교재팀 대시보드</h1>
+                <span>megastudy · 교재팀</span>
+            </div>
 
-            <p class="description">
-                등록된 계정으로 로그인해 주십시오.
-            </p>
+            <h1 class="auth-title">
+                교재팀 대시보드 로그인
+            </h1>
 
-            <form id="loginForm">
-                <label for="email">이메일</label>
+            <div class="auth-desc">
+                승인된 계정만 대시보드에 접근할 수 있습니다.
+            </div>
 
+            <form id="loginForm" class="auth-fields">
                 <input
                     id="email"
                     type="email"
-                    autocomplete="email"
+                    placeholder="이메일"
+                    autocomplete="username"
                     required
                 >
-
-                <label for="password">비밀번호</label>
 
                 <input
                     id="password"
                     type="password"
+                    placeholder="비밀번호"
                     autocomplete="current-password"
                     required
                 >
 
                 <button
                     id="loginButton"
-                    class="primary-button"
+                    class="auth-login-btn"
                     type="submit"
                 >
                     로그인
                 </button>
-
-                <p id="loginMessage" class="message"></p>
             </form>
+
+            <div id="loginMessage" class="auth-status">
+                Firebase Authentication 계정으로 로그인해 주세요.
+            </div>
+
+            <div class="auth-note">
+                등록된 계정으로 로그인한 사용자만 출고현황을
+                조회할 수 있습니다.
+            </div>
         </div>
     </section>
 
     <section id="dashboardView" hidden>
-        <header>
-            <div class="header-title">
-                교재팀 대시보드
-            </div>
+        <div class="app">
+            <aside class="side">
+                <div class="brand">
+                    <span class="brand-menu-symbol">☰</span>
 
-            <button
-                id="logoutButton"
-                class="logout-button"
-                type="button"
-            >
-                로그아웃
-            </button>
-        </header>
+                    <small>megastudy</small>
 
-        <main>
-            <section class="filter-card">
-                <h2 class="filter-title">
-                    출고현황 검색
-                </h2>
+                    <img
+                        class="brand-m-symbol"
+                        src="https://img.megastudy.net/common/mega_57.png"
+                        alt="M"
+                    >
+                </div>
 
-                <p class="filter-description">
-                    조회기간을 직접 지정하거나 월을 선택할 수 있습니다.
-                </p>
-
-                <div class="filter-grid">
-                    <div class="filter-group">
-                        <label for="startDate">
-                            시작일
-                        </label>
-
-                        <input
-                            id="startDate"
-                            class="filter-control"
-                            type="date"
-                        >
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="endDate">
-                            종료일
-                        </label>
-
-                        <input
-                            id="endDate"
-                            class="filter-control"
-                            type="date"
-                        >
-                    </div>
-
+                <nav class="menu">
                     <button
-                        id="searchButton"
-                        class="search-button"
+                        class="active"
                         type="button"
                     >
-                        기간 검색
+                        ⌂　<span>통합현황</span>
                     </button>
+                </nav>
+            </aside>
 
-                    <div class="filter-group">
-                        <label for="monthSelect">
-                            월별 조회
-                        </label>
-
-                        <select
-                            id="monthSelect"
-                            class="filter-control"
-                        >
-                            <option value="">
-                                월을 선택해 주십시오
-                            </option>
-                        </select>
+            <main class="main">
+                <header class="top">
+                    <div class="title">
+                        교재팀 대시보드
                     </div>
-                </div>
 
-                <p id="periodStatus" class="period-status">
-                    출고자료를 불러오고 있습니다.
-                </p>
-            </section>
+                    <div class="top-right">
+                        <div class="filters">
+                            <div class="datebox">
+                                <span>📅</span>
 
-            <section class="chart-card">
-                <div class="chart-header">
-                    <h2 class="chart-title">
-                        전체 출고 건수
-                    </h2>
+                                <input
+                                    id="startDate"
+                                    type="date"
+                                    aria-label="시작일"
+                                >
 
-                    <p class="chart-description">
-                        금년과 전년 동기간의 일자별 전체 출고 건수입니다.
+                                <span>~</span>
+
+                                <input
+                                    id="endDate"
+                                    type="date"
+                                    aria-label="종료일"
+                                >
+                            </div>
+
+                            <button
+                                id="searchButton"
+                                class="btn primary"
+                                type="button"
+                            >
+                                조회
+                            </button>
+
+                            <div class="monthbox">
+                                <span class="monthbox-label">
+                                    월별조회
+                                </span>
+
+                                <select
+                                    id="monthSelect"
+                                    aria-label="월별조회"
+                                >
+                                    <option value="">
+                                        월 선택
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="session-chip">
+                            <span class="session-role">
+                                일반
+                            </span>
+
+                            <span
+                                id="sessionEmail"
+                                class="session-email"
+                            >
+                                -
+                            </span>
+
+                            <button
+                                id="logoutButton"
+                                class="session-logout"
+                                type="button"
+                            >
+                                로그아웃
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <section class="period-row">
+                    <p
+                        id="periodStatus"
+                        class="period-status"
+                    >
+                        출고자료를 불러오고 있습니다.
                     </p>
+                </section>
 
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span
-                                class="legend-line legend-current"
-                            ></span>
-                            <span>금년</span>
+                <section class="detail-chart-grid">
+                    <article class="detail-chart-card">
+                        <div class="detail-chart-head">
+                            <div>
+                                <div class="detail-chart-title">
+                                    전체 출고 건수
+                                </div>
+
+                                <div class="detail-chart-sub">
+                                    금년 vs 전년 동기간
+                                </div>
+                            </div>
+
+                            <div class="chart-legend">
+                                <span class="legend-item">
+                                    <span
+                                        class="legend-line legend-current"
+                                    ></span>
+                                    금년
+                                </span>
+
+                                <span class="legend-item">
+                                    <span
+                                        class="legend-line legend-previous"
+                                    ></span>
+                                    전년 동기간
+                                </span>
+                            </div>
                         </div>
 
-                        <div class="legend-item">
-                            <span
-                                class="legend-line legend-previous"
-                            ></span>
-                            <span>전년 동기간</span>
+                        <div class="detail-chart-box">
+                            <canvas id="ordersChart"></canvas>
                         </div>
-                    </div>
-                </div>
+                    </article>
 
-                <div class="chart-canvas-container">
-                    <canvas id="ordersChart"></canvas>
-                </div>
-            </section>
+                    <article class="detail-chart-card">
+                        <div class="detail-chart-head">
+                            <div>
+                                <div class="detail-chart-title">
+                                    전체 출고 권수
+                                </div>
 
-            <section class="chart-card">
-                <div class="chart-header">
-                    <h2 class="chart-title">
-                        전체 출고 권수
-                    </h2>
+                                <div class="detail-chart-sub">
+                                    금년 vs 전년 동기간
+                                </div>
+                            </div>
 
-                    <p class="chart-description">
-                        금년과 전년 동기간의 일자별 전체 출고 권수입니다.
-                    </p>
+                            <div class="chart-legend">
+                                <span class="legend-item">
+                                    <span
+                                        class="legend-line legend-current"
+                                    ></span>
+                                    금년
+                                </span>
 
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span
-                                class="legend-line legend-current"
-                            ></span>
-                            <span>금년</span>
+                                <span class="legend-item">
+                                    <span
+                                        class="legend-line legend-previous"
+                                    ></span>
+                                    전년 동기간
+                                </span>
+                            </div>
                         </div>
 
-                        <div class="legend-item">
-                            <span
-                                class="legend-line legend-previous"
-                            ></span>
-                            <span>전년 동기간</span>
+                        <div class="detail-chart-box">
+                            <canvas id="booksChart"></canvas>
                         </div>
-                    </div>
-                </div>
-
-                <div class="chart-canvas-container">
-                    <canvas id="booksChart"></canvas>
-                </div>
-            </section>
-        </main>
+                    </article>
+                </section>
+            </main>
+        </div>
     </section>
 
     <script type="module">
@@ -647,7 +942,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const numberFormatter = new Intl.NumberFormat("ko-KR");
+        const numberFormatter =
+            new Intl.NumberFormat("ko-KR");
 
         const loadingView =
             document.getElementById("loadingView");
@@ -669,6 +965,9 @@
 
         const logoutButton =
             document.getElementById("logoutButton");
+
+        const sessionEmail =
+            document.getElementById("sessionEmail");
 
         const startDateInput =
             document.getElementById("startDate");
@@ -697,9 +996,14 @@
         let booksChart = null;
 
         function showView(view) {
-            loadingView.hidden = view !== "loading";
-            loginView.hidden = view !== "login";
-            dashboardView.hidden = view !== "dashboard";
+            loadingView.hidden =
+                view !== "loading";
+
+            loginView.hidden =
+                view !== "login";
+
+            dashboardView.hidden =
+                view !== "dashboard";
         }
 
         function getNumber(value) {
@@ -713,7 +1017,9 @@
         }
 
         function formatNumber(value) {
-            return numberFormatter.format(getNumber(value));
+            return numberFormatter.format(
+                getNumber(value)
+            );
         }
 
         function padNumber(value) {
@@ -731,7 +1037,8 @@
         }
 
         function parseDateId(dateId) {
-            const parts = String(dateId).split("-");
+            const parts =
+                String(dateId).split("-");
 
             if (parts.length !== 3) {
                 return null;
@@ -783,26 +1090,31 @@
         }
 
         function getPreviousYearDateId(dateId) {
-            const parts = String(dateId).split("-");
+            const parts =
+                String(dateId).split("-");
 
-            if (parts.length.length !== 3) {
+            if (parts.length !== 3) {
                 return "";
             }
 
-            const currentYear = Number(parts[0]);
-            const month = Number(parts[1]);
-            const day = Number(parts[2]);
-            const previousYear = currentYear - 1;
+            const currentYear =
+                Number(parts[0]);
+
+            const month =
+                Number(parts[1]);
+
+            const day =
+                Number(parts[2]);
+
+            const previousYear =
+                currentYear - 1;
 
             if (
                 month === 2 &&
                 day === 29 &&
                 !isLeapYear(previousYear)
             ) {
-                return (
-                    previousYear +
-                    "-02-28"
-                );
+                return previousYear + "-02-28";
             }
 
             return (
@@ -815,7 +1127,8 @@
         }
 
         function formatFullDate(dateId) {
-            const date = parseDateId(dateId);
+            const date =
+                parseDateId(dateId);
 
             if (!date) {
                 return dateId;
@@ -831,7 +1144,8 @@
         }
 
         function formatChartDate(dateId) {
-            const date = parseDateId(dateId);
+            const date =
+                parseDateId(dateId);
 
             if (!date) {
                 return dateId;
@@ -844,20 +1158,31 @@
             );
         }
 
-        function getDateRange(startDateId, endDateId) {
-            const startDate = parseDateId(startDateId);
-            const endDate = parseDateId(endDateId);
+        function getDateRange(
+            startDateId,
+            endDateId
+        ) {
+            const startDate =
+                parseDateId(startDateId);
+
+            const endDate =
+                parseDateId(endDateId);
 
             if (!startDate || !endDate) {
                 return [];
             }
 
             const dateIds = [];
-            let currentDate = new Date(startDate);
+            let currentDate =
+                new Date(startDate);
 
             while (currentDate <= endDate) {
-                dateIds.push(dateToId(currentDate));
-                currentDate = addDays(currentDate, 1);
+                dateIds.push(
+                    dateToId(currentDate)
+                );
+
+                currentDate =
+                    addDays(currentDate, 1);
             }
 
             return dateIds;
@@ -907,7 +1232,8 @@
             dateId,
             fieldName
         ) {
-            const row = shippingDataMap.get(dateId);
+            const row =
+                shippingDataMap.get(dateId);
 
             if (!row) {
                 return 0;
@@ -916,12 +1242,12 @@
             return getNumber(row[fieldName]);
         }
 
-        function getComparisonClass(changeValue) {
-            if (changeValue > 0) {
+        function getComparisonClass(value) {
+            if (value > 0) {
                 return "tooltip-positive";
             }
 
-            if (changeValue < 0) {
+            if (value < 0) {
                 return "tooltip-negative";
             }
 
@@ -932,8 +1258,11 @@
             value,
             unit
         ) {
-            const numberValue = getNumber(value);
-            const sign = numberValue > 0 ? "+" : "";
+            const numberValue =
+                getNumber(value);
+
+            const sign =
+                numberValue > 0 ? "+" : "";
 
             return (
                 sign +
@@ -970,7 +1299,8 @@
                 ) *
                 100;
 
-            const sign = rate > 0 ? "+" : "";
+            const sign =
+                rate > 0 ? "+" : "";
 
             return {
                 text:
@@ -1013,6 +1343,7 @@
         ) {
             const chart = context.chart;
             const tooltip = context.tooltip;
+
             const tooltipElement =
                 getOrCreateTooltip(chart);
 
@@ -1066,9 +1397,7 @@
                 "</div>" +
 
                 '<div class="tooltip-row">' +
-                    '<span class="tooltip-label">' +
-                        "금년" +
-                    "</span>" +
+                    '<span class="tooltip-label">금년</span>' +
                     '<span class="tooltip-value tooltip-current">' +
                         formatNumber(currentValue) +
                         unit +
@@ -1076,9 +1405,7 @@
                 "</div>" +
 
                 '<div class="tooltip-row">' +
-                    '<span class="tooltip-label">' +
-                        "전년" +
-                    "</span>" +
+                    '<span class="tooltip-label">전년</span>' +
                     '<span class="tooltip-value tooltip-previous">' +
                         formatNumber(previousValue) +
                         unit +
@@ -1086,9 +1413,7 @@
                 "</div>" +
 
                 '<div class="tooltip-row">' +
-                    '<span class="tooltip-label">' +
-                        "증감" +
-                    "</span>" +
+                    '<span class="tooltip-label">증감</span>' +
                     '<span class="tooltip-value ' +
                         changeClass +
                     '">' +
@@ -1100,9 +1425,7 @@
                 "</div>" +
 
                 '<div class="tooltip-row">' +
-                    '<span class="tooltip-label">' +
-                        "증감률" +
-                    "</span>" +
+                    '<span class="tooltip-label">증감률</span>' +
                     '<span class="tooltip-value ' +
                         rate.className +
                     '">' +
@@ -1129,7 +1452,7 @@
                 tooltip.caretY;
 
             const tooltipWidth =
-                tooltipElement.offsetWidth || 230;
+                tooltipElement.offsetWidth || 220;
 
             const minimumLeft =
                 tooltipWidth / 2 + 8;
@@ -1180,9 +1503,9 @@
                                 data: currentValues,
                                 borderColor: "#1d4ed8",
                                 backgroundColor: "#1d4ed8",
-                                borderWidth: 3,
-                                pointRadius: 2,
-                                pointHoverRadius: 6,
+                                borderWidth: 2.5,
+                                pointRadius: 1.5,
+                                pointHoverRadius: 5,
                                 pointBorderWidth: 0,
                                 tension: 0.25,
                                 fill: false
@@ -1193,8 +1516,8 @@
                                 borderColor: "#9ca3af",
                                 backgroundColor: "#9ca3af",
                                 borderWidth: 2,
-                                pointRadius: 2,
-                                pointHoverRadius: 6,
+                                pointRadius: 1.5,
+                                pointHoverRadius: 5,
                                 pointBorderWidth: 0,
                                 tension: 0.25,
                                 fill: false
@@ -1209,6 +1532,15 @@
                         interaction: {
                             mode: "index",
                             intersect: true
+                        },
+
+                        layout: {
+                            padding: {
+                                top: 5,
+                                right: 8,
+                                bottom: 0,
+                                left: 2
+                            }
                         },
 
                         plugins: {
@@ -1235,10 +1567,13 @@
                                 },
 
                                 ticks: {
-                                    color: "#64748b",
+                                    color: "#76839a",
+                                    font: {
+                                        size: 9
+                                    },
                                     maxRotation: 0,
                                     autoSkip: true,
-                                    maxTicksLimit: 16
+                                    maxTicksLimit: 18
                                 }
                             },
 
@@ -1246,11 +1581,14 @@
                                 beginAtZero: true,
 
                                 grid: {
-                                    color: "#e2e8f0"
+                                    color: "#edf1f5"
                                 },
 
                                 ticks: {
-                                    color: "#64748b",
+                                    color: "#76839a",
+                                    font: {
+                                        size: 9
+                                    },
 
                                     callback: function (value) {
                                         return formatNumber(value);
@@ -1328,7 +1666,7 @@
                 booksChart.destroy();
             }
 
-            const orderComparisonRows =
+            const orderRows =
                 comparisonRows.map(function (row) {
                     return {
                         currentDate: row.currentDate,
@@ -1338,7 +1676,7 @@
                     };
                 });
 
-            const bookComparisonRows =
+            const bookRows =
                 comparisonRows.map(function (row) {
                     return {
                         currentDate: row.currentDate,
@@ -1350,33 +1688,25 @@
 
             ordersChart = createChart(
                 ordersCanvas,
-                orderComparisonRows.map(
-                    function (row) {
-                        return row.currentValue;
-                    }
-                ),
-                orderComparisonRows.map(
-                    function (row) {
-                        return row.previousValue;
-                    }
-                ),
-                orderComparisonRows,
+                orderRows.map(function (row) {
+                    return row.currentValue;
+                }),
+                orderRows.map(function (row) {
+                    return row.previousValue;
+                }),
+                orderRows,
                 "건"
             );
 
             booksChart = createChart(
                 booksCanvas,
-                bookComparisonRows.map(
-                    function (row) {
-                        return row.currentValue;
-                    }
-                ),
-                bookComparisonRows.map(
-                    function (row) {
-                        return row.previousValue;
-                    }
-                ),
-                bookComparisonRows,
+                bookRows.map(function (row) {
+                    return row.currentValue;
+                }),
+                bookRows.map(function (row) {
+                    return row.previousValue;
+                }),
+                bookRows,
                 "권"
             );
 
@@ -1386,7 +1716,7 @@
                 formatFullDate(startDateId) +
                 " ~ " +
                 formatFullDate(endDateId) +
-                " / 전년 동기간 비교";
+                " · 전년 동기간 비교";
         }
 
         function populateMonthSelect() {
@@ -1406,7 +1736,9 @@
             );
 
             const currentMonth =
-                dateToId(new Date()).substring(0, 7);
+                dateToId(
+                    new Date()
+                ).substring(0, 7);
 
             monthSet.add(currentMonth);
 
@@ -1418,9 +1750,7 @@
                 );
 
             monthSelect.innerHTML =
-                '<option value="">' +
-                    "월을 선택해 주십시오" +
-                "</option>";
+                '<option value="">월 선택</option>';
 
             sortedMonths.forEach(
                 function (monthId) {
@@ -1445,6 +1775,7 @@
 
         function applyDefaultPeriod() {
             const today = new Date();
+
             const startDate =
                 addDays(today, -90);
 
@@ -1512,9 +1843,14 @@
                 return;
             }
 
-            const parts = monthId.split("-");
-            const year = Number(parts[0]);
-            const month = Number(parts[1]);
+            const parts =
+                monthId.split("-");
+
+            const year =
+                Number(parts[0]);
+
+            const month =
+                Number(parts[1]);
 
             const lastDay =
                 new Date(
@@ -1561,9 +1897,13 @@
                     );
                 }
 
-                const snapshot = await getDocs(
-                    collection(db, "shippingDaily")
-                );
+                const snapshot =
+                    await getDocs(
+                        collection(
+                            db,
+                            "shippingDaily"
+                        )
+                    );
 
                 shippingDataMap.clear();
 
@@ -1637,9 +1977,13 @@
                         .getElementById("password")
                         .value;
 
-                loginMessage.textContent = "";
+                loginMessage.classList.remove("error");
+                loginMessage.textContent =
+                    "로그인 중입니다.";
+
                 loginButton.disabled = true;
-                loginButton.textContent = "로그인 중...";
+                loginButton.textContent =
+                    "로그인 중...";
 
                 try {
                     await signInWithEmailAndPassword(
@@ -1655,11 +1999,14 @@
                         error
                     );
 
+                    loginMessage.classList.add("error");
+
                     loginMessage.textContent =
                         "이메일 또는 비밀번호를 확인해 주십시오.";
                 } finally {
                     loginButton.disabled = false;
-                    loginButton.textContent = "로그인";
+                    loginButton.textContent =
+                        "로그인";
                 }
             }
         );
@@ -1682,9 +2029,13 @@
             auth,
             async function (user) {
                 if (!user) {
+                    sessionEmail.textContent = "-";
                     showView("login");
                     return;
                 }
+
+                sessionEmail.textContent =
+                    user.email || "-";
 
                 showView("dashboard");
 
