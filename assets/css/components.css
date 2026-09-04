@@ -1,1 +1,161 @@
+.datebox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 310px;
+    padding: 8px 12px;
+    border: 1px solid #d7e0eb;
+    border-radius: 9px;
+    background: #ffffff;
+}
 
+.datebox input {
+    min-width: 120px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: var(--ink);
+    background: transparent;
+    font-weight: 800;
+}
+
+.btn {
+    height: 40px;
+    padding: 0 15px;
+    border-radius: 8px;
+    font-weight: 800;
+}
+
+.btn.primary {
+    color: #ffffff;
+    background: #0f6fe8;
+}
+
+.btn.primary:hover {
+    background: #0b62cf;
+}
+
+.monthbox {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid #d7e0eb;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+.monthbox-label {
+    color: #617187;
+    font-size: 10.5px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.monthbox select {
+    min-width: 112px;
+    border: 0;
+    outline: 0;
+    color: #173c6e;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.session-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 6px 5px 9px;
+    border: 1px solid #dfe6ef;
+    border-radius: 9px;
+    background: #f8fafc;
+    white-space: nowrap;
+}
+
+.session-role {
+    padding: 4px 6px;
+    border-radius: 6px;
+    color: #0c5ecf;
+    background: #e8f1ff;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.session-email {
+    max-width: 170px;
+    overflow: hidden;
+    color: #65758b;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+}
+
+.session-logout {
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: #4d5c70;
+    background: #eef2f7;
+    font-size: 10.5px;
+    font-weight: 800;
+}
+
+.session-logout:hover {
+    color: #1f3d63;
+    background: #e2e8f0;
+}
+
+.period-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 26px;
+    margin-bottom: 8px;
+}
+
+.period-status,
+.annual-status {
+    margin: 0;
+    color: #65778f;
+    font-size: 10.5px;
+    font-weight: 700;
+}
+
+.period-status.error,
+.annual-status.error {
+    color: #c83232;
+}
+
+.data-message {
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+@media (max-width: 900px) {
+    .session-email {
+        display: none;
+    }
+
+    .datebox {
+        min-width: 0;
+        justify-content: space-between;
+    }
+
+    .datebox,
+    .monthbox,
+    .session-chip {
+        width: 100%;
+    }
+
+    .monthbox select {
+        flex: 1;
+    }
+
+    .session-chip {
+        justify-content: flex-end;
+    }
+}
