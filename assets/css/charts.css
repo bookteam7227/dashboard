@@ -1,45 +1,86 @@
+/* /assets/css/charts.css */
+
 .chart-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    gap: 10px;
     width: 100%;
 }
 
 .chart-card {
     width: 100%;
     min-width: 0;
-    padding: 8px 14px 6px;
+    height: calc((100vh - 176px) / 2);
+    min-height: 260px;
+    padding: 12px 14px 10px;
     border: 1px solid var(--line);
     border-radius: 12px;
     background: #ffffff;
     box-shadow: var(--shadow);
 }
 
+.chart-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
 .chart-title {
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     color: #14243f;
     font-size: 13px;
     font-weight: 900;
 }
 
 .chart-sub {
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #7a8798;
     font-size: 10px;
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6d7d91;
+    font-size: 9.5px;
+    font-weight: 800;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.legend-line {
+    width: 20px;
+    height: 3px;
+    border-radius: 999px;
+}
+
+.legend-current {
+    background: #ef3340;
+}
+
+.legend-previous {
+    background: #1d4ed8;
 }
 
 .chart-box {
     position: relative;
     width: 100%;
-    height: 155px;
-    min-height: 155px;
-    max-height: 155px;
+    height: calc(100% - 44px);
+    min-height: 0;
+    max-height: none;
 }
 
 .chart-box.annual-chart-box {
-    height: 180px;
-    min-height: 180px;
-    max-height: 180px;
+    height: calc(100% - 44px);
+    min-height: 0;
+    max-height: none;
 }
 
 .chart-box canvas {
@@ -102,4 +143,11 @@
 
 .tooltip-neutral {
     color: #76839a;
+}
+
+@media (max-height: 760px) {
+    .chart-card {
+        height: calc((100vh - 160px) / 2);
+        min-height: 220px;
+    }
 }
