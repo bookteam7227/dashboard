@@ -1,5 +1,3 @@
-// /firebase-config.js
-
 export const firebaseConfig = Object.freeze({
     apiKey: "AIzaSyDz3dud_kVAA__WtNJAbPf7FVhhUFzDFkI",
     authDomain: "dashboard-b9f24.firebaseapp.com",
