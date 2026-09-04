@@ -1,1 +1,185 @@
+.app-shell {
+    display: grid;
+    grid-template-columns: 182px minmax(0, 1fr);
+    min-height: 100vh;
+}
 
+.sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    height: 100vh;
+    padding: 14px 10px;
+    color: #ffffff;
+    background: linear-gradient(180deg, #03265a 0%, #073b7c 55%, #062d65 100%);
+    box-shadow: 4px 0 16px rgba(3, 32, 71, 0.08);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 78px;
+    margin-bottom: 8px;
+    padding: 7px;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.brand-ci-logo {
+    width: 128px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 9px;
+    color: #ffffff;
+    background: transparent;
+    white-space: nowrap;
+    font-weight: 800;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-link.active {
+    background: #1673f8;
+}
+
+.menu-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.main-area {
+    min-width: 0;
+    padding: 0 14px 20px;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 68px;
+    margin: 0 -14px 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: #ffffff;
+}
+
+.page-title {
+    margin: 0;
+    color: var(--ink);
+    font-size: 23px;
+    font-weight: 900;
+    letter-spacing: -0.8px;
+    white-space: nowrap;
+}
+
+.topbar-right,
+.page-actions,
+.filters {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    min-width: 0;
+}
+
+.filters {
+    flex-wrap: wrap;
+}
+
+.page-content {
+    width: 100%;
+}
+
+.dashboard-welcome {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 110px);
+    border: 1px dashed #cfd9e6;
+    border-radius: 12px;
+    color: #8290a3;
+    background: rgba(255, 255, 255, 0.58);
+    text-align: center;
+}
+
+.dashboard-welcome h2 {
+    margin: 0 0 8px;
+    color: #31445f;
+}
+
+.dashboard-welcome p {
+    margin: 0;
+}
+
+@media (max-width: 1250px) {
+    .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .topbar-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .page-actions,
+    .filters {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 760px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        position: relative;
+        height: auto;
+    }
+
+    .brand {
+        width: 150px;
+        height: 58px;
+        margin: 0 auto 10px;
+    }
+
+    .brand-ci-logo {
+        height: 48px;
+    }
+
+    .menu {
+        flex-direction: row;
+    }
+
+    .menu-link {
+        justify-content: center;
+    }
+
+    .topbar-right,
+    .page-actions,
+    .filters {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+    }
+}
