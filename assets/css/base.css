@@ -1,1 +1,160 @@
+:root {
+    --nav: #052b63;
+    --nav2: #073b7c;
+    --blue: #1767d9;
+    --red: #ef3340;
+    --ink: #12213d;
+    --muted: #76839a;
+    --bg: #f3f6fa;
+    --card: #ffffff;
+    --line: #dfe6ef;
+    --soft: #f7f9fc;
+    --shadow: 0 6px 18px rgba(30, 55, 90, 0.08);
+}
 
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+button,
+input,
+select,
+canvas {
+    font-family: "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 13px;
+    letter-spacing: -0.15px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    border: 0;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.loading-view {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #65758b;
+    background: var(--bg);
+    font-weight: 800;
+}
+
+.auth-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #edf3fb 0%, #f7f9fc 48%, #e9f1fb 100%);
+}
+
+.auth-card {
+    width: min(420px, 100%);
+    padding: 30px 28px 25px;
+    border: 1px solid #dce5f0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 18px 48px rgba(24, 52, 92, 0.14);
+}
+
+.auth-ci-logo {
+    display: block;
+    width: 150px;
+    height: 86px;
+    margin: 0 auto 18px;
+    object-fit: contain;
+}
+
+.auth-title {
+    margin: 0 0 8px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.auth-desc,
+.auth-note,
+.auth-status {
+    color: var(--muted);
+    text-align: center;
+}
+
+.auth-desc {
+    margin: 0 0 22px;
+}
+
+.auth-fields {
+    display: grid;
+    gap: 10px;
+}
+
+.auth-fields input {
+    height: 46px;
+    padding: 0 13px;
+    border: 1px solid #ccd7e4;
+    border-radius: 9px;
+    outline: none;
+}
+
+.auth-fields input:focus {
+    border-color: #1673f8;
+    box-shadow: 0 0 0 3px rgba(22, 115, 248, 0.12);
+}
+
+.auth-login-btn {
+    height: 46px;
+    border-radius: 9px;
+    color: #ffffff;
+    background: #116ee8;
+    font-weight: 900;
+}
+
+.auth-status {
+    min-height: 20px;
+    margin-top: 15px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.auth-status.error {
+    color: #c83232;
+}
+
+.auth-note {
+    margin-top: 10px;
+    font-size: 10px;
+}
