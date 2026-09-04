@@ -1,0 +1,142 @@
+.chart-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.chart-card {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: var(--shadow);
+}
+
+.chart-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.chart-title {
+    margin-bottom: 4px;
+    color: #14243f;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.chart-sub {
+    margin-bottom: 8px;
+    color: #7a8798;
+    font-size: 10px;
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6d7d91;
+    font-size: 9.5px;
+    font-weight: 800;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.legend-line {
+    width: 20px;
+    height: 3px;
+    border-radius: 999px;
+}
+
+.legend-current {
+    background: #ef3340;
+}
+
+.legend-previous {
+    background: #1d4ed8;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+    height: 210px;
+    min-height: 210px;
+    max-height: 210px;
+}
+
+.chart-box.annual-chart-box {
+    height: 260px;
+    min-height: 260px;
+    max-height: 260px;
+}
+
+.chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-tooltip {
+    position: absolute;
+    z-index: 20;
+    min-width: 220px;
+    padding: 12px;
+    border: 1px solid #dfe6ef;
+    border-radius: 9px;
+    color: #1f2937;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 10px));
+    transition: opacity 0.1s ease;
+}
+
+.tooltip-title {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #14243f;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.tooltip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.tooltip-label {
+    color: #748399;
+}
+
+.tooltip-value {
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.tooltip-current,
+.tooltip-positive {
+    color: #ef3340;
+}
+
+.tooltip-previous,
+.tooltip-negative {
+    color: #1d4ed8;
+}
+
+.tooltip-neutral {
+    color: #76839a;
+}
