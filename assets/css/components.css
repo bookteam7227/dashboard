@@ -168,12 +168,29 @@
     font-weight: 900;
 }
 
-.dashboard-main-grid {
+.dashboard-top-grid {
     display: grid;
-    grid-template-columns: minmax(320px, 34%) minmax(620px, 66%);
+    grid-template-columns: minmax(320px, 34%) minmax(0, 66%);
     gap: 16px;
     width: 100%;
+    margin-bottom: 16px;
     align-items: stretch;
+}
+
+.dashboard-work-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 16px;
+    align-items: stretch;
+}
+
+.dashboard-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
 }
 
 .dashboard-card {
@@ -182,6 +199,7 @@
     border-radius: 12px;
     background: #ffffff;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .dashboard-card-header {
@@ -206,7 +224,9 @@
 }
 
 
-/* 출근 현황 */
+/* =====================================================
+   출근 현황
+   ===================================================== */
 
 .attendance-card-grid {
     display: grid;
@@ -225,6 +245,7 @@
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     background: #f8fafc;
+    box-sizing: border-box;
 }
 
 .attendance-stat-label {
@@ -242,47 +263,97 @@
 }
 
 
-/* 작업 현황 */
+/* =====================================================
+   로컬 상태
+   ===================================================== */
 
-.work-card-grid {
+.local-status-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 8px;
+    min-height: 178px;
     padding: 18px;
+    align-items: stretch;
+    box-sizing: border-box;
 }
 
-.work-detail-card {
+.local-status-item {
     display: flex;
     min-width: 0;
-    min-height: 142px;
     flex-direction: column;
-    padding: 16px 18px;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     background: #f8fafc;
     box-sizing: border-box;
 }
 
-.work-detail-title {
-    margin-bottom: 12px;
-    color: #173c6e;
-    font-size: 15px;
+.local-status-number {
+    color: #65758b;
+    font-size: 13px;
     font-weight: 900;
 }
 
-.work-table {
+.local-status-badge {
     display: flex;
-    width: 100%;
-    flex: 1;
-    flex-direction: column;
+    min-width: 52px;
+    min-height: 30px;
+    padding: 0 8px;
+    align-items: center;
     justify-content: center;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.local-status-badge.is-waiting {
+    color: #65758b;
+    background: #eef2f7;
+}
+
+.local-status-badge.is-working {
+    color: #0c5ecf;
+    background: #e8f1ff;
+}
+
+.local-status-badge.is-complete {
+    color: #267047;
+    background: #e8f5ee;
+}
+
+
+/* =====================================================
+   작업 현황
+   ===================================================== */
+
+.work-summary-card {
+    min-height: 238px;
+}
+
+.work-table-wrap {
+    display: flex;
+    min-height: 168px;
+    padding: 18px;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.work-table {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    overflow: hidden;
 }
 
 .work-table-row {
     display: grid;
-    grid-template-columns: 0.72fr 1fr 1fr 1fr;
     align-items: center;
-    min-height: 38px;
+    min-height: 46px;
     border-bottom: 1px solid #e1e8f0;
 }
 
@@ -290,21 +361,37 @@
     border-bottom: 0;
 }
 
+.work-table-five-column .work-table-row {
+    grid-template-columns:
+        0.72fr
+        1fr
+        1fr
+        1fr
+        1fr;
+}
+
+.work-table-three-column .work-table-row {
+    grid-template-columns:
+        1.5fr
+        1fr
+        1fr;
+}
+
 .work-table-row > span,
 .work-table-row > strong {
     min-width: 0;
-    padding: 0 8px;
+    padding: 0 10px;
     box-sizing: border-box;
 }
 
 .work-table-header {
-    min-height: 30px;
-    border-bottom: 1px solid #d5dee9;
+    min-height: 38px;
+    background: #eef3f8;
 }
 
 .work-table-header > span {
-    color: #66788f;
-    font-size: 11.5px;
+    color: #65758b;
+    font-size: 12px;
     font-weight: 900;
     text-align: center;
 }
@@ -315,44 +402,87 @@
 
 .work-table-row:not(.work-table-header) > span {
     color: #5f7086;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 800;
 }
 
 .work-table-row > strong {
     color: #173c6e;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 900;
     text-align: center;
 }
 
+.work-table-three-column
+.work-table-row:not(.work-table-header)
+> span:first-child {
+    color: #173c6e;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+#lecturePendingOrders,
+#lecturePendingBooks {
+    color: #65758b;
+}
+
 #lectureOrderProgress,
 #lectureBookProgress {
-    padding: 5px 7px;
-    border-radius: 6px;
+    justify-self: center;
+    min-width: 62px;
+    padding: 6px 8px;
+    border-radius: 7px;
     color: #0c5ecf;
     background: #e8f1ff;
-    font-size: 13px;
+    font-size: 14px;
     white-space: nowrap;
-}
-
-.work-table-three-column .work-table-row {
-    grid-template-columns: 1.5fr 1fr 1fr;
-}
-
-.work-table-three-column .work-table-row:not(.work-table-header) > span:first-child {
-    color: #173c6e;
-    font-size: 12.5px;
-    font-weight: 900;
-    text-align: left;
-}
-
-.work-table-three-column .work-table-header > span:first-child {
-    text-align: left;
+    box-sizing: border-box;
 }
 
 
-/* 반응형 */
+/* =====================================================
+   Dashboard 비교 그래프
+   ===================================================== */
+
+.dashboard-chart-card {
+    min-width: 0;
+}
+
+.dashboard-chart-header {
+    min-height: 72px;
+}
+
+.dashboard-chart-box {
+    position: relative;
+    width: 100%;
+    height: 270px;
+    padding: 12px 14px 16px;
+    box-sizing: border-box;
+}
+
+.dashboard-chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* =====================================================
+   반응형
+   ===================================================== */
+
+@media (max-width: 1100px) {
+    .local-status-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .dashboard-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-chart-box {
+        height: 300px;
+    }
+}
 
 @media (max-width: 900px) {
     .session-email {
@@ -378,21 +508,50 @@
         justify-content: flex-end;
     }
 
-    .dashboard-main-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .work-card-grid {
+    .dashboard-top-grid,
+    .dashboard-work-grid {
         grid-template-columns: 1fr;
     }
 
     .attendance-card-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .local-status-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 600px) {
     .attendance-card-grid {
         grid-template-columns: 1fr;
+    }
+
+    .local-status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .work-table-row > span,
+    .work-table-row > strong {
+        padding: 0 5px;
+    }
+
+    .work-table-header > span {
+        font-size: 10.5px;
+    }
+
+    .work-table-row:not(.work-table-header) > span {
+        font-size: 11px;
+    }
+
+    .work-table-row > strong {
+        font-size: 12px;
+    }
+
+    #lectureOrderProgress,
+    #lectureBookProgress {
+        min-width: 52px;
+        padding: 5px;
+        font-size: 11px;
     }
 }
