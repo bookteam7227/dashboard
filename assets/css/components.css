@@ -287,6 +287,19 @@
 }
 
 
+.attendance-part-time-detail {
+    display: flex;
+    margin-top: 14px;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    color: #728197;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+
 /* =====================================================
    로컬 상태
    ===================================================== */
@@ -379,6 +392,17 @@
     color: #173c6e;
     font-size: 10.5px;
     font-weight: 900;
+    text-align: right;
+    white-space: nowrap;
+}
+
+
+.local-progress-rate {
+    width: 100%;
+    margin-top: 7px;
+    color: #8a98aa;
+    font-size: 9.5px;
+    font-weight: 700;
     text-align: right;
     white-space: nowrap;
 }
