@@ -156,12 +156,9 @@ function getPreviousYearComparableDate(date) {
         getIsoWeekParts(candidate);
 
     if (
-        candidateIso.isoYear ===
-            targetIsoYear
-        && candidateIso.week ===
-            currentIso.week
-        && candidateIso.weekday ===
-            currentIso.weekday
+        candidateIso.isoYear === targetIsoYear
+        && candidateIso.week === currentIso.week
+        && candidateIso.weekday === currentIso.weekday
     ) {
         return candidate;
     }
@@ -265,16 +262,31 @@ function createLocalMarkup() {
 function createDashboardMarkup() {
     return `
         <section class="dashboard-date-card">
-            <span class="dashboard-date-label">
-                기준일자:
-            </span>
+            <div class="dashboard-date-primary">
+                <span class="dashboard-date-label">
+                    기준일자:
+                </span>
 
-            <strong
-                id="dashboardDate"
-                class="dashboard-date-value"
-            >
-                -
-            </strong>
+                <strong
+                    id="dashboardDate"
+                    class="dashboard-date-value"
+                >
+                    -
+                </strong>
+            </div>
+
+            <div class="dashboard-update-meta">
+                <span class="dashboard-update-label">
+                    최종 업데이트:
+                </span>
+
+                <strong
+                    id="dashboardUpdatedAt"
+                    class="dashboard-update-value"
+                >
+                    -
+                </strong>
+            </div>
         </section>
 
         <section class="dashboard-top-grid">
@@ -319,9 +331,7 @@ function createDashboardMarkup() {
                 <div class="dashboard-card-header">
                     <div>
                         <h2>로컬 상태</h2>
-                        <p>
-                            인강 로컬 1~9 작업 상태
-                        </p>
+                        <p>인강 로컬 1~9 작업 상태</p>
                     </div>
                 </div>
 
@@ -399,10 +409,7 @@ function createDashboardMarkup() {
             <article class="dashboard-card work-summary-card">
                 <div class="dashboard-card-header">
                     <div>
-                        <h2>
-                            온라인서점/유니스터디
-                        </h2>
-
+                        <h2>온라인서점/유니스터디</h2>
                         <p>오늘 발송량</p>
                     </div>
                 </div>
@@ -511,9 +518,7 @@ function renderLocalStatuses(row) {
             locals[localId] || {};
 
         const status =
-            getLocalStatus(
-                localRow
-            );
+            getLocalStatus(localRow);
 
         const statusElement =
             document.getElementById(
@@ -572,6 +577,11 @@ function renderDashboardRow(
         "dashboardDate"
     ).textContent =
         todayId;
+
+    document.getElementById(
+        "dashboardUpdatedAt"
+    ).textContent =
+        row.firestore_updated_at || "-";
 
     document.getElementById(
         "employeeCount"
@@ -692,9 +702,7 @@ function createComparisonChart(
         id: `todayValueLabel-${canvasId}`,
 
         afterDatasetsDraw(chart) {
-            const {
-                ctx
-            } = chart;
+            const { ctx } = chart;
 
             chart.data.datasets.forEach(
                 (dataset, datasetIndex) => {
