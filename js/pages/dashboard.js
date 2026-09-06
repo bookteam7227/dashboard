@@ -69,59 +69,53 @@ function createDashboardMarkup() {
                     <section class="work-detail-card">
                         <div class="work-detail-title">인강</div>
 
-                        <div class="work-detail-value">
-                            <span>건수</span>
-                            <strong id="lectureOrders">0건</strong>
-                        </div>
+                        <div class="work-table">
+                            <div class="work-table-row work-table-header">
+                                <span>구분</span>
+                                <span>전체</span>
+                                <span>처리</span>
+                                <span>진행률</span>
+                            </div>
 
-                        <div class="work-detail-value">
-                            <span>권수</span>
-                            <strong id="lectureBooks">0권</strong>
-                        </div>
+                            <div class="work-table-row">
+                                <span>건수</span>
+                                <strong id="lectureTotalOrders">0건</strong>
+                                <strong id="lectureCompletedOrders">0건</strong>
+                                <strong id="lectureOrderProgress">0.0%</strong>
+                            </div>
 
-                        <div class="work-progress-block">
-                            <span>진행률</span>
-                            <strong id="lectureProgress">
-                                건 0.0% / 권 0.0%
-                            </strong>
-                        </div>
-                    </section>
-
-                    <section class="work-detail-card">
-                        <div class="work-detail-title">온라인서점</div>
-
-                        <div class="work-detail-value">
-                            <span>건수</span>
-                            <strong id="bookstoreOrders">0건</strong>
-                        </div>
-
-                        <div class="work-detail-value">
-                            <span>권수</span>
-                            <strong id="bookstoreBooks">0권</strong>
-                        </div>
-
-                        <div class="work-progress-block">
-                            <span>진행률</span>
-                            <strong>0.0%</strong>
+                            <div class="work-table-row">
+                                <span>권수</span>
+                                <strong id="lectureTotalBooks">0권</strong>
+                                <strong id="lectureCompletedBooks">0권</strong>
+                                <strong id="lectureBookProgress">0.0%</strong>
+                            </div>
                         </div>
                     </section>
 
                     <section class="work-detail-card">
-                        <div class="work-detail-title">유니스터디</div>
-
-                        <div class="work-detail-value">
-                            <span>건수</span>
-                            <strong id="unistudyOrders">0건</strong>
+                        <div class="work-detail-title">
+                            온라인서점/유니스터디
                         </div>
 
-                        <div class="work-detail-value">
-                            <span>권수</span>
-                            <strong id="unistudyBooks">0권</strong>
-                        </div>
+                        <div class="work-table work-table-three-column">
+                            <div class="work-table-row work-table-header">
+                                <span>구분</span>
+                                <span>건수</span>
+                                <span>권수</span>
+                            </div>
 
-                        <div class="work-progress-block">
-                            <span>진행률</span>
-                            <strong>0.0%</strong>
+                            <div class="work-table-row">
+                                <span>온라인서점</span>
+                                <strong id="bookstoreOrders">0건</strong>
+                                <strong id="bookstoreBooks">0권</strong>
+                            </div>
+
+                            <div class="work-table-row">
+                                <span>유니스터디</span>
+                                <strong id="unistudyOrders">0건</strong>
+                                <strong id="unistudyBooks">0권</strong>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -142,14 +136,23 @@ function renderDashboardRow(row, todayId) {
     document.getElementById("partTimeCount").textContent =
         `${formatNumber(attendance.part_time_count)}명`;
 
-    document.getElementById("lectureOrders").textContent =
+    document.getElementById("lectureTotalOrders").textContent =
         `${formatNumber(row.total_orders)}건`;
 
-    document.getElementById("lectureBooks").textContent =
+    document.getElementById("lectureCompletedOrders").textContent =
+        `${formatNumber(row.completed_orders)}건`;
+
+    document.getElementById("lectureOrderProgress").textContent =
+        formatRate(row.order_progress_rate);
+
+    document.getElementById("lectureTotalBooks").textContent =
         `${formatNumber(row.total_books)}권`;
 
-    document.getElementById("lectureProgress").textContent =
-        `건 ${formatRate(row.order_progress_rate)} / 권 ${formatRate(row.book_progress_rate)}`;
+    document.getElementById("lectureCompletedBooks").textContent =
+        `${formatNumber(row.completed_books)}권`;
+
+    document.getElementById("lectureBookProgress").textContent =
+        formatRate(row.book_progress_rate);
 
     document.getElementById("bookstoreOrders").textContent =
         `${formatNumber(row.bookstore_orders)}건`;
