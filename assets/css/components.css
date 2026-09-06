@@ -291,3 +291,158 @@
         border-bottom: 0;
     }
 }
+
+/* Dashboard */
+.dashboard-date-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 13px 16px;
+    border: 1px solid #dfe6ef;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.dashboard-date-label {
+    color: #65758b;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.dashboard-date-value {
+    color: #173c6e;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.dashboard-main-grid {
+    display: grid;
+    grid-template-columns: minmax(250px, 0.8fr) minmax(0, 2.2fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.dashboard-card {
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.dashboard-card-header h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.dashboard-card-header p {
+    margin: 5px 0 0;
+    color: #65778f;
+    font-size: 10.5px;
+    font-weight: 700;
+}
+
+.attendance-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 18px;
+}
+
+.attendance-stat-card {
+    display: flex;
+    min-height: 120px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e4eaf2;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.attendance-stat-label {
+    color: #65758b;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.attendance-stat-value {
+    margin-top: 10px;
+    color: #173c6e;
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.work-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 18px;
+}
+
+.work-detail-card {
+    padding: 16px;
+    border: 1px solid #e4eaf2;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.work-detail-title {
+    margin-bottom: 14px;
+    color: #173c6e;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.work-detail-value,
+.work-progress-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 34px;
+}
+
+.work-detail-value {
+    border-bottom: 1px solid #e9eef5;
+}
+
+.work-detail-value span,
+.work-progress-block span {
+    color: #65758b;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.work-detail-value strong,
+.work-progress-block strong {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+}
+
+.work-progress-block {
+    padding-top: 5px;
+}
+
+@media (max-width: 900px) {
+    .dashboard-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .work-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-card-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
