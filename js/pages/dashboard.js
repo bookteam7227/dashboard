@@ -688,6 +688,67 @@ function createComparisonChart(
             canvasId
         );
 
+    const todayValueLabelPlugin = {
+        id: `todayValueLabel-${canvasId}`,
+
+        afterDatasetsDraw(chart) {
+            const {
+                ctx
+            } = chart;
+
+            chart.data.datasets.forEach(
+                (dataset, datasetIndex) => {
+                    const meta =
+                        chart.getDatasetMeta(
+                            datasetIndex
+                        );
+
+                    const bar =
+                        meta.data[0];
+
+                    if (!bar) {
+                        return;
+                    }
+
+                    const value =
+                        getNumber(
+                            dataset.data[0]
+                        );
+
+                    const unit =
+                        dataset.label === "건수"
+                            ? "건"
+                            : "권";
+
+                    const text =
+                        `${formatNumber(value)}${unit}`;
+
+                    ctx.save();
+
+                    ctx.font =
+                        "700 10px Pretendard, sans-serif";
+
+                    ctx.fillStyle =
+                        "#173c6e";
+
+                    ctx.textAlign =
+                        "center";
+
+                    ctx.textBaseline =
+                        "bottom";
+
+                    ctx.fillText(
+                        text,
+                        bar.x,
+                        bar.y - 5
+                    );
+
+                    ctx.restore();
+                }
+            );
+        }
+    };
+
     return new Chart(
         canvas,
         {
@@ -716,11 +777,26 @@ function createComparisonChart(
                             )
                         ],
 
-                        backgroundColor:
+                        backgroundColor: [
                             "#0f6fe8",
+                            "#d7e0eb",
+                            "#d7e0eb"
+                        ],
+
+                        borderColor: [
+                            "#0b62cf",
+                            "#d7e0eb",
+                            "#d7e0eb"
+                        ],
+
+                        borderWidth: [
+                            2,
+                            0,
+                            0
+                        ],
 
                         borderRadius: 5,
-                        maxBarThickness: 28
+                        maxBarThickness: 30
                     },
                     {
                         label: "권수",
@@ -737,18 +813,43 @@ function createComparisonChart(
                             )
                         ],
 
-                        backgroundColor:
-                            "#8ea0b5",
+                        backgroundColor: [
+                            "#173c6e",
+                            "#b8c4d1",
+                            "#b8c4d1"
+                        ],
+
+                        borderColor: [
+                            "#0f2f59",
+                            "#b8c4d1",
+                            "#b8c4d1"
+                        ],
+
+                        borderWidth: [
+                            2,
+                            0,
+                            0
+                        ],
 
                         borderRadius: 5,
-                        maxBarThickness: 28
+                        maxBarThickness: 30
                     }
                 ]
             },
 
+            plugins: [
+                todayValueLabelPlugin
+            ],
+
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+
+                layout: {
+                    padding: {
+                        top: 18
+                    }
+                },
 
                 interaction: {
                     mode: "index",
@@ -798,11 +899,26 @@ function createComparisonChart(
                         },
 
                         ticks: {
-                            color: "#65758b",
+                            color(context) {
+                                return (
+                                    context.index === 0
+                                        ? "#173c6e"
+                                        : "#8a98aa"
+                                );
+                            },
 
-                            font: {
-                                size: 11,
-                                weight: "700"
+                            font(context) {
+                                return {
+                                    size:
+                                        context.index === 0
+                                            ? 12
+                                            : 11,
+
+                                    weight:
+                                        context.index === 0
+                                            ? "900"
+                                            : "700"
+                                };
                             }
                         }
                     },
