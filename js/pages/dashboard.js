@@ -1,6 +1,6 @@
 // /js/pages/dashboard.js
 
-import { getCollectionRows } from "../services/firestore-service.js";
+import { getDocumentRow } from "../services/firestore-service.js";
 import { dateToId } from "../utils/date-utils.js";
 import { getNumber } from "../utils/number-utils.js";
 
@@ -35,14 +35,20 @@ function createDashboardMarkup() {
                 <div class="attendance-card-grid">
                     <div class="attendance-stat-card">
                         <span class="attendance-stat-label">직원</span>
-                        <strong id="employeeCount" class="attendance-stat-value">
+                        <strong
+                            id="employeeCount"
+                            class="attendance-stat-value"
+                        >
                             0명
                         </strong>
                     </div>
 
                     <div class="attendance-stat-card">
                         <span class="attendance-stat-label">아르바이트</span>
-                        <strong id="partTimeCount" class="attendance-stat-value">
+                        <strong
+                            id="partTimeCount"
+                            class="attendance-stat-value"
+                        >
                             0명
                         </strong>
                     </div>
@@ -127,7 +133,8 @@ function createDashboardMarkup() {
 function renderDashboardRow(row, todayId) {
     const attendance = row?.attendance || {};
 
-    document.getElementById("dashboardDate").textContent = todayId;
+    document.getElementById("dashboardDate").textContent =
+        todayId;
 
     document.getElementById("employeeCount").textContent =
         `${formatNumber(attendance.employee_count)}명`;
@@ -163,25 +170,18 @@ function renderDashboardRow(row, todayId) {
 async function loadDashboardData() {
     const todayId = dateToId(new Date());
 
-    const rows = await getCollectionRows(
-        "shippingProgress"
+    document.getElementById(
+        "dashboardDate"
+    ).textContent = todayId;
+
+    const todayRow = await getDocumentRow(
+        "shippingProgress",
+        todayId
     );
 
     if (!active) {
         return;
     }
-
-    const todayRow = rows.find((row) => {
-        const dateId = String(
-            row.work_date || row.id || ""
-        );
-
-        return dateId === todayId;
-    });
-
-    document.getElementById(
-        "dashboardDate"
-    ).textContent = todayId;
 
     if (!todayRow) {
         document.getElementById(
