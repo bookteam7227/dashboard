@@ -234,6 +234,28 @@ function createLocalMarkup() {
                     >
                         대기
                     </strong>
+
+                    <div class="local-work-values">
+                        <div class="local-work-row">
+                            <span>작업 건수</span>
+
+                            <strong
+                                id="localOrders${localNumber}"
+                            >
+                                0건
+                            </strong>
+                        </div>
+
+                        <div class="local-work-row">
+                            <span>작업 권수</span>
+
+                            <strong
+                                id="localBooks${localNumber}"
+                            >
+                                0권
+                            </strong>
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -485,32 +507,57 @@ function renderLocalStatuses(row) {
         const localId =
             `LOCAL_${String(index).padStart(2, "0")}`;
 
+        const localRow =
+            locals[localId] || {};
+
         const status =
             getLocalStatus(
-                locals[localId]
+                localRow
             );
 
-        const element =
+        const statusElement =
             document.getElementById(
                 `localStatus${index}`
             );
 
-        if (!element) {
-            continue;
+        const ordersElement =
+            document.getElementById(
+                `localOrders${index}`
+            );
+
+        const booksElement =
+            document.getElementById(
+                `localBooks${index}`
+            );
+
+        if (statusElement) {
+            statusElement.textContent =
+                status.text;
+
+            statusElement.classList.remove(
+                "is-waiting",
+                "is-working",
+                "is-complete"
+            );
+
+            statusElement.classList.add(
+                status.className
+            );
         }
 
-        element.textContent =
-            status.text;
+        if (ordersElement) {
+            ordersElement.textContent =
+                `${formatNumber(
+                    localRow.work_orders
+                )}건`;
+        }
 
-        element.classList.remove(
-            "is-waiting",
-            "is-working",
-            "is-complete"
-        );
-
-        element.classList.add(
-            status.className
-        );
+        if (booksElement) {
+            booksElement.textContent =
+                `${formatNumber(
+                    localRow.work_books
+                )}권`;
+        }
     }
 }
 
@@ -922,15 +969,6 @@ async function loadDashboardData() {
     ).textContent =
         todayId;
 
-    /*
-     * Firestore 읽기 최소화
-     *
-     * 1. 오늘 shippingProgress 1문서
-     * 2. 전일 shippingDaily 1문서
-     * 3. 전년 동일 ISO주차/요일 shippingDaily 1문서
-     *
-     * 총 3 Document Read
-     */
     const [
         todayRow,
         yesterdayRow,
