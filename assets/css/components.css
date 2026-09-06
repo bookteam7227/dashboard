@@ -145,6 +145,8 @@
 .dashboard-date-card {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 24px;
     width: 100%;
     min-height: 54px;
     margin-bottom: 16px;
@@ -153,6 +155,13 @@
     border-radius: 12px;
     background: #ffffff;
     box-sizing: border-box;
+}
+
+.dashboard-date-primary,
+.dashboard-update-meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
 }
 
 .dashboard-date-label {
@@ -168,9 +177,24 @@
     font-weight: 900;
 }
 
+.dashboard-update-label {
+    margin-right: 6px;
+    color: #728197;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.dashboard-update-value {
+    color: #728197;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .dashboard-top-grid {
     display: grid;
-    grid-template-columns: minmax(260px, 24%) minmax(0, 76%);
+    grid-template-columns: minmax(260px, 24%) minmax(0, 1fr);
     gap: 16px;
     width: 100%;
     margin-bottom: 16px;
@@ -505,10 +529,6 @@
    ===================================================== */
 
 @media (max-width: 1100px) {
-    .local-status-grid {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-    }
-
     .dashboard-chart-grid {
         grid-template-columns: 1fr;
     }
@@ -557,6 +577,14 @@
 }
 
 @media (max-width: 600px) {
+    .dashboard-date-card {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
     .attendance-card-grid {
         grid-template-columns: 1fr;
     }
