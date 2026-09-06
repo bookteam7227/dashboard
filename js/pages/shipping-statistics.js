@@ -28,92 +28,6 @@ let booksChart = null;
 let annualChart = null;
 let active = false;
 
-
-function ensureCursorSideTooltipPositioner() {
-    if (
-        typeof Chart === "undefined"
-        || !Chart.Tooltip
-        || !Chart.Tooltip.positioners
-    ) {
-        return false;
-    }
-
-    if (
-        !Chart.Tooltip.positioners.cursorSide
-    ) {
-        Chart.Tooltip.positioners.cursorSide =
-            function (
-                elements,
-                eventPosition
-            ) {
-                const chartWidth =
-                    getNumber(
-                        this?.chart?.width
-                    );
-
-                const tooltipWidth =
-                    Math.max(
-                        getNumber(
-                            this?.width
-                        ),
-                        140
-                    );
-
-                const horizontalOffset =
-                    34;
-
-                const rightX =
-                    eventPosition.x
-                    + horizontalOffset;
-
-                const rightEdge =
-                    rightX
-                    + (tooltipWidth / 2);
-
-                const x =
-                    (
-                        chartWidth > 0
-                        && rightEdge > chartWidth
-                    )
-                        ? eventPosition.x
-                            - horizontalOffset
-                        : rightX;
-
-                return {
-                    x,
-                    y: eventPosition.y
-                };
-            };
-    }
-
-    return true;
-}
-
-
-function applyCursorSideTooltip(
-    chart
-) {
-    if (
-        !chart
-        || !ensureCursorSideTooltipPositioner()
-    ) {
-        return;
-    }
-
-    chart.options.plugins =
-        chart.options.plugins || {};
-
-    chart.options.plugins.tooltip =
-        chart.options.plugins.tooltip || {};
-
-    chart.options.plugins.tooltip.position =
-        "cursorSide";
-
-    chart.update(
-        "none"
-    );
-}
-
 function destroyCharts() {
     [
         ordersChart,
@@ -265,10 +179,6 @@ function drawDailyCharts(
             formatChartDate
         );
 
-    applyCursorSideTooltip(
-        ordersChart
-    );
-
     booksChart =
         createComparisonChart(
             document.getElementById(
@@ -282,10 +192,6 @@ function drawDailyCharts(
             "권",
             formatChartDate
         );
-
-    applyCursorSideTooltip(
-        booksChart
-    );
 
     const status =
         document.getElementById(
