@@ -170,7 +170,7 @@
 
 .dashboard-top-grid {
     display: grid;
-    grid-template-columns: minmax(320px, 34%) minmax(0, 66%);
+    grid-template-columns: minmax(260px, 24%) minmax(0, 76%);
     gap: 16px;
     width: 100%;
     margin-bottom: 16px;
@@ -271,6 +271,7 @@
     display: grid;
     grid-template-columns: repeat(9, minmax(0, 1fr));
     gap: 8px;
+    width: 100%;
     padding: 18px;
     box-sizing: border-box;
 }
