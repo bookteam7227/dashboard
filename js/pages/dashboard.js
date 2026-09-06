@@ -19,7 +19,7 @@ function formatRate(value) {
 function createDashboardMarkup() {
     return `
         <section class="dashboard-date-card">
-            <span class="dashboard-date-label">기준일자</span>
+            <span class="dashboard-date-label">기준일자:</span>
             <strong id="dashboardDate" class="dashboard-date-value">-</strong>
         </section>
 
@@ -35,12 +35,16 @@ function createDashboardMarkup() {
                 <div class="attendance-card-grid">
                     <div class="attendance-stat-card">
                         <span class="attendance-stat-label">직원</span>
-                        <strong id="employeeCount" class="attendance-stat-value">0명</strong>
+                        <strong id="employeeCount" class="attendance-stat-value">
+                            0명
+                        </strong>
                     </div>
 
                     <div class="attendance-stat-card">
                         <span class="attendance-stat-label">아르바이트</span>
-                        <strong id="partTimeCount" class="attendance-stat-value">0명</strong>
+                        <strong id="partTimeCount" class="attendance-stat-value">
+                            0명
+                        </strong>
                     </div>
                 </div>
             </article>
@@ -49,7 +53,9 @@ function createDashboardMarkup() {
                 <div class="dashboard-card-header">
                     <div>
                         <h2>작업 현황</h2>
-                        <p id="dashboardStatus">오늘 작업현황을 불러오고 있습니다.</p>
+                        <p id="dashboardStatus">
+                            오늘 작업현황을 불러오고 있습니다.
+                        </p>
                     </div>
                 </div>
 
@@ -156,44 +162,67 @@ function renderDashboardRow(row, todayId) {
 
 async function loadDashboardData() {
     const todayId = dateToId(new Date());
-    const rows = await getCollectionRows("shippingProgress");
+
+    const rows = await getCollectionRows(
+        "shippingProgress"
+    );
 
     if (!active) {
         return;
     }
 
     const todayRow = rows.find((row) => {
-        const dateId = String(row.work_date || row.id || "");
+        const dateId = String(
+            row.work_date || row.id || ""
+        );
+
         return dateId === todayId;
     });
 
-    document.getElementById("dashboardDate").textContent = todayId;
+    document.getElementById(
+        "dashboardDate"
+    ).textContent = todayId;
 
     if (!todayRow) {
-        document.getElementById("dashboardStatus").textContent =
+        document.getElementById(
+            "dashboardStatus"
+        ).textContent =
             "오늘 작업현황 데이터가 없습니다.";
+
         return;
     }
 
-    renderDashboardRow(todayRow, todayId);
+    renderDashboardRow(
+        todayRow,
+        todayId
+    );
 }
 
-export async function mount({ content, actions }) {
+export async function mount({
+    content,
+    actions
+}) {
     active = true;
 
     actions.innerHTML = "";
-    content.innerHTML = createDashboardMarkup();
+    content.innerHTML =
+        createDashboardMarkup();
 
     try {
         await loadDashboardData();
     } catch (error) {
-        console.error("[shippingProgress]", error);
+        console.error(
+            "[shippingProgress]",
+            error
+        );
 
         if (!active) {
             return;
         }
 
-        document.getElementById("dashboardStatus").textContent =
+        document.getElementById(
+            "dashboardStatus"
+        ).textContent =
             "작업현황을 불러오지 못했습니다. Firestore 읽기 권한을 확인해 주십시오.";
     }
 }
