@@ -90,7 +90,7 @@ function renderComparisonTooltip(context, unit) {
     const containerBox =
         chart.canvas.parentNode.getBoundingClientRect();
 
-    let left =
+    const cursorX =
         canvasBox.left -
         containerBox.left +
         tooltip.caretX;
@@ -102,6 +102,23 @@ function renderComparisonTooltip(context, unit) {
 
     const halfWidth =
         (element.offsetWidth || 220) / 2;
+
+    const horizontalOffset = 30;
+
+    let left =
+        cursorX +
+        halfWidth +
+        horizontalOffset;
+
+    if (
+        left + halfWidth + 8 >
+        containerBox.width
+    ) {
+        left =
+            cursorX -
+            halfWidth -
+            horizontalOffset;
+    }
 
     left = Math.max(
         halfWidth + 8,
