@@ -210,6 +210,31 @@ function getLocalStatus(localRow) {
     };
 }
 
+function getLocalProgressRate(localRow) {
+    const workOrders =
+        getNumber(
+            localRow?.work_orders
+        );
+
+    const completedOrders =
+        getNumber(
+            localRow?.completed_orders
+        );
+
+    if (workOrders <= 0) {
+        return 0;
+    }
+
+    return Math.min(
+        100,
+        Math.max(
+            0,
+            (completedOrders / workOrders) * 100
+        )
+    );
+}
+
+
 function createLocalMarkup() {
     return Array.from(
         {
@@ -252,6 +277,13 @@ function createLocalMarkup() {
                                 0권
                             </strong>
                         </div>
+                    </div>
+
+                    <div
+                        id="localProgress${localNumber}"
+                        class="local-progress-rate"
+                    >
+                        진행률 0%
                     </div>
                 </div>
             `;
@@ -323,6 +355,16 @@ function createDashboardMarkup() {
                         >
                             0명
                         </strong>
+
+                        <div class="attendance-part-time-detail">
+                            <span id="partTimeMorningCount">
+                                오전: 0명
+                            </span>
+
+                            <span id="partTimeAfternoonCount">
+                                오후: 0명
+                            </span>
+                        </div>
                     </div>
                 </div>
             </article>
@@ -535,6 +577,11 @@ function renderLocalStatuses(row) {
                 `localBooks${index}`
             );
 
+        const progressElement =
+            document.getElementById(
+                `localProgress${index}`
+            );
+
         if (statusElement) {
             statusElement.textContent =
                 status.text;
@@ -562,6 +609,13 @@ function renderLocalStatuses(row) {
                 `${formatNumber(
                     localRow.work_books
                 )}권`;
+        }
+
+        if (progressElement) {
+            progressElement.textContent =
+                `진행률 ${getLocalProgressRate(
+                    localRow
+                ).toFixed(0)}%`;
         }
     }
 }
@@ -595,6 +649,20 @@ function renderDashboardRow(
     ).textContent =
         `${formatNumber(
             attendance.part_time_count
+        )}명`;
+
+    document.getElementById(
+        "partTimeMorningCount"
+    ).textContent =
+        `오전: ${formatNumber(
+            attendance.part_time_morning_count
+        )}명`;
+
+    document.getElementById(
+        "partTimeAfternoonCount"
+    ).textContent =
+        `오후: ${formatNumber(
+            attendance.part_time_afternoon_count
         )}명`;
 
     document.getElementById(
