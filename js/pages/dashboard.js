@@ -18,87 +18,96 @@ function formatRate(value) {
 
 function createDashboardMarkup() {
     return `
-        <section class="dashboard-summary">
-            <article class="dashboard-panel attendance-panel">
-                <div class="dashboard-panel-head">
-                    <h2>출근 현황</h2>
-                    <p id="dashboardDate" class="dashboard-panel-sub">오늘 기준</p>
+        <section class="dashboard-date-card">
+            <span class="dashboard-date-label">기준일자</span>
+            <strong id="dashboardDate" class="dashboard-date-value">-</strong>
+        </section>
+
+        <section class="dashboard-main-grid">
+            <article class="dashboard-card attendance-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h2>출근 현황</h2>
+                        <p>오늘 출근 인원</p>
+                    </div>
                 </div>
 
-                <div class="attendance-grid">
-                    <div class="attendance-item">
-                        <span class="attendance-label">직원</span>
-                        <strong id="employeeCount" class="attendance-value">0명</strong>
+                <div class="attendance-card-grid">
+                    <div class="attendance-stat-card">
+                        <span class="attendance-stat-label">직원</span>
+                        <strong id="employeeCount" class="attendance-stat-value">0명</strong>
                     </div>
 
-                    <div class="attendance-item">
-                        <span class="attendance-label">아르바이트</span>
-                        <strong id="partTimeCount" class="attendance-value">0명</strong>
+                    <div class="attendance-stat-card">
+                        <span class="attendance-stat-label">아르바이트</span>
+                        <strong id="partTimeCount" class="attendance-stat-value">0명</strong>
                     </div>
                 </div>
             </article>
 
-            <article class="dashboard-panel work-panel">
-                <div class="dashboard-panel-head">
-                    <h2>작업 현황</h2>
-                    <p id="dashboardStatus" class="dashboard-panel-sub">
-                        오늘 작업현황을 불러오고 있습니다.
-                    </p>
+            <article class="dashboard-card work-card">
+                <div class="dashboard-card-header">
+                    <div>
+                        <h2>작업 현황</h2>
+                        <p id="dashboardStatus">오늘 작업현황을 불러오고 있습니다.</p>
+                    </div>
                 </div>
 
-                <div class="work-status-grid">
-                    <section class="work-status-item">
-                        <h3>인강</h3>
+                <div class="work-card-grid">
+                    <section class="work-detail-card">
+                        <div class="work-detail-title">인강</div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>건수</span>
                             <strong id="lectureOrders">0건</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>권수</span>
                             <strong id="lectureBooks">0권</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-progress-block">
                             <span>진행률</span>
-                            <strong id="lectureProgress">건 0.0% / 권 0.0%</strong>
+                            <strong id="lectureProgress">
+                                건 0.0% / 권 0.0%
+                            </strong>
                         </div>
                     </section>
 
-                    <section class="work-status-item">
-                        <h3>온라인서점</h3>
+                    <section class="work-detail-card">
+                        <div class="work-detail-title">온라인서점</div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>건수</span>
                             <strong id="bookstoreOrders">0건</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>권수</span>
                             <strong id="bookstoreBooks">0권</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-progress-block">
                             <span>진행률</span>
                             <strong>0.0%</strong>
                         </div>
                     </section>
 
-                    <section class="work-status-item">
-                        <h3>유니스터디</h3>
+                    <section class="work-detail-card">
+                        <div class="work-detail-title">유니스터디</div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>건수</span>
                             <strong id="unistudyOrders">0건</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-detail-value">
                             <span>권수</span>
                             <strong id="unistudyBooks">0권</strong>
                         </div>
 
-                        <div class="work-metric-row">
+                        <div class="work-progress-block">
                             <span>진행률</span>
                             <strong>0.0%</strong>
                         </div>
@@ -112,7 +121,7 @@ function createDashboardMarkup() {
 function renderDashboardRow(row, todayId) {
     const attendance = row?.attendance || {};
 
-    document.getElementById("dashboardDate").textContent = `${todayId} 기준`;
+    document.getElementById("dashboardDate").textContent = todayId;
 
     document.getElementById("employeeCount").textContent =
         `${formatNumber(attendance.employee_count)}명`;
@@ -158,8 +167,9 @@ async function loadDashboardData() {
         return dateId === todayId;
     });
 
+    document.getElementById("dashboardDate").textContent = todayId;
+
     if (!todayRow) {
-        document.getElementById("dashboardDate").textContent = `${todayId} 기준`;
         document.getElementById("dashboardStatus").textContent =
             "오늘 작업현황 데이터가 없습니다.";
         return;
@@ -170,6 +180,7 @@ async function loadDashboardData() {
 
 export async function mount({ content, actions }) {
     active = true;
+
     actions.innerHTML = "";
     content.innerHTML = createDashboardMarkup();
 
@@ -182,8 +193,7 @@ export async function mount({ content, actions }) {
             return;
         }
 
-        const status = document.getElementById("dashboardStatus");
-        status.textContent =
+        document.getElementById("dashboardStatus").textContent =
             "작업현황을 불러오지 못했습니다. Firestore 읽기 권한을 확인해 주십시오.";
     }
 }
