@@ -76,7 +76,11 @@
                 </a>
 
                 <nav class="menu" aria-label="대시보드 메뉴">
-                    <a class="menu-link" data-route="dashboard" href="#/dashboard">
+                    <a
+                        class="menu-link"
+                        data-route="dashboard"
+                        href="#/dashboard"
+                    >
                         <span class="menu-icon" aria-hidden="true">⌂</span>
                         <span>Dashboard</span>
                     </a>
@@ -85,6 +89,7 @@
                         class="menu-link"
                         data-route="shipping-statistics"
                         href="#/shipping-statistics"
+                        hidden
                     >
                         <span class="menu-icon" aria-hidden="true">▥</span>
                         <span>발송 통계</span>
@@ -102,9 +107,14 @@
                         <div id="pageActions" class="page-actions"></div>
 
                         <div class="session-chip">
-                            <span class="session-role">일반</span>
+                            <span id="sessionRole" class="session-role">일반</span>
                             <span id="sessionEmail" class="session-email">-</span>
-                            <button id="logoutButton" class="session-logout" type="button">
+
+                            <button
+                                id="logoutButton"
+                                class="session-logout"
+                                type="button"
+                            >
                                 로그아웃
                             </button>
                         </div>
