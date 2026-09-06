@@ -137,118 +137,177 @@
     background: #ffffff;
 }
 
-/* Dashboard */
-.dashboard-summary {
+
+/* =====================================================
+   Dashboard
+   ===================================================== */
+
+.dashboard-date-card {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 54px;
+    margin-bottom: 16px;
+    padding: 0 20px;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.dashboard-date-label {
+    margin-right: 6px;
+    color: #65758b;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.dashboard-date-value {
+    color: #173c6e;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.dashboard-main-grid {
     display: grid;
-    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
+    grid-template-columns: minmax(280px, 30%) minmax(0, 70%);
     gap: 16px;
+    width: 100%;
     align-items: stretch;
 }
 
-.dashboard-panel {
+.dashboard-card {
+    min-width: 0;
     border: 1px solid #dfe6ef;
     border-radius: 12px;
     background: #ffffff;
     overflow: hidden;
 }
 
-.dashboard-panel-head {
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid #eef2f7;
+.dashboard-card-header {
+    min-height: 70px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9eef5;
+    box-sizing: border-box;
 }
 
-.dashboard-panel-head h2 {
+.dashboard-card-header h2 {
     margin: 0;
     color: var(--ink);
     font-size: 16px;
     font-weight: 900;
 }
 
-.dashboard-panel-sub {
+.dashboard-card-header p {
     margin: 5px 0 0;
-    color: #65778f;
+    color: #728197;
     font-size: 10.5px;
     font-weight: 700;
 }
 
-.attendance-grid {
+
+/* 출근 현황 */
+
+.attendance-card-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     padding: 18px;
 }
 
-.attendance-item {
+.attendance-stat-card {
     display: flex;
-    min-height: 100px;
+    min-width: 0;
+    min-height: 142px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e5ebf2;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     background: #f8fafc;
 }
 
-.attendance-label {
+.attendance-stat-label {
     color: #65758b;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
 }
 
-.attendance-value {
-    margin-top: 8px;
+.attendance-stat-value {
+    margin-top: 12px;
     color: #173c6e;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 900;
+    line-height: 1;
 }
 
-.work-status-grid {
+
+/* 작업 현황 */
+
+.work-card-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-}
-
-.work-status-item {
+    gap: 12px;
     padding: 18px;
-    border-right: 1px solid #eef2f7;
 }
 
-.work-status-item:last-child {
-    border-right: 0;
+.work-detail-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    box-sizing: border-box;
 }
 
-.work-status-item h3 {
-    margin: 0 0 16px;
+.work-detail-title {
+    margin-bottom: 14px;
     color: #173c6e;
     font-size: 14px;
     font-weight: 900;
 }
 
-.work-metric-row {
+.work-detail-value,
+.work-progress-block {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    min-height: 34px;
-    border-bottom: 1px solid #f0f3f7;
+    gap: 8px;
+    min-height: 36px;
 }
 
-.work-metric-row:last-child {
-    border-bottom: 0;
+.work-detail-value {
+    border-bottom: 1px solid #e7edf4;
 }
 
-.work-metric-row span {
+.work-detail-value span,
+.work-progress-block span {
+    flex-shrink: 0;
     color: #65758b;
     font-size: 11px;
     font-weight: 700;
 }
 
-.work-metric-row strong {
+.work-detail-value strong,
+.work-progress-block strong {
+    min-width: 0;
     color: var(--ink);
     font-size: 13px;
     font-weight: 900;
     text-align: right;
 }
+
+.work-progress-block {
+    padding-top: 4px;
+}
+
+#lectureProgress {
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+
+/* 반응형 */
 
 @media (max-width: 900px) {
     .session-email {
@@ -274,166 +333,6 @@
         justify-content: flex-end;
     }
 
-    .dashboard-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .work-status-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .work-status-item {
-        border-right: 0;
-        border-bottom: 1px solid #eef2f7;
-    }
-
-    .work-status-item:last-child {
-        border-bottom: 0;
-    }
-}
-
-/* Dashboard */
-.dashboard-date-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    padding: 13px 16px;
-    border: 1px solid #dfe6ef;
-    border-radius: 10px;
-    background: #ffffff;
-}
-
-.dashboard-date-label {
-    color: #65758b;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.dashboard-date-value {
-    color: #173c6e;
-    font-size: 14px;
-    font-weight: 900;
-}
-
-.dashboard-main-grid {
-    display: grid;
-    grid-template-columns: minmax(250px, 0.8fr) minmax(0, 2.2fr);
-    gap: 16px;
-    align-items: stretch;
-}
-
-.dashboard-card {
-    border: 1px solid #dfe6ef;
-    border-radius: 12px;
-    background: #ffffff;
-    overflow: hidden;
-}
-
-.dashboard-card-header {
-    padding: 16px 18px;
-    border-bottom: 1px solid #eef2f7;
-}
-
-.dashboard-card-header h2 {
-    margin: 0;
-    color: var(--ink);
-    font-size: 16px;
-    font-weight: 900;
-}
-
-.dashboard-card-header p {
-    margin: 5px 0 0;
-    color: #65778f;
-    font-size: 10.5px;
-    font-weight: 700;
-}
-
-.attendance-card-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 18px;
-}
-
-.attendance-stat-card {
-    display: flex;
-    min-height: 120px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #e4eaf2;
-    border-radius: 10px;
-    background: #f8fafc;
-}
-
-.attendance-stat-label {
-    color: #65758b;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.attendance-stat-value {
-    margin-top: 10px;
-    color: #173c6e;
-    font-size: 26px;
-    font-weight: 900;
-}
-
-.work-card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    padding: 18px;
-}
-
-.work-detail-card {
-    padding: 16px;
-    border: 1px solid #e4eaf2;
-    border-radius: 10px;
-    background: #f8fafc;
-}
-
-.work-detail-title {
-    margin-bottom: 14px;
-    color: #173c6e;
-    font-size: 14px;
-    font-weight: 900;
-}
-
-.work-detail-value,
-.work-progress-block {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    min-height: 34px;
-}
-
-.work-detail-value {
-    border-bottom: 1px solid #e9eef5;
-}
-
-.work-detail-value span,
-.work-progress-block span {
-    color: #65758b;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.work-detail-value strong,
-.work-progress-block strong {
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 900;
-    text-align: right;
-}
-
-.work-progress-block {
-    padding-top: 5px;
-}
-
-@media (max-width: 900px) {
     .dashboard-main-grid {
         grid-template-columns: 1fr;
     }
@@ -443,6 +342,12 @@
     }
 
     .attendance-card-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .attendance-card-grid {
+        grid-template-columns: 1fr;
     }
 }
