@@ -1,3 +1,5 @@
+/* /assets/css/components.css */
+
 .datebox {
     display: flex;
     align-items: center;
@@ -135,6 +137,119 @@
     background: #ffffff;
 }
 
+/* Dashboard */
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.dashboard-panel {
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.dashboard-panel-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.dashboard-panel-head h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.dashboard-panel-sub {
+    margin: 5px 0 0;
+    color: #65778f;
+    font-size: 10.5px;
+    font-weight: 700;
+}
+
+.attendance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 18px;
+}
+
+.attendance-item {
+    display: flex;
+    min-height: 100px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5ebf2;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.attendance-label {
+    color: #65758b;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.attendance-value {
+    margin-top: 8px;
+    color: #173c6e;
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.work-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+}
+
+.work-status-item {
+    padding: 18px;
+    border-right: 1px solid #eef2f7;
+}
+
+.work-status-item:last-child {
+    border-right: 0;
+}
+
+.work-status-item h3 {
+    margin: 0 0 16px;
+    color: #173c6e;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.work-metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 34px;
+    border-bottom: 1px solid #f0f3f7;
+}
+
+.work-metric-row:last-child {
+    border-bottom: 0;
+}
+
+.work-metric-row span {
+    color: #65758b;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.work-metric-row strong {
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+}
+
 @media (max-width: 900px) {
     .session-email {
         display: none;
@@ -157,5 +272,22 @@
 
     .session-chip {
         justify-content: flex-end;
+    }
+
+    .dashboard-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .work-status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .work-status-item {
+        border-right: 0;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .work-status-item:last-child {
+        border-bottom: 0;
     }
 }
