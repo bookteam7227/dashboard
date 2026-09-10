@@ -12,7 +12,7 @@ import {
 } from "../utils/number-utils.js";
 import { createAnnualChart } from "../utils/chart-utils.js";
 
-export const title = "강사별 매출";
+export const title = "강사별 매출 통계";
 
 let active = false;
 let instructorSalesChart = null;
