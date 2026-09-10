@@ -2,10 +2,12 @@
 
 import * as dashboardPage from "./pages/dashboard.js";
 import * as shippingStatisticsPage from "./pages/shipping-statistics.js";
+import * as instructorSalesPage from "./pages/instructor-sales.js";
 
 const routes = {
     dashboard: dashboardPage,
-    "shipping-statistics": shippingStatisticsPage
+    "shipping-statistics": shippingStatisticsPage,
+    "instructor-sales": instructorSalesPage
 };
 
 let currentPage = null;
