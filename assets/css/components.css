@@ -649,9 +649,11 @@
 
 .instructor-sales-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     width: 100%;
+    height: calc(100vh - 100px);
+    min-height: 620px;
     align-items: stretch;
 }
 
@@ -705,9 +707,16 @@
     box-shadow: 0 0 0 3px rgba(22, 115, 248, 0.1);
 }
 
+.instructor-sales-card {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+}
+
 .instructor-sales-table-wrap {
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    height: 430px;
     overflow: auto;
 }
 
@@ -793,13 +802,40 @@
     font-weight: 700 !important;
 }
 
-.instructor-trend-chart-box {
-    height: 430px;
+.instructor-trend-stack {
+    display: grid;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    min-height: 0;
+}
+
+.instructor-trend-card,
+.instructor-annual-total-card {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.instructor-trend-chart-box,
+.instructor-annual-total-chart-box {
+    flex: 1;
+    min-height: 0;
+    height: auto;
 }
 
 @media (max-width: 1100px) {
     .instructor-sales-grid {
         grid-template-columns: 1fr;
+        height: auto;
+        min-height: 0;
+    }
+
+    .instructor-sales-card {
+        min-height: 620px;
+    }
+
+    .instructor-trend-stack {
+        grid-template-rows: repeat(2, 360px);
     }
 }
 
