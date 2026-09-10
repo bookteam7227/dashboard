@@ -71,3 +71,58 @@ export async function getCollectionRowsByDocumentIdRange(
 
     return mapSnapshot(snapshot);
 }
+
+export async function getCollectionRowsByDocumentIdPrefix(
+    collectionName,
+    documentIdPrefix
+) {
+    const prefixQuery = query(
+        collection(db, collectionName),
+        where(
+            documentId(),
+            ">=",
+            documentIdPrefix
+        ),
+        where(
+            documentId(),
+            "<=",
+            `${documentIdPrefix}\uf8ff`
+        )
+    );
+
+    const snapshot = await getDocs(prefixQuery);
+
+    return mapSnapshot(snapshot);
+}
+
+export async function getCollectionRowsByFieldEqualsAndRange(
+    collectionName,
+    equalityField,
+    equalityValue,
+    rangeField,
+    startValue,
+    endValue
+) {
+    const filteredQuery = query(
+        collection(db, collectionName),
+        where(
+            equalityField,
+            "==",
+            equalityValue
+        ),
+        where(
+            rangeField,
+            ">=",
+            startValue
+        ),
+        where(
+            rangeField,
+            "<=",
+            endValue
+        )
+    );
+
+    const snapshot = await getDocs(filteredQuery);
+
+    return mapSnapshot(snapshot);
+}
