@@ -16,10 +16,14 @@ export const title = "강사별 매출";
 
 let active = false;
 let instructorSalesChart = null;
+let instructorAnnualTotalChart = null;
 
 function destroyChart() {
     instructorSalesChart?.destroy();
+    instructorAnnualTotalChart?.destroy();
+
     instructorSalesChart = null;
+    instructorAnnualTotalChart = null;
 }
 
 function escapeHtml(value) {
@@ -112,11 +116,20 @@ function renderComparisonTable(
                 ...previousMap.keys()
             ])
         ).sort(
-            (a, b) =>
-                a.localeCompare(
+            (a, b) => {
+                const salesDifference =
+                    (currentMap.get(b) || 0)
+                    - (currentMap.get(a) || 0);
+
+                if (salesDifference !== 0) {
+                    return salesDifference;
+                }
+
+                return a.localeCompare(
                     b,
                     "ko-KR"
-                )
+                );
+            }
         );
 
     document.getElementById(
@@ -304,6 +317,109 @@ function buildYearlyData(
     return yearlyData;
 }
 
+
+function getYearlyTotals(yearlyData) {
+    return Array.from(yearlyData.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([year, monthlyValues]) => ({
+            year,
+            total: monthlyValues.reduce(
+                (sum, value) =>
+                    sum + getNumber(value),
+                0
+            )
+        }));
+}
+
+function createAnnualTotalChart(
+    canvas,
+    yearlyTotals
+) {
+    return new Chart(canvas, {
+        type: "bar",
+
+        data: {
+            labels:
+                yearlyTotals.map(
+                    (row) => `${row.year}년`
+                ),
+
+            datasets: [
+                {
+                    label: "연간 매출 합계",
+                    data:
+                        yearlyTotals.map(
+                            (row) => row.total
+                        ),
+                    backgroundColor: "#0f6fe8",
+                    borderColor: "#0b62cf",
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    maxBarThickness: 46
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: (context) =>
+                            `연간 매출: ${formatNumber(
+                                context.parsed.y
+                            )}원`
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+
+                    ticks: {
+                        color: "#76839a",
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    }
+                },
+
+                y: {
+                    beginAtZero: true,
+
+                    grid: {
+                        color: "#edf1f5"
+                    },
+
+                    ticks: {
+                        color: "#76839a",
+                        font: {
+                            size: 9
+                        },
+                        callback: (value) =>
+                            formatNumber(value)
+                    }
+                }
+            }
+        }
+    });
+}
+
 async function loadTrend(instructorName) {
     const normalizedName =
         String(
@@ -351,21 +467,45 @@ async function loadTrend(instructorName) {
     if (!rows.length) {
         status.textContent =
             `${normalizedName}: 최근 5개년 매출 데이터가 없습니다.`;
+
+        document.getElementById(
+            "instructorAnnualTotalStatus"
+        ).textContent =
+            "연도별 합계 데이터가 없습니다.";
+
         return;
     }
+
+    const yearlyData =
+        buildYearlyData(
+            rows,
+            firstYear,
+            currentYear
+        );
 
     instructorSalesChart =
         createAnnualChart(
             document.getElementById(
                 "instructorSalesTrendChart"
             ),
-            buildYearlyData(
-                rows,
-                firstYear,
-                currentYear
-            ),
+            yearlyData,
             "원"
         );
+
+    instructorAnnualTotalChart =
+        createAnnualTotalChart(
+            document.getElementById(
+                "instructorAnnualTotalChart"
+            ),
+            getYearlyTotals(
+                yearlyData
+            )
+        );
+
+    document.getElementById(
+        "instructorAnnualTotalStatus"
+    ).textContent =
+        `${normalizedName} · ${firstYear}~${currentYear} · 연도별 합계`;
 
     status.textContent =
         `${normalizedName} · ${firstYear}~${currentYear} · 월별 교재매출`;
@@ -509,39 +649,57 @@ function createMarkup() {
                 </div>
             </article>
 
-            <article class="dashboard-card dashboard-chart-card instructor-trend-card">
-                <div class="dashboard-card-header dashboard-chart-header instructor-analysis-header">
-                    <div>
-                        <h2>강사별 매출 추이</h2>
+            <div class="instructor-trend-stack">
+                <article class="dashboard-card dashboard-chart-card instructor-trend-card">
+                    <div class="dashboard-card-header dashboard-chart-header instructor-analysis-header">
+                        <div>
+                            <h2>강사별 매출 추이</h2>
 
-                        <p id="instructorTrendStatus">
-                            강사명을 입력하면 최근 5개년 월별 매출을 표시합니다.
-                        </p>
+                            <p id="instructorTrendStatus">
+                                강사명을 입력하면 최근 5개년 월별 매출을 표시합니다.
+                            </p>
+                        </div>
+
+                        <div class="instructor-search">
+                            <input
+                                id="instructorNameSearch"
+                                type="text"
+                                placeholder="강사명"
+                                aria-label="강사명 검색"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                id="instructorTrendSearchButton"
+                                class="btn primary"
+                                type="button"
+                            >
+                                조회
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="instructor-search">
-                        <input
-                            id="instructorNameSearch"
-                            type="text"
-                            placeholder="강사명"
-                            aria-label="강사명 검색"
-                            autocomplete="off"
-                        >
-
-                        <button
-                            id="instructorTrendSearchButton"
-                            class="btn primary"
-                            type="button"
-                        >
-                            조회
-                        </button>
+                    <div class="dashboard-chart-box instructor-trend-chart-box">
+                        <canvas id="instructorSalesTrendChart"></canvas>
                     </div>
-                </div>
+                </article>
 
-                <div class="dashboard-chart-box instructor-trend-chart-box">
-                    <canvas id="instructorSalesTrendChart"></canvas>
-                </div>
-            </article>
+                <article class="dashboard-card dashboard-chart-card instructor-annual-total-card">
+                    <div class="dashboard-card-header dashboard-chart-header">
+                        <div>
+                            <h2>강사별 연도 매출 합계</h2>
+
+                            <p id="instructorAnnualTotalStatus">
+                                동일한 조회 데이터를 기준으로 연도별 합계를 표시합니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-chart-box instructor-annual-total-chart-box">
+                        <canvas id="instructorAnnualTotalChart"></canvas>
+                    </div>
+                </article>
+            </div>
         </section>
     `;
 }
