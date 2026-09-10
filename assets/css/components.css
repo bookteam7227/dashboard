@@ -644,15 +644,14 @@
 }
 
 /* =====================================================
-   강사별 매출 분석
+   강사별 매출
    ===================================================== */
 
-.dashboard-instructor-grid {
+.instructor-sales-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     gap: 16px;
     width: 100%;
-    margin-bottom: 16px;
     align-items: stretch;
 }
 
@@ -708,7 +707,7 @@
 
 .instructor-sales-table-wrap {
     width: 100%;
-    height: 360px;
+    height: 430px;
     overflow: auto;
 }
 
@@ -795,11 +794,11 @@
 }
 
 .instructor-trend-chart-box {
-    height: 360px;
+    height: 430px;
 }
 
 @media (max-width: 1100px) {
-    .dashboard-instructor-grid {
+    .instructor-sales-grid {
         grid-template-columns: 1fr;
     }
 }
