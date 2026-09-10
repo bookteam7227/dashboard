@@ -318,17 +318,309 @@ function buildYearlyData(
 }
 
 
-function getYearlyTotals(yearlyData) {
+function sumMonthlyValues(
+    monthlyValues,
+    endMonth = 12
+) {
+    if (!Array.isArray(monthlyValues)) {
+        return 0;
+    }
+
+    return monthlyValues
+        .slice(0, endMonth)
+        .reduce(
+            (sum, value) =>
+                sum + getNumber(value),
+            0
+        );
+}
+
+function getLastDataMonth(monthlyValues) {
+    if (!Array.isArray(monthlyValues)) {
+        return 0;
+    }
+
+    for (
+        let index = monthlyValues.length - 1;
+        index >= 0;
+        index -= 1
+    ) {
+        if (monthlyValues[index] !== null) {
+            return index + 1;
+        }
+    }
+
+    return 0;
+}
+
+function getYearlyTotals(
+    yearlyData,
+    currentYear
+) {
     return Array.from(yearlyData.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([year, monthlyValues]) => ({
-            year,
-            total: monthlyValues.reduce(
-                (sum, value) =>
-                    sum + getNumber(value),
-                0
-            )
-        }));
+        .map(([year, monthlyValues]) => {
+            const lastDataMonth =
+                getLastDataMonth(
+                    monthlyValues
+                );
+
+            const comparisonEndMonth =
+                year === currentYear
+                    && lastDataMonth > 0
+                        ? lastDataMonth
+                        : 12;
+
+            const total =
+                sumMonthlyValues(
+                    monthlyValues,
+                    comparisonEndMonth
+                );
+
+            const previousMonthlyValues =
+                yearlyData.get(year - 1);
+
+            const previousTotal =
+                previousMonthlyValues
+                    ? sumMonthlyValues(
+                        previousMonthlyValues,
+                        comparisonEndMonth
+                    )
+                    : null;
+
+            const change =
+                previousTotal === null
+                    ? null
+                    : total - previousTotal;
+
+            const rate =
+                previousTotal === null
+                    ? null
+                    : calculateChangeRate(
+                        total,
+                        previousTotal
+                    );
+
+            return {
+                year,
+                total,
+                previousTotal,
+                change,
+                rate,
+                lastDataMonth,
+                comparisonEndMonth,
+                isCurrentYear:
+                    year === currentYear
+            };
+        });
+}
+
+function getOrCreateAnnualTotalTooltip(chart) {
+    const container =
+        chart.canvas.parentNode;
+
+    let element =
+        container.querySelector(
+            ".chart-tooltip"
+        );
+
+    if (!element) {
+        element =
+            document.createElement("div");
+
+        element.className =
+            "chart-tooltip";
+
+        container.appendChild(element);
+    }
+
+    return element;
+}
+
+function renderAnnualTotalTooltip(
+    context,
+    yearlyTotals
+) {
+    const { chart, tooltip } =
+        context;
+
+    const element =
+        getOrCreateAnnualTotalTooltip(
+            chart
+        );
+
+    if (
+        !tooltip.opacity
+        || !tooltip.dataPoints?.length
+    ) {
+        element.style.opacity = 0;
+        return;
+    }
+
+    const dataIndex =
+        tooltip.dataPoints[0].dataIndex;
+
+    const row =
+        yearlyTotals[dataIndex];
+
+    if (!row) {
+        element.style.opacity = 0;
+        return;
+    }
+
+    const changeClass =
+        row.change === null
+            ? "tooltip-neutral"
+            : row.change > 0
+                ? "tooltip-positive"
+                : row.change < 0
+                    ? "tooltip-negative"
+                    : "tooltip-neutral";
+
+    const rateClass =
+        row.rate?.className
+        || "tooltip-neutral";
+
+    const previousLabel =
+        row.previousTotal === null
+            ? "전년 데이터 없음"
+            : row.isCurrentYear
+                ? `전년 동기간(1~${row.comparisonEndMonth}월)`
+                : `전년(${row.year - 1}년)`;
+
+    const previousValue =
+        row.previousTotal === null
+            ? "-"
+            : `${formatNumber(
+                row.previousTotal
+            )}원`;
+
+    const changeValue =
+        row.change === null
+            ? "-"
+            : formatSignedValue(
+                row.change,
+                "원"
+            );
+
+    const rateValue =
+        row.rate?.text || "-";
+
+    const currentPeriodRow =
+        row.isCurrentYear
+            ? `
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        집계 기준
+                    </span>
+
+                    <span class="tooltip-value tooltip-neutral">
+                        ${row.lastDataMonth > 0
+                            ? `${row.lastDataMonth}월까지`
+                            : "데이터 없음"}
+                    </span>
+                </div>
+            `
+            : "";
+
+    element.innerHTML = `
+        <div class="tooltip-title">
+            ${row.year}년 매출 합계
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                매출 합계
+            </span>
+
+            <span class="tooltip-value">
+                ${formatNumber(row.total)}원
+            </span>
+        </div>
+
+        ${currentPeriodRow}
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                ${previousLabel}
+            </span>
+
+            <span class="tooltip-value tooltip-neutral">
+                ${previousValue}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                전년대비 증감
+            </span>
+
+            <span class="tooltip-value ${changeClass}">
+                ${changeValue}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                전년대비 증감률
+            </span>
+
+            <span class="tooltip-value ${rateClass}">
+                ${rateValue}
+            </span>
+        </div>
+    `;
+
+    const canvasBox =
+        chart.canvas.getBoundingClientRect();
+
+    const containerBox =
+        chart.canvas.parentNode
+            .getBoundingClientRect();
+
+    const cursorX =
+        canvasBox.left
+        - containerBox.left
+        + tooltip.caretX;
+
+    const top =
+        canvasBox.top
+        - containerBox.top
+        + tooltip.caretY;
+
+    const halfWidth =
+        (element.offsetWidth || 220) / 2;
+
+    const horizontalOffset = 30;
+
+    let left =
+        cursorX
+        + halfWidth
+        + horizontalOffset;
+
+    if (
+        left + halfWidth + 8
+        > containerBox.width
+    ) {
+        left =
+            cursorX
+            - halfWidth
+            - horizontalOffset;
+    }
+
+    left = Math.max(
+        halfWidth + 8,
+        Math.min(
+            left,
+            containerBox.width
+            - halfWidth
+            - 8
+        )
+    );
+
+    element.style.opacity = 1;
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
 }
 
 function createAnnualTotalChart(
@@ -375,12 +667,12 @@ function createAnnualTotalChart(
                 },
 
                 tooltip: {
-                    callbacks: {
-                        label: (context) =>
-                            `연간 매출: ${formatNumber(
-                                context.parsed.y
-                            )}원`
-                    }
+                    enabled: false,
+                    external: (context) =>
+                        renderAnnualTotalTooltip(
+                            context,
+                            yearlyTotals
+                        )
                 }
             },
 
@@ -492,13 +784,29 @@ async function loadTrend(instructorName) {
             "원"
         );
 
+    instructorSalesChart.data.datasets
+        .forEach((dataset) => {
+            const year =
+                Number(
+                    String(dataset.label)
+                        .replace("년", "")
+                );
+
+            dataset.hidden =
+                year !== currentYear
+                && year !== currentYear - 1;
+        });
+
+    instructorSalesChart.update();
+
     instructorAnnualTotalChart =
         createAnnualTotalChart(
             document.getElementById(
                 "instructorAnnualTotalChart"
             ),
             getYearlyTotals(
-                yearlyData
+                yearlyData,
+                currentYear
             )
         );
 
@@ -594,7 +902,7 @@ function createMarkup() {
                         </h2>
 
                         <p id="instructorSalesStatus">
-                            전년 동기간 매출을 비교합니다.
+                            기준 연월을 선택한 뒤 조회해 주십시오.
                         </p>
                     </div>
 
@@ -641,7 +949,7 @@ function createMarkup() {
                                     colspan="5"
                                     class="instructor-sales-empty"
                                 >
-                                    강사별 매출 자료를 불러오고 있습니다.
+                                    조회 전에는 강사별 매출 데이터를 불러오지 않습니다.
                                 </td>
                             </tr>
                         </tbody>
@@ -760,29 +1068,6 @@ export async function mount({
             }
         );
 
-    try {
-        await loadComparison(
-            monthInput.value
-        );
-    } catch (error) {
-        console.error(
-            "[instructorSalesComparison]",
-            error
-        );
-
-        if (!active) {
-            return;
-        }
-
-        const status =
-            document.getElementById(
-                "instructorSalesStatus"
-            );
-
-        status.classList.add("error");
-        status.textContent =
-            "강사별 매출 비교자료를 불러오지 못했습니다. Firestore 읽기 권한을 확인해 주십시오.";
-    }
 }
 
 export function unmount() {
