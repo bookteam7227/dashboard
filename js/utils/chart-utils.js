@@ -284,7 +284,8 @@ const YEAR_COLORS = [
 
 export function createAnnualChart(
     canvas,
-    yearlyData
+    yearlyData,
+    unit = "건"
 ) {
     const years =
         Array.from(yearlyData.keys())
@@ -353,7 +354,7 @@ export function createAnnualChart(
                 tooltip: {
                     callbacks: {
                         label: (context) =>
-                            `${context.dataset.label}: ${formatNumber(context.parsed.y)}건`
+                            `${context.dataset.label}: ${formatNumber(context.parsed.y)}${unit}`
                     }
                 }
             },
