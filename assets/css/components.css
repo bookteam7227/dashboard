@@ -1084,3 +1084,16 @@
     }
 }
 
+/* 강사별 매출 통계 그래프 툴팁 영역 보정 */
+.instructor-trend-chart-box,
+.instructor-annual-total-chart-box {
+    min-height: 300px;
+    position: relative;
+}
+
+.instructor-trend-chart-box .chart-tooltip,
+.instructor-annual-total-chart-box .chart-tooltip {
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+}
+
