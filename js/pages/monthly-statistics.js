@@ -1244,10 +1244,288 @@ function yearlySalesMap(
     return result;
 }
 
+
+function getOrCreateMonthlyStatTooltip(chart) {
+    const container =
+        chart.canvas.parentNode;
+
+    let element =
+        container.querySelector(
+            ".chart-tooltip"
+        );
+
+    if (!element) {
+        element =
+            document.createElement("div");
+
+        element.className =
+            "chart-tooltip";
+
+        container.appendChild(element);
+    }
+
+    return element;
+}
+
+function positionMonthlyStatTooltip(
+    chart,
+    tooltip,
+    element
+) {
+    const canvasBox =
+        chart.canvas.getBoundingClientRect();
+
+    const container =
+        chart.canvas.parentNode;
+
+    const containerBox =
+        container.getBoundingClientRect();
+
+    const cursorX =
+        canvasBox.left
+        - containerBox.left
+        + tooltip.caretX;
+
+    const cursorY =
+        canvasBox.top
+        - containerBox.top
+        + tooltip.caretY;
+
+    const halfWidth =
+        (element.offsetWidth || 230) / 2;
+
+    const halfHeight =
+        (element.offsetHeight || 150) / 2;
+
+    const horizontalOffset = 30;
+    const verticalPadding = 8;
+
+    let left =
+        cursorX
+        + halfWidth
+        + horizontalOffset;
+
+    if (
+        left + halfWidth + 8
+        > containerBox.width
+    ) {
+        left =
+            cursorX
+            - halfWidth
+            - horizontalOffset;
+    }
+
+    left = Math.max(
+        halfWidth + 8,
+        Math.min(
+            left,
+            containerBox.width
+            - halfWidth
+            - 8
+        )
+    );
+
+    const top =
+        Math.max(
+            halfHeight
+            + verticalPadding,
+            Math.min(
+                cursorY,
+                containerBox.height
+                - halfHeight
+                - verticalPadding
+            )
+        );
+
+    element.style.opacity = 1;
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+}
+
+function renderYearComparisonTooltip(
+    context,
+    series,
+    previousYtd,
+    cutoffMonth,
+    currentYear
+) {
+    const { chart, tooltip } =
+        context;
+
+    const element =
+        getOrCreateMonthlyStatTooltip(
+            chart
+        );
+
+    if (
+        !tooltip.opacity
+        || !tooltip.dataPoints?.length
+    ) {
+        element.style.opacity = 0;
+        return;
+    }
+
+    const point =
+        tooltip.dataPoints[0];
+
+    const dataIndex =
+        point.dataIndex;
+
+    const datasetIndex =
+        point.datasetIndex;
+
+    const seriesItem =
+        series[datasetIndex];
+
+    const year =
+        Number(
+            String(
+                chart.data.labels[
+                    dataIndex
+                ]
+            ).replace("년", "")
+        );
+
+    const currentValue =
+        getNumber(
+            seriesItem.values[
+                dataIndex
+            ]
+        );
+
+    let previousValue = null;
+    let previousLabel =
+        year > 0
+            ? `전년(${year - 1}년)`
+            : "전년";
+
+    if (
+        year === currentYear
+        && cutoffMonth > 0
+    ) {
+        previousValue =
+            seriesItem.getter(
+                previousYtd
+            );
+
+        previousLabel =
+            `전년 동기간(1~${cutoffMonth}월)`;
+    } else if (dataIndex > 0) {
+        previousValue =
+            getNumber(
+                seriesItem.values[
+                    dataIndex - 1
+                ]
+            );
+    }
+
+    const hasPrevious =
+        previousValue !== null
+        && previousValue !== undefined;
+
+    const change =
+        hasPrevious
+            ? currentValue
+                - getNumber(
+                    previousValue
+                )
+            : null;
+
+    const rate =
+        hasPrevious
+            ? calculateChangeRate(
+                currentValue,
+                getNumber(
+                    previousValue
+                )
+            )
+            : null;
+
+    const changeClass =
+        change === null
+            ? "tooltip-neutral"
+            : getComparisonClass(
+                change
+            );
+
+    const rateClass =
+        rate
+            ? rate.className
+            : "tooltip-neutral";
+
+    element.innerHTML = `
+        <div class="tooltip-title">
+            ${year}년 · ${seriesItem.label}
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                ${year === currentYear && cutoffMonth > 0
+                    ? `금년(1~${cutoffMonth}월)`
+                    : "매출"}
+            </span>
+
+            <span class="tooltip-value">
+                ${formatNumber(
+                    currentValue
+                )}원
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                ${previousLabel}
+            </span>
+
+            <span class="tooltip-value tooltip-previous">
+                ${hasPrevious
+                    ? `${formatNumber(
+                        previousValue
+                    )}원`
+                    : "-"}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                전년대비 증감
+            </span>
+
+            <span class="tooltip-value ${changeClass}">
+                ${change === null
+                    ? "-"
+                    : `${change >= 0 ? "+" : ""}${formatNumber(
+                        change
+                    )}원`}
+            </span>
+        </div>
+
+        <div class="tooltip-row">
+            <span class="tooltip-label">
+                전년대비 증감률
+            </span>
+
+            <span class="tooltip-value ${rateClass}">
+                ${rate
+                    ? rate.text
+                    : "-"}
+            </span>
+        </div>
+    `;
+
+    positionMonthlyStatTooltip(
+        chart,
+        tooltip,
+        element
+    );
+}
+
 function createSalesTrendChart(
     yearlyCollections,
     firstYear,
-    currentYear
+    currentYear,
+    previousYtd,
+    cutoffMonth
 ) {
     const canvas =
         document.getElementById(
@@ -1279,6 +1557,19 @@ function createSalesTrendChart(
         );
     }
 
+    const series = [
+        {
+            label: "교재 매출",
+            values,
+            getter: (dataset) =>
+                getField(
+                    dataset,
+                    "dispatch",
+                    "textbook_sales_amount"
+                )
+        }
+    ];
+
     return new Chart(canvas, {
         type: "line",
 
@@ -1292,9 +1583,9 @@ function createSalesTrendChart(
                     borderColor: "#0f6fe8",
                     backgroundColor: "#0f6fe8",
                     borderWidth: 3,
-                    pointRadius: 3,
+                    pointRadius: 2,
                     pointHoverRadius: 5,
-                    tension: 0.25,
+                    tension: 0,
                     fill: false
                 }
             ]
@@ -1304,6 +1595,11 @@ function createSalesTrendChart(
             responsive: true,
             maintainAspectRatio: false,
 
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
             plugins: {
                 legend: {
                     display: true,
@@ -1311,12 +1607,15 @@ function createSalesTrendChart(
                 },
 
                 tooltip: {
-                    callbacks: {
-                        label: (context) =>
-                            `교재 매출: ${formatNumber(
-                                context.parsed.y
-                            )}`
-                    }
+                    enabled: false,
+                    external: (context) =>
+                        renderYearComparisonTooltip(
+                            context,
+                            series,
+                            previousYtd,
+                            cutoffMonth,
+                            currentYear
+                        )
                 }
             },
 
@@ -1343,7 +1642,9 @@ function createSalesTrendChart(
 function createCourierComparisonChart(
     yearlyCollections,
     firstYear,
-    currentYear
+    currentYear,
+    previousYtd,
+    cutoffMonth
 ) {
     const canvas =
         document.getElementById(
@@ -1382,6 +1683,24 @@ function createCourierComparisonChart(
         );
     }
 
+    const series = [
+        {
+            label: "배송비 매출",
+            values: revenue,
+            getter: (dataset) =>
+                getField(
+                    dataset,
+                    "shipping",
+                    "shipping_fee_amount"
+                )
+        },
+        {
+            label: "택배사 총 지급액",
+            values: payment,
+            getter: getCourierPayment
+        }
+    ];
+
     return new Chart(canvas, {
         type: "bar",
 
@@ -1408,6 +1727,11 @@ function createCourierComparisonChart(
             responsive: true,
             maintainAspectRatio: false,
 
+            interaction: {
+                mode: "nearest",
+                intersect: true
+            },
+
             plugins: {
                 legend: {
                     display: true,
@@ -1415,12 +1739,15 @@ function createCourierComparisonChart(
                 },
 
                 tooltip: {
-                    callbacks: {
-                        label: (context) =>
-                            `${context.dataset.label}: ${formatNumber(
-                                context.parsed.y
-                            )}`
-                    }
+                    enabled: false,
+                    external: (context) =>
+                        renderYearComparisonTooltip(
+                            context,
+                            series,
+                            previousYtd,
+                            cutoffMonth,
+                            currentYear
+                        )
                 }
             },
 
@@ -1526,7 +1853,7 @@ function normalizeMonthlyStatColumnWidths() {
             )
         );
 
-    const valueWidth =
+    const baseValueWidth =
         Math.max(
             90,
             getMaxMeasuredWidth(
@@ -1540,6 +1867,74 @@ function normalizeMonthlyStatColumnWidths() {
             getMaxMeasuredWidth(
                 referenceDiffCells
             )
+        );
+
+    const wouldOverflowWithScale =
+        (scale) =>
+            tables.some((table) => {
+                const headerCells =
+                    Array.from(
+                        table.querySelectorAll(
+                            "thead th"
+                        )
+                    );
+
+                const yearCount =
+                    headerCells.filter(
+                        (cell) =>
+                            cell.classList.contains(
+                                "monthly-stat-year-head"
+                            )
+                    ).length;
+
+                const diffCount =
+                    headerCells.filter(
+                        (cell) =>
+                            cell.classList.contains(
+                                "monthly-stat-diff-head"
+                            )
+                    ).length;
+
+                const valueCount =
+                    Math.max(
+                        0,
+                        headerCells.length
+                        - yearCount
+                        - diffCount
+                    );
+
+                const projectedWidth =
+                    yearCount * yearWidth
+                    + diffCount * diffWidth
+                    + valueCount
+                        * baseValueWidth
+                        * scale;
+
+                const card =
+                    table.closest(
+                        ".monthly-stat-table-card"
+                    );
+
+                const availableWidth =
+                    card
+                        ? card.clientWidth - 32
+                        : window.innerWidth;
+
+                return (
+                    projectedWidth
+                    > availableWidth
+                );
+            });
+
+    const valueScale =
+        wouldOverflowWithScale(1.3)
+            ? 1.2
+            : 1.3;
+
+    const valueWidth =
+        Math.ceil(
+            baseValueWidth
+            * valueScale
         );
 
     tables.forEach((table) => {
@@ -1695,14 +2090,18 @@ export async function mount({
             createSalesTrendChart(
                 yearlyCollections,
                 firstYear,
-                currentYear
+                currentYear,
+                previousYtd,
+                cutoffMonth
             );
 
         courierComparisonChart =
             createCourierComparisonChart(
                 yearlyCollections,
                 firstYear,
-                currentYear
+                currentYear,
+                previousYtd,
+                cutoffMonth
             );
 
         status.classList.remove(
