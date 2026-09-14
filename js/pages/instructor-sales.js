@@ -471,7 +471,6 @@ function renderComparisonTable(
         totalRow;
 
     renderSortedComparisonRows();
-        ).join("");
 }
 
 async function loadComparison(monthId) {
