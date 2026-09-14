@@ -641,21 +641,6 @@ export async function mount({
                         </div>
                     </div>
 
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span
-                                class="legend-line legend-current"
-                            ></span>
-                            금년
-                        </span>
-
-                        <span class="legend-item">
-                            <span
-                                class="legend-line legend-previous"
-                            ></span>
-                            전년 동기간
-                        </span>
-                    </div>
                 </div>
 
                 <div class="chart-box">
@@ -675,21 +660,6 @@ export async function mount({
                         </div>
                     </div>
 
-                    <div class="chart-legend">
-                        <span class="legend-item">
-                            <span
-                                class="legend-line legend-current"
-                            ></span>
-                            금년
-                        </span>
-
-                        <span class="legend-item">
-                            <span
-                                class="legend-line legend-previous"
-                            ></span>
-                            전년 동기간
-                        </span>
-                    </div>
                 </div>
 
                 <div class="chart-box">
