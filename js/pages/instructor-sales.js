@@ -12,7 +12,7 @@ import {
 } from "../utils/number-utils.js";
 import { createAnnualChart } from "../utils/chart-utils.js";
 
-export const title = "강사별 매출 통계";
+export const title = "강사별 매출";
 
 let active = false;
 let instructorSalesChart = null;
@@ -166,7 +166,70 @@ function renderComparisonTable(
         return;
     }
 
+    const previousTotal =
+        Array.from(previousMap.values())
+            .reduce(
+                (sum, value) =>
+                    sum + getNumber(value),
+                0
+            );
+
+    const currentTotal =
+        Array.from(currentMap.values())
+            .reduce(
+                (sum, value) =>
+                    sum + getNumber(value),
+                0
+            );
+
+    const totalChange =
+        currentTotal - previousTotal;
+
+    const totalRate =
+        calculateChangeRate(
+            currentTotal,
+            previousTotal
+        );
+
+    const totalChangeClass =
+        totalChange > 0
+            ? "is-positive"
+            : totalChange < 0
+                ? "is-negative"
+                : "is-neutral";
+
+    const totalRateClass =
+        totalRate.className === "tooltip-positive"
+            ? "is-positive"
+            : totalRate.className === "tooltip-negative"
+                ? "is-negative"
+                : "is-neutral";
+
+    const totalRow = `
+        <tr class="instructor-sales-total-row">
+            <td class="instructor-name-cell">
+                합계
+            </td>
+            <td>
+                ${formatNumber(previousTotal)}
+            </td>
+            <td>
+                ${formatNumber(currentTotal)}
+            </td>
+            <td class="${totalChangeClass}">
+                ${formatSignedValue(
+                    totalChange,
+                    ""
+                )}
+            </td>
+            <td class="${totalRateClass}">
+                ${totalRate.text}
+            </td>
+        </tr>
+    `;
+
     body.innerHTML =
+        totalRow +
         instructorNames.map(
             (instructorName) => {
                 const previousValue =
@@ -208,15 +271,15 @@ function renderComparisonTable(
                             ${escapeHtml(instructorName)}
                         </td>
                         <td>
-                            ${formatNumber(previousValue)}원
+                            ${formatNumber(previousValue)}
                         </td>
                         <td>
-                            ${formatNumber(currentValue)}원
+                            ${formatNumber(currentValue)}
                         </td>
                         <td class="${changeClass}">
                             ${formatSignedValue(
                                 change,
-                                "원"
+                                ""
                             )}
                         </td>
                         <td class="${rateClass}">
