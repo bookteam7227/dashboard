@@ -1444,6 +1444,122 @@ function createCourierComparisonChart(
     });
 }
 
+
+function measureCellContentWidth(cell) {
+    const clone =
+        cell.cloneNode(true);
+
+    clone.style.position = "absolute";
+    clone.style.visibility = "hidden";
+    clone.style.width = "auto";
+    clone.style.minWidth = "0";
+    clone.style.maxWidth = "none";
+    clone.style.whiteSpace = "nowrap";
+    clone.style.left = "-99999px";
+    clone.style.top = "-99999px";
+
+    document.body.appendChild(
+        clone
+    );
+
+    const width =
+        Math.ceil(
+            clone.getBoundingClientRect()
+                .width
+        );
+
+    clone.remove();
+
+    return width;
+}
+
+function getMaxMeasuredWidth(cells) {
+    return Math.max(
+        0,
+        ...cells.map(
+            measureCellContentWidth
+        )
+    );
+}
+
+function normalizeMonthlyStatColumnWidths() {
+    const tables =
+        Array.from(
+            document.querySelectorAll(
+                ".monthly-stat-table"
+            )
+        );
+
+    if (!tables.length) {
+        return;
+    }
+
+    const referenceTable =
+        tables[0];
+
+    const referenceYearCells =
+        Array.from(
+            referenceTable.querySelectorAll(
+                ".monthly-stat-year-head, .monthly-stat-year-cell"
+            )
+        );
+
+    const referenceDiffCells =
+        Array.from(
+            referenceTable.querySelectorAll(
+                ".monthly-stat-diff-head, .monthly-stat-diff-cell"
+            )
+        );
+
+    const allValueCells =
+        Array.from(
+            document.querySelectorAll(
+                ".monthly-stat-table tbody td:not(.monthly-stat-year-cell):not(.monthly-stat-diff-cell)"
+            )
+        );
+
+    const yearWidth =
+        Math.max(
+            90,
+            getMaxMeasuredWidth(
+                referenceYearCells
+            )
+        );
+
+    const valueWidth =
+        Math.max(
+            90,
+            getMaxMeasuredWidth(
+                allValueCells
+            )
+        );
+
+    const diffWidth =
+        Math.max(
+            72,
+            getMaxMeasuredWidth(
+                referenceDiffCells
+            )
+        );
+
+    tables.forEach((table) => {
+        table.style.setProperty(
+            "--monthly-stat-year-width",
+            `${yearWidth}px`
+        );
+
+        table.style.setProperty(
+            "--monthly-stat-value-width",
+            `${valueWidth}px`
+        );
+
+        table.style.setProperty(
+            "--monthly-stat-diff-width",
+            `${diffWidth}px`
+        );
+    });
+}
+
 function createMarkup() {
     return `
         <section class="monthly-stat-status-row">
@@ -1572,6 +1688,8 @@ export async function mount({
                         rows
                     )
             ).join("");
+
+        normalizeMonthlyStatColumnWidths();
 
         salesChart =
             createSalesTrendChart(
