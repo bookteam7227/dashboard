@@ -4,7 +4,8 @@ import {
     calculateChangeRate,
     formatNumber,
     formatSignedValue,
-    getComparisonClass
+    getComparisonClass,
+    getNumber
 } from "./number-utils.js";
 import { formatFullDate } from "./date-utils.js";
 
@@ -299,7 +300,11 @@ const YEAR_COLORS = [
 function getAnnualDatasetYear(dataset) {
     const match =
         /^(\d{4})년$/.exec(
-            String(dataset?.label || "")
+            String(
+                dataset && dataset.label
+                    ? dataset.label
+                    : ""
+            )
         );
 
     return match
@@ -330,7 +335,10 @@ function renderAnnualComparisonTooltip(
         tooltip.dataPoints[0].dataIndex;
 
     const monthLabel =
-        chart.data.labels?.[dataIndex]
+        (
+            chart.data.labels
+            && chart.data.labels[dataIndex]
+        )
         || `${dataIndex + 1}월`;
 
     const rowHtml =
@@ -348,7 +356,9 @@ function renderAnnualComparisonTooltip(
 
                 const currentValue =
                     getNumber(
-                        dataPoint.parsed?.y
+                        dataPoint.parsed
+                            ? dataPoint.parsed.y
+                            : 0
                     );
 
                 const previousValues =
@@ -359,9 +369,11 @@ function renderAnnualComparisonTooltip(
                         : null;
 
                 const previousRaw =
-                    previousValues?.[
-                        dataIndex
-                    ];
+                    previousValues
+                        ? previousValues[
+                            dataIndex
+                        ]
+                        : null;
 
                 const hasPrevious =
                     previousRaw !== null
@@ -394,7 +406,10 @@ function renderAnnualComparisonTooltip(
                         );
 
                 const rateClass =
-                    rate?.className
+                    (
+                        rate
+                        && rate.className
+                    )
                     || "tooltip-neutral";
 
                 const previousText =
@@ -413,7 +428,11 @@ function renderAnnualComparisonTooltip(
                         );
 
                 const rateText =
-                    rate?.text || "-";
+                    (
+                        rate
+                        && rate.text
+                    )
+                    || "-";
 
                 return `
                     <div class="tooltip-annual-group">
