@@ -744,6 +744,55 @@
     font-weight: 900;
 }
 
+
+.instructor-sort-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    min-width: 0;
+}
+
+.instructor-sales-table th:first-child
+.instructor-sort-header {
+    justify-content: flex-start;
+}
+
+.instructor-sort-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.instructor-sort-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid #d7e0eb;
+    border-radius: 4px;
+    color: #8a98aa;
+    background: #ffffff;
+    font-size: 8px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.instructor-sort-button:hover {
+    color: #173c6e;
+    border-color: #b8c7d8;
+    background: #f8fafc;
+}
+
+.instructor-sort-button.active {
+    color: #ffffff;
+    border-color: #0f6fe8;
+    background: #0f6fe8;
+}
+
 .instructor-sales-table th:first-child,
 .instructor-sales-table td:first-child {
     width: 18%;
