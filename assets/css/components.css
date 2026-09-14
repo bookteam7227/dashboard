@@ -778,6 +778,25 @@
     background: #f8fafc;
 }
 
+
+.instructor-sales-total-row td {
+    background: #eef3f8;
+    color: #65758b;
+    font-weight: 900;
+    border-bottom: 2px solid #dfe6ef;
+}
+
+.instructor-sales-table
+.instructor-sales-total-row:hover td {
+    background: #eef3f8;
+}
+
+.instructor-sales-table
+.instructor-sales-total-row
+.instructor-name-cell {
+    color: #65758b !important;
+}
+
 .instructor-name-cell {
     color: var(--ink) !important;
     font-weight: 900 !important;
