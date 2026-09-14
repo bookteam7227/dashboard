@@ -156,8 +156,8 @@ export function createComparisonChart(
                     ),
                     borderColor: CURRENT_COLOR,
                     backgroundColor: CURRENT_COLOR,
-                    borderWidth: 2.5,
-                    pointRadius: 1.5,
+                    borderWidth: 3,
+                    pointRadius: 2,
                     pointHoverRadius: 5,
                     pointBorderWidth: 0,
                     tension: 0,
@@ -170,8 +170,8 @@ export function createComparisonChart(
                     ),
                     borderColor: PREVIOUS_COLOR,
                     backgroundColor: PREVIOUS_COLOR,
-                    borderWidth: 2,
-                    pointRadius: 1.5,
+                    borderWidth: 1.8,
+                    pointRadius: 2,
                     pointHoverRadius: 5,
                     pointBorderWidth: 0,
                     tension: 0,
@@ -200,7 +200,20 @@ export function createComparisonChart(
 
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: "right",
+
+                    labels: {
+                        color: "#5f6f84",
+                        boxWidth: 18,
+                        boxHeight: 3,
+                        padding: 9,
+
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    }
                 },
 
                 tooltip: {
@@ -282,6 +295,234 @@ const YEAR_COLORS = [
     "#1e40af"
 ];
 
+
+function getAnnualDatasetYear(dataset) {
+    const match =
+        /^(\d{4})년$/.exec(
+            String(dataset?.label || "")
+        );
+
+    return match
+        ? Number(match[1])
+        : null;
+}
+
+function renderAnnualComparisonTooltip(
+    context,
+    yearlyData,
+    unit
+) {
+    const { chart, tooltip } =
+        context;
+
+    const element =
+        getOrCreateTooltip(chart);
+
+    if (
+        !tooltip.opacity
+        || !tooltip.dataPoints?.length
+    ) {
+        element.style.opacity = 0;
+        return;
+    }
+
+    const dataIndex =
+        tooltip.dataPoints[0].dataIndex;
+
+    const monthLabel =
+        chart.data.labels?.[dataIndex]
+        || `${dataIndex + 1}월`;
+
+    const rowHtml =
+        tooltip.dataPoints.map(
+            (dataPoint) => {
+                const dataset =
+                    chart.data.datasets[
+                        dataPoint.datasetIndex
+                    ];
+
+                const year =
+                    getAnnualDatasetYear(
+                        dataset
+                    );
+
+                const currentValue =
+                    getNumber(
+                        dataPoint.parsed?.y
+                    );
+
+                const previousValues =
+                    year !== null
+                        ? yearlyData.get(
+                            year - 1
+                        )
+                        : null;
+
+                const previousRaw =
+                    previousValues?.[
+                        dataIndex
+                    ];
+
+                const hasPrevious =
+                    previousRaw !== null
+                    && previousRaw !== undefined;
+
+                const previousValue =
+                    hasPrevious
+                        ? getNumber(previousRaw)
+                        : null;
+
+                const change =
+                    hasPrevious
+                        ? currentValue
+                            - previousValue
+                        : null;
+
+                const rate =
+                    hasPrevious
+                        ? calculateChangeRate(
+                            currentValue,
+                            previousValue
+                        )
+                        : null;
+
+                const changeClass =
+                    change === null
+                        ? "tooltip-neutral"
+                        : getComparisonClass(
+                            change
+                        );
+
+                const rateClass =
+                    rate?.className
+                    || "tooltip-neutral";
+
+                const previousText =
+                    hasPrevious
+                        ? `${formatNumber(
+                            previousValue
+                        )}${unit}`
+                        : "-";
+
+                const changeText =
+                    change === null
+                        ? "-"
+                        : formatSignedValue(
+                            change,
+                            unit
+                        );
+
+                const rateText =
+                    rate?.text || "-";
+
+                return `
+                    <div class="tooltip-annual-group">
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">
+                                ${dataset.label}
+                            </span>
+
+                            <span class="tooltip-value">
+                                ${formatNumber(
+                                    currentValue
+                                )}${unit}
+                            </span>
+                        </div>
+
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">
+                                전년
+                            </span>
+
+                            <span class="tooltip-value tooltip-previous">
+                                ${previousText}
+                            </span>
+                        </div>
+
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">
+                                전년대비 증감
+                            </span>
+
+                            <span class="tooltip-value ${changeClass}">
+                                ${changeText}
+                            </span>
+                        </div>
+
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">
+                                전년대비 증감률
+                            </span>
+
+                            <span class="tooltip-value ${rateClass}">
+                                ${rateText}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+        ).join("");
+
+    element.innerHTML = `
+        <div class="tooltip-title">
+            ${monthLabel}
+        </div>
+
+        ${rowHtml}
+    `;
+
+    const canvasBox =
+        chart.canvas.getBoundingClientRect();
+
+    const containerBox =
+        chart.canvas.parentNode
+            .getBoundingClientRect();
+
+    const cursorX =
+        canvasBox.left
+        - containerBox.left
+        + tooltip.caretX;
+
+    const top =
+        canvasBox.top
+        - containerBox.top
+        + tooltip.caretY;
+
+    const halfWidth =
+        (element.offsetWidth || 220) / 2;
+
+    const horizontalOffset = 30;
+
+    let left =
+        cursorX
+        + halfWidth
+        + horizontalOffset;
+
+    if (
+        left + halfWidth + 8
+        > containerBox.width
+    ) {
+        left =
+            cursorX
+            - halfWidth
+            - horizontalOffset;
+    }
+
+    left = Math.max(
+        halfWidth + 8,
+        Math.min(
+            left,
+            containerBox.width
+            - halfWidth
+            - 8
+        )
+    );
+
+    element.style.opacity = 1;
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+}
+
 export function createAnnualChart(
     canvas,
     yearlyData,
@@ -352,10 +593,13 @@ export function createAnnualChart(
                 },
 
                 tooltip: {
-                    callbacks: {
-                        label: (context) =>
-                            `${context.dataset.label}: ${formatNumber(context.parsed.y)}${unit}`
-                    }
+                    enabled: false,
+                    external: (context) =>
+                        renderAnnualComparisonTooltip(
+                            context,
+                            yearlyData,
+                            unit
+                        )
                 }
             },
 
