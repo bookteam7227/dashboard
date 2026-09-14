@@ -537,9 +537,23 @@ function renderAnnualComparisonTooltip(
         )
     );
 
+    const halfHeight =
+        (element.offsetHeight || 180) / 2;
+
+    const clampedTop =
+        Math.max(
+            halfHeight + 8,
+            Math.min(
+                top,
+                containerBox.height
+                - halfHeight
+                - 8
+            )
+        );
+
     element.style.opacity = 1;
     element.style.left = `${left}px`;
-    element.style.top = `${top}px`;
+    element.style.top = `${clampedTop}px`;
 }
 
 export function createAnnualChart(
