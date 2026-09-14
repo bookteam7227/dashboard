@@ -18,6 +18,13 @@ let active = false;
 let instructorSalesChart = null;
 let instructorAnnualTotalChart = null;
 
+let comparisonRowsState = [];
+let comparisonTotalRowHtml = "";
+let comparisonSort = {
+    key: "currentValue",
+    direction: "desc"
+};
+
 function destroyChart() {
     instructorSalesChart?.destroy();
     instructorAnnualTotalChart?.destroy();
@@ -82,6 +89,219 @@ function getInstructorSalesMap(rows) {
     return result;
 }
 
+function getComparisonRateValue(
+    currentValue,
+    previousValue
+) {
+    if (previousValue === 0) {
+        return currentValue === 0
+            ? 0
+            : null;
+    }
+
+    return (
+        (
+            currentValue
+            - previousValue
+        )
+        / previousValue
+    ) * 100;
+}
+
+function updateSortButtonState() {
+    document
+        .querySelectorAll(
+            ".instructor-sort-button"
+        )
+        .forEach((button) => {
+            const activeSort =
+                button.dataset.sortKey
+                    === comparisonSort.key
+                && button.dataset.direction
+                    === comparisonSort.direction;
+
+            button.classList.toggle(
+                "active",
+                activeSort
+            );
+
+            button.setAttribute(
+                "aria-pressed",
+                activeSort
+                    ? "true"
+                    : "false"
+            );
+        });
+}
+
+function compareNullableNumbers(
+    a,
+    b,
+    direction
+) {
+    const aMissing =
+        a === null
+        || a === undefined
+        || Number.isNaN(a);
+
+    const bMissing =
+        b === null
+        || b === undefined
+        || Number.isNaN(b);
+
+    if (aMissing && bMissing) {
+        return 0;
+    }
+
+    if (aMissing) {
+        return 1;
+    }
+
+    if (bMissing) {
+        return -1;
+    }
+
+    return direction === "asc"
+        ? a - b
+        : b - a;
+}
+
+function renderSortedComparisonRows() {
+    const body =
+        document.getElementById(
+            "instructorSalesTableBody"
+        );
+
+    if (!body) {
+        return;
+    }
+
+    const sortedRows =
+        [...comparisonRowsState].sort(
+            (a, b) => {
+                let result = 0;
+
+                if (
+                    comparisonSort.key
+                    === "instructorName"
+                ) {
+                    result =
+                        a.instructorName
+                            .localeCompare(
+                                b.instructorName,
+                                "ko-KR"
+                            );
+
+                    if (
+                        comparisonSort.direction
+                        === "desc"
+                    ) {
+                        result *= -1;
+                    }
+                } else {
+                    result =
+                        compareNullableNumbers(
+                            a[
+                                comparisonSort.key
+                            ],
+                            b[
+                                comparisonSort.key
+                            ],
+                            comparisonSort.direction
+                        );
+                }
+
+                if (result !== 0) {
+                    return result;
+                }
+
+                return a.instructorName
+                    .localeCompare(
+                        b.instructorName,
+                        "ko-KR"
+                    );
+            }
+        );
+
+    body.innerHTML =
+        comparisonTotalRowHtml
+        + sortedRows.map(
+            (row) => {
+                const changeClass =
+                    row.change > 0
+                        ? "is-positive"
+                        : row.change < 0
+                            ? "is-negative"
+                            : "is-neutral";
+
+                const rate =
+                    calculateChangeRate(
+                        row.currentValue,
+                        row.previousValue
+                    );
+
+                const rateClass =
+                    rate.className
+                        === "tooltip-positive"
+                            ? "is-positive"
+                            : rate.className
+                                === "tooltip-negative"
+                                ? "is-negative"
+                                : "is-neutral";
+
+                return `
+                    <tr>
+                        <td class="instructor-name-cell">
+                            ${escapeHtml(
+                                row.instructorName
+                            )}
+                        </td>
+                        <td>
+                            ${formatNumber(
+                                row.previousValue
+                            )}
+                        </td>
+                        <td>
+                            ${formatNumber(
+                                row.currentValue
+                            )}
+                        </td>
+                        <td class="${changeClass}">
+                            ${formatSignedValue(
+                                row.change,
+                                ""
+                            )}
+                        </td>
+                        <td class="${rateClass}">
+                            ${rate.text}
+                        </td>
+                    </tr>
+                `;
+            }
+        ).join("");
+
+    updateSortButtonState();
+}
+
+function handleComparisonSort(event) {
+    const button =
+        event.target.closest(
+            ".instructor-sort-button"
+        );
+
+    if (!button) {
+        return;
+    }
+
+    comparisonSort = {
+        key: button.dataset.sortKey,
+        direction:
+            button.dataset.direction
+    };
+
+    renderSortedComparisonRows();
+}
+
 function renderComparisonTable(
     monthId,
     currentRows,
@@ -115,20 +335,34 @@ function renderComparisonTable(
                 ...currentMap.keys(),
                 ...previousMap.keys()
             ])
-        ).sort(
-            (a, b) => {
-                const salesDifference =
-                    (currentMap.get(b) || 0)
-                    - (currentMap.get(a) || 0);
+        );
 
-                if (salesDifference !== 0) {
-                    return salesDifference;
-                }
+    comparisonRowsState =
+        instructorNames.map(
+            (instructorName) => {
+                const previousValue =
+                    previousMap.get(
+                        instructorName
+                    ) || 0;
 
-                return a.localeCompare(
-                    b,
-                    "ko-KR"
-                );
+                const currentValue =
+                    currentMap.get(
+                        instructorName
+                    ) || 0;
+
+                return {
+                    instructorName,
+                    previousValue,
+                    currentValue,
+                    change:
+                        currentValue
+                        - previousValue,
+                    rateValue:
+                        getComparisonRateValue(
+                            currentValue,
+                            previousValue
+                        )
+                };
             }
         );
 
@@ -153,6 +387,9 @@ function renderComparisonTable(
         );
 
     if (!instructorNames.length) {
+        comparisonRowsState = [];
+        comparisonTotalRowHtml = "";
+
         body.innerHTML = `
             <tr>
                 <td
@@ -163,6 +400,8 @@ function renderComparisonTable(
                 </td>
             </tr>
         `;
+
+        updateSortButtonState();
         return;
     }
 
@@ -228,66 +467,10 @@ function renderComparisonTable(
         </tr>
     `;
 
-    body.innerHTML =
-        totalRow +
-        instructorNames.map(
-            (instructorName) => {
-                const previousValue =
-                    previousMap.get(
-                        instructorName
-                    ) || 0;
+    comparisonTotalRowHtml =
+        totalRow;
 
-                const currentValue =
-                    currentMap.get(
-                        instructorName
-                    ) || 0;
-
-                const change =
-                    currentValue - previousValue;
-
-                const rate =
-                    calculateChangeRate(
-                        currentValue,
-                        previousValue
-                    );
-
-                const changeClass =
-                    change > 0
-                        ? "is-positive"
-                        : change < 0
-                            ? "is-negative"
-                            : "is-neutral";
-
-                const rateClass =
-                    rate.className === "tooltip-positive"
-                        ? "is-positive"
-                        : rate.className === "tooltip-negative"
-                            ? "is-negative"
-                            : "is-neutral";
-
-                return `
-                    <tr>
-                        <td class="instructor-name-cell">
-                            ${escapeHtml(instructorName)}
-                        </td>
-                        <td>
-                            ${formatNumber(previousValue)}
-                        </td>
-                        <td>
-                            ${formatNumber(currentValue)}
-                        </td>
-                        <td class="${changeClass}">
-                            ${formatSignedValue(
-                                change,
-                                ""
-                            )}
-                        </td>
-                        <td class="${rateClass}">
-                            ${rate.text}
-                        </td>
-                    </tr>
-                `;
-            }
+    renderSortedComparisonRows();
         ).join("");
 }
 
@@ -994,15 +1177,139 @@ function createMarkup() {
                     <table class="instructor-sales-table">
                         <thead>
                             <tr>
-                                <th>강사명</th>
-                                <th id="instructorPreviousYearHeader">
-                                    전년
+                                <th>
+                                    <div class="instructor-sort-header">
+                                        <span>강사명</span>
+
+                                        <span class="instructor-sort-controls">
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="instructorName"
+                                                data-direction="asc"
+                                                aria-label="강사명 오름차순 정렬"
+                                                aria-pressed="false"
+                                            >▲</button>
+
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="instructorName"
+                                                data-direction="desc"
+                                                aria-label="강사명 내림차순 정렬"
+                                                aria-pressed="false"
+                                            >▼</button>
+                                        </span>
+                                    </div>
                                 </th>
-                                <th id="instructorCurrentYearHeader">
-                                    금년
+
+                                <th>
+                                    <div class="instructor-sort-header">
+                                        <span id="instructorPreviousYearHeader">
+                                            전년
+                                        </span>
+
+                                        <span class="instructor-sort-controls">
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="previousValue"
+                                                data-direction="asc"
+                                                aria-label="전년 매출 오름차순 정렬"
+                                                aria-pressed="false"
+                                            >▲</button>
+
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="previousValue"
+                                                data-direction="desc"
+                                                aria-label="전년 매출 내림차순 정렬"
+                                                aria-pressed="false"
+                                            >▼</button>
+                                        </span>
+                                    </div>
                                 </th>
-                                <th>전년대비 증감</th>
-                                <th>전년대비 증감률</th>
+
+                                <th>
+                                    <div class="instructor-sort-header">
+                                        <span id="instructorCurrentYearHeader">
+                                            금년
+                                        </span>
+
+                                        <span class="instructor-sort-controls">
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="currentValue"
+                                                data-direction="asc"
+                                                aria-label="금년 매출 오름차순 정렬"
+                                                aria-pressed="false"
+                                            >▲</button>
+
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="currentValue"
+                                                data-direction="desc"
+                                                aria-label="금년 매출 내림차순 정렬"
+                                                aria-pressed="false"
+                                            >▼</button>
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th>
+                                    <div class="instructor-sort-header">
+                                        <span>전년대비 증감</span>
+
+                                        <span class="instructor-sort-controls">
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="change"
+                                                data-direction="asc"
+                                                aria-label="전년대비 증감 오름차순 정렬"
+                                                aria-pressed="false"
+                                            >▲</button>
+
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="change"
+                                                data-direction="desc"
+                                                aria-label="전년대비 증감 내림차순 정렬"
+                                                aria-pressed="false"
+                                            >▼</button>
+                                        </span>
+                                    </div>
+                                </th>
+
+                                <th>
+                                    <div class="instructor-sort-header">
+                                        <span>전년대비 증감률</span>
+
+                                        <span class="instructor-sort-controls">
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="rateValue"
+                                                data-direction="asc"
+                                                aria-label="전년대비 증감률 오름차순 정렬"
+                                                aria-pressed="false"
+                                            >▲</button>
+
+                                            <button
+                                                class="instructor-sort-button"
+                                                type="button"
+                                                data-sort-key="rateValue"
+                                                data-direction="desc"
+                                                aria-label="전년대비 증감률 내림차순 정렬"
+                                                aria-pressed="false"
+                                            >▼</button>
+                                        </span>
+                                    </div>
+                                </th>
                             </tr>
                         </thead>
 
@@ -1108,6 +1415,17 @@ export async function mount({
             "click",
             searchComparison
         );
+
+    document
+        .querySelector(
+            ".instructor-sales-table thead"
+        )
+        .addEventListener(
+            "click",
+            handleComparisonSort
+        );
+
+    updateSortButtonState();
 
     document
         .getElementById(
