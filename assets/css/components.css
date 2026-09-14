@@ -972,19 +972,25 @@
 
 .monthly-stat-table {
     width: max-content;
-    min-width: 100%;
+    min-width: 0;
     border-collapse: collapse;
     table-layout: fixed;
+    --monthly-stat-year-width: 120px;
+    --monthly-stat-value-width: 124px;
+    --monthly-stat-diff-width: 82px;
 }
 
 .monthly-stat-table th,
 .monthly-stat-table td {
-    min-width: 124px;
+    width: var(--monthly-stat-value-width);
+    min-width: var(--monthly-stat-value-width);
+    max-width: var(--monthly-stat-value-width);
     padding: 9px 10px;
     border-right: 1px solid #e3e8ef;
     border-bottom: 1px solid #e9eef5;
     text-align: right;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .monthly-stat-table th {
@@ -1007,7 +1013,9 @@
 
 .monthly-stat-table .monthly-stat-year-head,
 .monthly-stat-table .monthly-stat-year-cell {
-    min-width: 120px;
+    width: var(--monthly-stat-year-width);
+    min-width: var(--monthly-stat-year-width);
+    max-width: var(--monthly-stat-year-width);
     position: sticky;
     left: 0;
     z-index: 1;
@@ -1026,7 +1034,9 @@
 
 .monthly-stat-table .monthly-stat-diff-head,
 .monthly-stat-table .monthly-stat-diff-cell {
-    min-width: 82px;
+    width: var(--monthly-stat-diff-width);
+    min-width: var(--monthly-stat-diff-width);
+    max-width: var(--monthly-stat-diff-width);
     background: #fff6f6;
 }
 
