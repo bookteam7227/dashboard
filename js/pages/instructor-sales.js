@@ -1,8 +1,8 @@
 // /js/pages/instructor-sales.js
 
 import {
-    getCollectionRowsByDocumentIdPrefix,
-    getCollectionRowsByFieldEqualsAndRange
+    getCollectionRowsByFieldEqualsAndRange,
+    getDocumentRow
 } from "../services/firestore-service.js";
 import {
     calculateChangeRate,
@@ -494,18 +494,28 @@ async function loadComparison(monthId) {
         "강사별 매출 자료를 불러오고 있습니다.";
 
     const [
-        currentRows,
-        previousRows
+        currentSummary,
+        previousSummary
     ] = await Promise.all([
-        getCollectionRowsByDocumentIdPrefix(
-            "monthly_instructor_sales_payment",
-            `${monthId}_`
+        getDocumentRow(
+            "instructor_sales_monthly_summary",
+            monthId
         ),
-        getCollectionRowsByDocumentIdPrefix(
-            "monthly_instructor_sales_payment",
-            `${previousMonthId}_`
+        getDocumentRow(
+            "instructor_sales_monthly_summary",
+            previousMonthId
         )
     ]);
+
+    const currentRows =
+        Array.isArray(currentSummary?.instructors)
+            ? currentSummary.instructors
+            : [];
+
+    const previousRows =
+        Array.isArray(previousSummary?.instructors)
+            ? previousSummary.instructors
+            : [];
 
     if (!active) {
         return;
