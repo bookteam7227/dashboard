@@ -1,7 +1,6 @@
 // /js/pages/instructor-sales.js
 
 import {
-    getCollectionRowsByFieldEqualsAndRange,
     getDocumentRow
 } from "../services/firestore-service.js";
 import {
@@ -65,6 +64,27 @@ function getPreviousYearMonthId(monthId) {
         `${Number(match[1]) - 1}-`
         + `${match[2]}`
     );
+}
+
+
+async function getInstructorTrendDocumentId(instructorName) {
+    const bytes =
+        new TextEncoder().encode(instructorName);
+
+    const digest =
+        await crypto.subtle.digest(
+            "SHA-1",
+            bytes
+        );
+
+    return Array.from(
+        new Uint8Array(digest)
+    )
+        .map((value) =>
+            value.toString(16).padStart(2, "0")
+        )
+        .join("")
+        .slice(0, 12);
 }
 
 function getInstructorSalesMap(rows) {
@@ -1009,15 +1029,25 @@ async function loadTrend(instructorName) {
     const firstYear =
         currentYear - 4;
 
-    const rows =
-        await getCollectionRowsByFieldEqualsAndRange(
-            "monthly_instructor_sales_payment",
-            "instructor_name",
-            normalizedName,
-            "base_month",
-            `${firstYear}-01`,
-            `${currentYear}-12`
+    const trendDocumentId =
+        await getInstructorTrendDocumentId(
+            normalizedName
         );
+
+    const trendDocument =
+        await getDocumentRow(
+            "instructor_sales_trend",
+            trendDocumentId
+        );
+
+    const rows =
+        Array.isArray(trendDocument?.records)
+            ? trendDocument.records.filter(
+                (row) =>
+                    Number(row.base_year) >= firstYear
+                    && Number(row.base_year) <= currentYear
+            )
+            : [];
 
     if (!active) {
         return;
