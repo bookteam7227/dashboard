@@ -1,7 +1,6 @@
 // /js/pages/monthly-statistics.js
 
 import {
-    getDocumentRow,
     getCollectionRowsByDocumentIdRange
 } from "../services/firestore-service.js";
 import {
@@ -17,6 +16,7 @@ import {
 export const title = "월별 통계";
 
 const ANNUAL_YEARS = 5;
+const SUMMARY_COLLECTION = "yearly_dashboard_statistics";
 
 const REQUIRED_COLLECTIONS = [
     "dispatch",
@@ -715,77 +715,57 @@ function subtractRows(
     return result;
 }
 
-async function findCurrentDataMonth(
-    currentYear
-) {
-    const collectionName =
-        COLLECTIONS.dispatch.monthly;
-
-    const currentMonth =
-        new Date().getMonth() + 1;
-
-    for (
-        let month = currentMonth;
-        month >= 1;
-        month -= 1
-    ) {
-        const documentId =
-            `${currentYear}-${String(
-                month
-            ).padStart(2, "0")}`;
-
-        const row =
-            await getDocumentRow(
-                collectionName,
-                documentId
-            );
-
-        if (row) {
-            return month;
-        }
-    }
-
-    return 0;
-}
-
-async function loadYearlyCollections(
+async function loadYearlySummaryDocuments(
     firstYear,
     currentYear
 ) {
+    const rows =
+        await getCollectionRowsByDocumentIdRange(
+            SUMMARY_COLLECTION,
+            String(firstYear),
+            String(currentYear)
+        );
+
+    return new Map(
+        rows.map((row) => [
+            Number(row.base_year || row.id),
+            row
+        ])
+    );
+}
+
+function yearlyCollectionsFromSummaries(
+    summaries
+) {
     const result = {};
 
-    await Promise.all(
-        REQUIRED_COLLECTIONS.map(
-            async (collectionKey) => {
-                const collectionName =
-                    COLLECTIONS[
-                        collectionKey
-                    ].yearly;
-
-                const rows =
-                    await getCollectionRowsByDocumentIdRange(
-                        collectionName,
-                        String(firstYear),
-                        String(currentYear)
-                    );
-
-                result[collectionKey] =
-                    new Map(
-                        rows.map(
-                            (row) => [
-                                Number(
-                                    row.base_year
-                                    || row.id
-                                ),
-                                row
-                            ]
-                        )
-                    );
-            }
-        )
+    REQUIRED_COLLECTIONS.forEach(
+        (collectionKey) => {
+            result[collectionKey] = new Map();
+        }
     );
 
+    summaries.forEach((summary, year) => {
+        REQUIRED_COLLECTIONS.forEach(
+            (collectionKey) => {
+                result[collectionKey].set(
+                    year,
+                    summary?.yearly?.[collectionKey] || {}
+                );
+            }
+        );
+    });
+
     return result;
+}
+
+function findCurrentDataMonth(
+    summaries,
+    currentYear
+) {
+    return Number(
+        summaries.get(currentYear)?.last_month || 0
+    );
 }
 
 function yearlyDatasetForYear(
@@ -806,85 +786,48 @@ function yearlyDatasetForYear(
     return result;
 }
 
-async function loadPreviousYearYtd(
-    yearlyCollections,
+function loadPreviousYearYtd(
+    summaries,
     previousYear,
     cutoffMonth
 ) {
     const result = {};
 
-    if (cutoffMonth <= 0) {
-        REQUIRED_COLLECTIONS
-            .forEach((collectionKey) => {
-                result[collectionKey] = {};
-            });
+    REQUIRED_COLLECTIONS.forEach(
+        (collectionKey) => {
+            result[collectionKey] = {};
+        }
+    );
 
+    if (cutoffMonth <= 0) {
         return result;
     }
 
-    const useFrontRange =
-        cutoffMonth <= 6;
+    const monthly =
+        summaries.get(previousYear)?.monthly || {};
 
-    await Promise.all(
-        REQUIRED_COLLECTIONS.map(
-            async (collectionKey) => {
-                const monthlyCollection =
-                    COLLECTIONS[
-                        collectionKey
-                    ].monthly;
+    REQUIRED_COLLECTIONS.forEach(
+        (collectionKey) => {
+            const rows = [];
 
-                if (useFrontRange) {
-                    const rows =
-                        await getCollectionRowsByDocumentIdRange(
-                            monthlyCollection,
-                            `${previousYear}-01`,
-                            `${previousYear}-${String(
-                                cutoffMonth
-                            ).padStart(2, "0")}`
-                        );
+            for (
+                let month = 1;
+                month <= cutoffMonth;
+                month += 1
+            ) {
+                const monthKey =
+                    String(month).padStart(2, "0");
+                const row =
+                    monthly?.[monthKey]?.[collectionKey];
 
-                    result[collectionKey] =
-                        sumRows(
-                            collectionKey,
-                            rows
-                        );
-
-                    return;
+                if (row) {
+                    rows.push(row);
                 }
-
-                if (cutoffMonth >= 12) {
-                    result[collectionKey] =
-                        yearlyCollections[
-                            collectionKey
-                        ]?.get(
-                            previousYear
-                        )
-                        || {};
-
-                    return;
-                }
-
-                const excludedRows =
-                    await getCollectionRowsByDocumentIdRange(
-                        monthlyCollection,
-                        `${previousYear}-${String(
-                            cutoffMonth + 1
-                        ).padStart(2, "0")}`,
-                        `${previousYear}-12`
-                    );
-
-                result[collectionKey] =
-                    subtractRows(
-                        collectionKey,
-                        yearlyCollections[
-                            collectionKey
-                        ]?.get(
-                            previousYear
-                        ),
-                        excludedRows
-                    );
             }
-        )
+
+            result[collectionKey] =
+                sumRows(collectionKey, rows);
+        }
     );
 
     return result;
@@ -2036,26 +1979,30 @@ export async function mount({
         );
 
     try {
-        const [
-            yearlyCollections,
-            cutoffMonth
-        ] = await Promise.all([
-            loadYearlyCollections(
+        const summaries =
+            await loadYearlySummaryDocuments(
                 firstYear,
                 currentYear
-            ),
-            findCurrentDataMonth(
-                currentYear
-            )
-        ]);
+            );
 
         if (!active) {
             return;
         }
 
+        const yearlyCollections =
+            yearlyCollectionsFromSummaries(
+                summaries
+            );
+
+        const cutoffMonth =
+            findCurrentDataMonth(
+                summaries,
+                currentYear
+            );
+
         const previousYtd =
-            await loadPreviousYearYtd(
-                yearlyCollections,
+            loadPreviousYearYtd(
+                summaries,
                 currentYear - 1,
                 cutoffMonth
             );
