@@ -1,7 +1,7 @@
 // /js/pages/dashboard.js
 
 import { getDocumentRow } from "../services/firestore-service.js";
-import { addDays, dateToId } from "../utils/date-utils.js";
+import { dateToId } from "../utils/date-utils.js";
 import { getNumber } from "../utils/number-utils.js";
 
 export const title = "Dashboard";
@@ -1131,29 +1131,9 @@ function renderComparisonCharts(
 }
 
 async function loadDashboardData() {
-    const today =
-        new Date();
-
-    const yesterday =
-        addDays(
-            today,
-            -1
-        );
-
-    const previousYearComparableDate =
-        getPreviousYearComparableDate(
-            today
-        );
-
     const todayId =
-        dateToId(today);
-
-    const yesterdayId =
-        dateToId(yesterday);
-
-    const previousYearId =
         dateToId(
-            previousYearComparableDate
+            new Date()
         );
 
     document.getElementById(
@@ -1161,26 +1141,11 @@ async function loadDashboardData() {
     ).textContent =
         todayId;
 
-    const [
-        todayRow,
-        yesterdayRow,
-        previousYearRow
-    ] = await Promise.all([
-        getDocumentRow(
+    const todayRow =
+        await getDocumentRow(
             "shippingProgress",
             todayId
-        ),
-
-        getDocumentRow(
-            "shippingDaily",
-            yesterdayId
-        ),
-
-        getDocumentRow(
-            "shippingDaily",
-            previousYearId
-        )
-    ]);
+        );
 
     if (!active) {
         return;
@@ -1194,6 +1159,21 @@ async function loadDashboardData() {
 
         return;
     }
+
+    const comparison =
+        todayRow.comparison || {};
+
+    const yesterdayRow =
+        comparison.yesterday || {};
+
+    const previousYearRow =
+        comparison.previous_year || {};
+
+    const yesterdayId =
+        yesterdayRow.date || "-";
+
+    const previousYearId =
+        previousYearRow.date || "-";
 
     renderDashboardRow(
         todayRow,
