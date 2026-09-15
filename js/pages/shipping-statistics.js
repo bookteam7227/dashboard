@@ -1,7 +1,8 @@
 // /js/pages/shipping-statistics.js
 
 import {
-    getCollectionRowsByDocumentIdRange
+    getCollectionRowsByDocumentIdRange,
+    getDocumentRow
 } from "../services/firestore-service.js";
 import {
     addDays,
@@ -115,6 +116,73 @@ function setDailyRows(rows) {
     });
 }
 
+function getMonthIdsForRange(
+    startDateId,
+    endDateId
+) {
+    const start =
+        parseDateId(startDateId);
+
+    const end =
+        parseDateId(endDateId);
+
+    if (
+        !start ||
+        !end
+    ) {
+        return [];
+    }
+
+    const monthIds = [];
+    const cursor =
+        new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            1
+        );
+
+    const endMonth =
+        new Date(
+            end.getFullYear(),
+            end.getMonth(),
+            1
+        );
+
+    while (cursor <= endMonth) {
+        monthIds.push(
+            `${cursor.getFullYear()}-${String(
+                cursor.getMonth() + 1
+            ).padStart(2, "0")}`
+        );
+
+        cursor.setMonth(
+            cursor.getMonth() + 1
+        );
+    }
+
+    return monthIds;
+}
+
+function setMonthlySummaryRows(
+    monthlyDocuments
+) {
+    monthlyDocuments.forEach((documentRow) => {
+        if (
+            !documentRow ||
+            !documentRow.days ||
+            typeof documentRow.days !== "object"
+        ) {
+            return;
+        }
+
+        setDailyRows(
+            Object.values(
+                documentRow.days
+            )
+        );
+    });
+}
+
 async function loadDailyRange(
     startDateId,
     endDateId
@@ -129,31 +197,38 @@ async function loadDailyRange(
             endDateId
         );
 
-    const [
-        currentRows,
-        previousRows
-    ] = await Promise.all([
-        getCollectionRowsByDocumentIdRange(
-            "shippingDaily",
-            startDateId,
-            endDateId
-        ),
+    const monthIds =
+        Array.from(
+            new Set([
+                ...getMonthIdsForRange(
+                    startDateId,
+                    endDateId
+                ),
+                ...getMonthIdsForRange(
+                    previousStartDateId,
+                    previousEndDateId
+                )
+            ])
+        );
 
-        getCollectionRowsByDocumentIdRange(
-            "shippingDaily",
-            previousStartDateId,
-            previousEndDateId
-        )
-    ]);
+    const monthlyDocuments =
+        await Promise.all(
+            monthIds.map((monthId) =>
+                getDocumentRow(
+                    "shipping_daily_monthly",
+                    monthId
+                )
+            )
+        );
 
     if (!active) {
         return false;
     }
 
     dailyMap.clear();
-
-    setDailyRows(currentRows);
-    setDailyRows(previousRows);
+    setMonthlySummaryRows(
+        monthlyDocuments
+    );
 
     return true;
 }
