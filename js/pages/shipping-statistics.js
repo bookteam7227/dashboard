@@ -22,6 +22,7 @@ import {
 
 export const title = "발송 통계";
 
+const YEARLY_SUMMARY_COLLECTION = "yearly_dashboard_statistics";
 const dailyMap = new Map();
 
 let ordersChart = null;
@@ -530,46 +531,45 @@ function yearlyCourierData(
         new Map();
 
     rows.forEach((row) => {
-        const monthId =
-            String(
-                row.base_month ||
+        const year =
+            Number(
+                row.base_year ||
                 row.id
             );
 
-        const match =
-            /^(\d{4})-(\d{2})/.exec(
-                monthId
-            );
-
-        if (!match) {
+        if (!Number.isFinite(year)) {
             return;
         }
 
-        const year =
-            Number(
-                match[1]
-            );
+        const monthly =
+            row.monthly || {};
 
-        const monthIndex =
-            Number(
-                match[2]
-            ) - 1;
+        const monthlyValues =
+            Array(12).fill(0);
 
-        if (
-            !result.has(year)
+        for (
+            let month = 1;
+            month <= 12;
+            month += 1
         ) {
-            result.set(
-                year,
-                Array(12).fill(0)
-            );
+            const monthKey =
+                String(month).padStart(
+                    2,
+                    "0"
+                );
+
+            monthlyValues[month - 1] =
+                getNumber(
+                    monthly[monthKey]
+                        ?.courier
+                        ?.total_qty
+                );
         }
 
-        result.get(
-            year
-        )[monthIndex] =
-            getNumber(
-                row.total_qty
-            );
+        result.set(
+            year,
+            monthlyValues
+        );
     });
 
     return result;
@@ -588,17 +588,11 @@ async function loadAnnualData() {
     const firstYear =
         currentYear - 4;
 
-    const startDocumentId =
-        `${firstYear}-01`;
-
-    const endDocumentId =
-        `${currentYear}-12`;
-
     const rows =
         await getCollectionRowsByDocumentIdRange(
-            "monthly_courier_statistics",
-            startDocumentId,
-            endDocumentId
+            YEARLY_SUMMARY_COLLECTION,
+            String(firstYear),
+            String(currentYear)
         );
 
     if (!active) {
@@ -830,7 +824,7 @@ export async function mount({
         "rejected"
     ) {
         console.error(
-            "[monthly_courier_statistics]",
+            "[yearly_dashboard_statistics]",
             annualResult.reason
         );
 
