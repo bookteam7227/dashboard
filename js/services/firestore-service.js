@@ -10,6 +10,9 @@ import {
     where
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import { db } from "./firebase.js";
+import {
+    recordFirestoreReads
+} from "./usage-tracker.js";
 
 function mapSnapshot(snapshot) {
     return snapshot.docs.map((documentSnapshot) => ({
@@ -22,6 +25,8 @@ export async function getCollectionRows(collectionName) {
     const snapshot = await getDocs(
         collection(db, collectionName)
     );
+
+    recordFirestoreReads(Math.max(1, snapshot.size));
 
     return mapSnapshot(snapshot);
 }
@@ -37,6 +42,8 @@ export async function getDocumentRow(
             documentIdValue
         )
     );
+
+    recordFirestoreReads(1);
 
     if (!snapshot.exists()) {
         return null;
@@ -69,6 +76,8 @@ export async function getCollectionRowsByDocumentIdRange(
 
     const snapshot = await getDocs(rangeQuery);
 
+    recordFirestoreReads(Math.max(1, snapshot.size));
+
     return mapSnapshot(snapshot);
 }
 
@@ -91,6 +100,8 @@ export async function getCollectionRowsByDocumentIdPrefix(
     );
 
     const snapshot = await getDocs(prefixQuery);
+
+    recordFirestoreReads(Math.max(1, snapshot.size));
 
     return mapSnapshot(snapshot);
 }
@@ -123,6 +134,8 @@ export async function getCollectionRowsByFieldEqualsAndRange(
     );
 
     const snapshot = await getDocs(filteredQuery);
+
+    recordFirestoreReads(Math.max(1, snapshot.size));
 
     return mapSnapshot(snapshot);
 }
