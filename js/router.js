@@ -4,19 +4,23 @@ import * as dashboardPage from "./pages/dashboard.js";
 import * as shippingStatisticsPage from "./pages/shipping-statistics.js";
 import * as instructorSalesPage from "./pages/instructor-sales.js";
 import * as monthlyStatisticsPage from "./pages/monthly-statistics.js";
+import * as firestoreUsagePage from "./pages/firestore-usage.js";
+import { setUsageRoute } from "./services/usage-tracker.js";
 
 const routes = {
     dashboard: dashboardPage,
     "shipping-statistics": shippingStatisticsPage,
     "instructor-sales": instructorSalesPage,
-    "monthly-statistics": monthlyStatisticsPage
+    "monthly-statistics": monthlyStatisticsPage,
+    "firestore-usage": firestoreUsagePage
 };
 
 let currentPage = null;
 
 let accessControl = {
     role: "viewer",
-    allowedMenus: ["dashboard"]
+    allowedMenus: ["dashboard"],
+    canViewFirestoreUsage: false
 };
 
 function isAdmin() {
@@ -24,8 +28,16 @@ function isAdmin() {
 }
 
 function getAllowedRouteNames() {
+    const usageRoute = "firestore-usage";
+
     if (isAdmin()) {
-        return Object.keys(routes);
+        return Object.keys(routes).filter((routeName) => {
+            if (routeName !== usageRoute) {
+                return true;
+            }
+
+            return accessControl.canViewFirestoreUsage === true;
+        });
     }
 
     const allowedMenus =
@@ -36,7 +48,8 @@ function getAllowedRouteNames() {
     const allowedRoutes =
         allowedMenus.filter(
             (routeName) =>
-                Object.prototype.hasOwnProperty.call(
+                routeName !== usageRoute
+                && Object.prototype.hasOwnProperty.call(
                     routes,
                     routeName
                 )
@@ -92,7 +105,8 @@ function routeNameFromHash() {
 
 export function setAccessControl({
     role,
-    allowedMenus
+    allowedMenus,
+    canViewFirestoreUsage
 }) {
     accessControl = {
         role:
@@ -102,7 +116,9 @@ export function setAccessControl({
         allowedMenus:
             Array.isArray(allowedMenus)
                 ? [...allowedMenus]
-                : ["dashboard"]
+                : ["dashboard"],
+        canViewFirestoreUsage:
+            canViewFirestoreUsage === true
     };
 
     updateMenuVisibility();
@@ -144,6 +160,8 @@ export async function renderRoute() {
 
     const page =
         routes[routeName];
+
+    setUsageRoute(routeName);
 
     currentPage?.unmount?.();
     currentPage = page;
