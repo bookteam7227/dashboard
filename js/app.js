@@ -12,6 +12,11 @@ import {
     startRouter,
     stopRouter
 } from "./router.js";
+import {
+    flushUsageNow,
+    initializeUsageTracking,
+    stopUsageTracking
+} from "./services/usage-tracker.js";
 
 const loadingView = document.getElementById("loadingView");
 const loginView = document.getElementById("loginView");
@@ -78,6 +83,12 @@ loginForm.addEventListener("submit", async (event) => {
 
 logoutButton.addEventListener("click", async () => {
     try {
+        try {
+            await flushUsageNow();
+        } catch (error) {
+            console.error("[usage-flush:logout]", error);
+        }
+
         await logout();
     } catch (error) {
         console.error("[logout]", error);
@@ -91,8 +102,11 @@ observeAuth(async (user) => {
 
         setAccessControl({
             role: "viewer",
-            allowedMenus: ["dashboard"]
+            allowedMenus: ["dashboard"],
+            canViewFirestoreUsage: false
         });
+
+        stopUsageTracking();
 
         if (routerStarted) {
             stopRouter();
@@ -104,6 +118,7 @@ observeAuth(async (user) => {
     }
 
     showView("loading");
+    initializeUsageTracking(user);
 
     try {
         const profile =
@@ -119,7 +134,9 @@ observeAuth(async (user) => {
 
         setAccessControl({
             role,
-            allowedMenus
+            allowedMenus,
+            canViewFirestoreUsage:
+                profile?.canViewFirestoreUsage === true
         });
 
         sessionEmail.textContent =
@@ -157,4 +174,11 @@ observeAuth(async (user) => {
         loginMessage.textContent =
             "사용자 권한 정보를 불러오지 못했습니다. 잠시 후 다시 로그인해 주십시오.";
     }
+});
+
+
+window.addEventListener("pagehide", () => {
+    void flushUsageNow().catch((error) => {
+        console.error("[usage-flush:pagehide]", error);
+    });
 });
