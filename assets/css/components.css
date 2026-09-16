@@ -1097,3 +1097,170 @@
     overflow-y: auto;
 }
 
+
+/* =====================================================
+   Firestore usage
+   ===================================================== */
+
+.usage-page {
+    width: 100%;
+}
+
+.usage-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.usage-range-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.usage-range-button {
+    height: 36px;
+    border: 1px solid #d7e0eb;
+    color: #52657d;
+    background: #ffffff;
+}
+
+.usage-range-button.is-active {
+    border-color: #0f6fe8;
+    color: #ffffff;
+    background: #0f6fe8;
+}
+
+.usage-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.usage-summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 16px 18px;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.usage-summary-card span {
+    color: #728197;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.usage-summary-card strong {
+    overflow: hidden;
+    color: #173c6e;
+    font-size: 19px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.usage-table-card {
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.usage-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.usage-table {
+    width: 100%;
+    min-width: 1120px;
+    border-collapse: collapse;
+}
+
+.usage-table th,
+.usage-table td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #e8edf3;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.usage-table th {
+    color: #53667d;
+    background: #f8fafc;
+    font-size: 10.5px;
+    font-weight: 900;
+}
+
+.usage-table td {
+    color: #334a66;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.usage-table th:first-child,
+.usage-table td:first-child {
+    min-width: 220px;
+    text-align: left;
+}
+
+.usage-user-cell strong,
+.usage-user-cell span {
+    display: block;
+}
+
+.usage-user-cell strong {
+    color: #173c6e;
+    font-size: 11.5px;
+}
+
+.usage-user-cell span {
+    max-width: 220px;
+    margin-top: 3px;
+    overflow: hidden;
+    color: #8794a6;
+    font-size: 9.5px;
+    text-overflow: ellipsis;
+}
+
+.usage-total-cell {
+    color: #0f6fe8 !important;
+    font-weight: 900 !important;
+}
+
+.usage-empty {
+    padding: 24px !important;
+    color: #8794a6 !important;
+    text-align: center !important;
+}
+
+.usage-note {
+    margin: 10px 2px 0;
+    color: #7c899a;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+    .usage-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .usage-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .usage-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
