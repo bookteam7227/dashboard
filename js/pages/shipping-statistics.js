@@ -19,16 +19,24 @@ import {
     createAnnualChart,
     createComparisonChart
 } from "../utils/chart-utils.js";
+import {
+    getCachedData,
+    getDataVersion,
+    setCachedData
+} from "../services/data-cache.js";
 
 export const title = "발송 통계";
 
 const YEARLY_SUMMARY_COLLECTION = "yearly_dashboard_statistics";
+const CACHE_SCOPE = "shipping_statistics";
+const CACHE_TTL_MS = 60 * 60 * 1000;
 const dailyMap = new Map();
 
 let ordersChart = null;
 let booksChart = null;
 let annualChart = null;
 let active = false;
+let cacheVersion = null;
 
 function destroyCharts() {
     [
@@ -214,12 +222,33 @@ async function loadDailyRange(
 
     const monthlyDocuments =
         await Promise.all(
-            monthIds.map((monthId) =>
-                getDocumentRow(
+            monthIds.map(async (monthId) => {
+                const cacheKey = `daily:${monthId}`;
+                const cached = getCachedData(
+                    CACHE_SCOPE,
+                    cacheKey,
+                    cacheVersion,
+                    CACHE_TTL_MS
+                );
+
+                if (cached !== null) {
+                    return cached;
+                }
+
+                const row = await getDocumentRow(
                     "shipping_daily_monthly",
                     monthId
-                )
-            )
+                );
+
+                setCachedData(
+                    CACHE_SCOPE,
+                    cacheKey,
+                    cacheVersion,
+                    row
+                );
+
+                return row;
+            })
         );
 
     if (!active) {
@@ -588,12 +617,31 @@ async function loadAnnualData() {
     const firstYear =
         currentYear - 4;
 
-    const rows =
-        await getCollectionRowsByDocumentIdRange(
-            YEARLY_SUMMARY_COLLECTION,
-            String(firstYear),
-            String(currentYear)
+    const cacheKey =
+        `annual:${firstYear}-${currentYear}`;
+
+    let rows = getCachedData(
+        CACHE_SCOPE,
+        cacheKey,
+        cacheVersion,
+        CACHE_TTL_MS
+    );
+
+    if (rows === null) {
+        rows =
+            await getCollectionRowsByDocumentIdRange(
+                YEARLY_SUMMARY_COLLECTION,
+                String(firstYear),
+                String(currentYear)
+            );
+
+        setCachedData(
+            CACHE_SCOPE,
+            cacheKey,
+            cacheVersion,
+            rows
         );
+    }
 
     if (!active) {
         return;
@@ -632,6 +680,10 @@ export async function mount({
     actions
 }) {
     active = true;
+    cacheVersion =
+        await getDataVersion(
+            CACHE_SCOPE
+        );
 
     if (
         typeof Chart ===
