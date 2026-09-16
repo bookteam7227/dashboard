@@ -4,6 +4,11 @@ import {
     getCollectionRowsByDocumentIdRange
 } from "../services/firestore-service.js";
 import {
+    getCachedData,
+    getDataVersion,
+    setCachedData
+} from "../services/data-cache.js";
+import {
     calculateChangeRate,
     formatNumber,
     getComparisonClass,
@@ -14,6 +19,9 @@ import {
 } from "../utils/chart-utils.js";
 
 export const title = "월별 통계";
+
+const CACHE_SCOPE = "monthly_statistics";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 const ANNUAL_YEARS = 5;
 const SUMMARY_COLLECTION = "yearly_dashboard_statistics";
@@ -432,6 +440,7 @@ const TABLES = [
 ];
 
 let active = false;
+let cacheVersion = null;
 let salesChart = null;
 let courierComparisonChart = null;
 
@@ -719,12 +728,31 @@ async function loadYearlySummaryDocuments(
     firstYear,
     currentYear
 ) {
-    const rows =
-        await getCollectionRowsByDocumentIdRange(
-            SUMMARY_COLLECTION,
-            String(firstYear),
-            String(currentYear)
+    const cacheKey =
+        `summary:${firstYear}-${currentYear}`;
+
+    let rows = getCachedData(
+        CACHE_SCOPE,
+        cacheKey,
+        cacheVersion,
+        CACHE_TTL_MS
+    );
+
+    if (rows === null) {
+        rows =
+            await getCollectionRowsByDocumentIdRange(
+                SUMMARY_COLLECTION,
+                String(firstYear),
+                String(currentYear)
+            );
+
+        setCachedData(
+            CACHE_SCOPE,
+            cacheKey,
+            cacheVersion,
+            rows
         );
+    }
 
     return new Map(
         rows.map((row) => [
@@ -1959,6 +1987,10 @@ export async function mount({
     actions
 }) {
     active = true;
+    cacheVersion =
+        await getDataVersion(
+            CACHE_SCOPE
+        );
     destroyCharts();
 
     actions.innerHTML = "";
