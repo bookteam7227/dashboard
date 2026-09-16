@@ -10,10 +10,19 @@ import {
     getNumber
 } from "../utils/number-utils.js";
 import { createAnnualChart } from "../utils/chart-utils.js";
+import {
+    getCachedData,
+    getDataVersion,
+    setCachedData
+} from "../services/data-cache.js";
 
 export const title = "강사별 매출";
 
+const CACHE_SCOPE = "instructor_sales";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
 let active = false;
+let cacheVersion = null;
 let instructorSalesChart = null;
 let instructorAnnualTotalChart = null;
 
@@ -513,18 +522,40 @@ async function loadComparison(monthId) {
     status.textContent =
         "강사별 매출 자료를 불러오고 있습니다.";
 
+    const loadMonthlySummary = async (targetMonthId) => {
+        const cacheKey = `comparison:${targetMonthId}`;
+        const cached = getCachedData(
+            CACHE_SCOPE,
+            cacheKey,
+            cacheVersion,
+            CACHE_TTL_MS
+        );
+
+        if (cached !== null) {
+            return cached;
+        }
+
+        const row = await getDocumentRow(
+            "instructor_sales_monthly_summary",
+            targetMonthId
+        );
+
+        setCachedData(
+            CACHE_SCOPE,
+            cacheKey,
+            cacheVersion,
+            row
+        );
+
+        return row;
+    };
+
     const [
         currentSummary,
         previousSummary
     ] = await Promise.all([
-        getDocumentRow(
-            "instructor_sales_monthly_summary",
-            monthId
-        ),
-        getDocumentRow(
-            "instructor_sales_monthly_summary",
-            previousMonthId
-        )
+        loadMonthlySummary(monthId),
+        loadMonthlySummary(previousMonthId)
     ]);
 
     const currentRows =
@@ -1034,11 +1065,30 @@ async function loadTrend(instructorName) {
             normalizedName
         );
 
-    const trendDocument =
-        await getDocumentRow(
-            "instructor_sales_trend",
-            trendDocumentId
+    const trendCacheKey =
+        `trend:${trendDocumentId}`;
+
+    let trendDocument = getCachedData(
+        CACHE_SCOPE,
+        trendCacheKey,
+        cacheVersion,
+        CACHE_TTL_MS
+    );
+
+    if (trendDocument === null) {
+        trendDocument =
+            await getDocumentRow(
+                "instructor_sales_trend",
+                trendDocumentId
+            );
+
+        setCachedData(
+            CACHE_SCOPE,
+            trendCacheKey,
+            cacheVersion,
+            trendDocument
         );
+    }
 
     const rows =
         Array.isArray(trendDocument?.records)
@@ -1440,6 +1490,10 @@ export async function mount({
     actions
 }) {
     active = true;
+    cacheVersion =
+        await getDataVersion(
+            CACHE_SCOPE
+        );
 
     actions.innerHTML = "";
     content.innerHTML = createMarkup();
