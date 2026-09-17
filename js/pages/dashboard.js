@@ -2,7 +2,12 @@
 
 import { getDocumentRow } from "../services/firestore-service.js";
 import { dateToId } from "../utils/date-utils.js";
-import { getNumber } from "../utils/number-utils.js";
+import {
+    calculateChangeRate,
+    formatSignedValue,
+    getComparisonClass,
+    getNumber
+} from "../utils/number-utils.js";
 
 export const title = "Dashboard";
 
@@ -757,6 +762,193 @@ function renderDashboardRow(
     renderLocalStatuses(row);
 }
 
+function getOrCreateDashboardTooltip(chart) {
+    const container = chart.canvas.parentNode;
+    let element = container.querySelector(
+        ".chart-tooltip"
+    );
+
+    if (!element) {
+        element = document.createElement("div");
+        element.className = "chart-tooltip";
+        container.appendChild(element);
+    }
+
+    return element;
+}
+
+function renderDashboardComparisonTooltip(
+    context,
+    values
+) {
+    const { chart, tooltip } = context;
+    const element = getOrCreateDashboardTooltip(
+        chart
+    );
+
+    if (!tooltip.opacity || !tooltip.dataPoints?.length) {
+        element.style.opacity = 0;
+        return;
+    }
+
+    const dataIndex =
+        tooltip.dataPoints[0].dataIndex;
+
+    const title =
+        chart.data.labels[dataIndex] || "";
+
+    const currentRows =
+        tooltip.dataPoints.map((dataPoint) => {
+            const unit =
+                dataPoint.dataset.label === "건수"
+                    ? "건"
+                    : "권";
+
+            return `
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        ${dataPoint.dataset.label}
+                    </span>
+                    <span class="tooltip-value">
+                        ${formatNumber(
+                            dataPoint.raw
+                        )}${unit}
+                    </span>
+                </div>
+            `;
+        }).join("");
+
+    let comparisonRows = "";
+
+    if (dataIndex === 0) {
+        const todayOrders =
+            getNumber(values.todayOrders);
+        const todayBooks =
+            getNumber(values.todayBooks);
+        const previousYearOrders =
+            getNumber(values.previousYearOrders);
+        const previousYearBooks =
+            getNumber(values.previousYearBooks);
+
+        const orderDiff =
+            todayOrders - previousYearOrders;
+        const bookDiff =
+            todayBooks - previousYearBooks;
+
+        const orderRate = calculateChangeRate(
+            todayOrders,
+            previousYearOrders
+        );
+        const bookRate = calculateChangeRate(
+            todayBooks,
+            previousYearBooks
+        );
+
+        comparisonRows = `
+            <div class="tooltip-annual-group">
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        전년동기
+                    </span>
+                    <span class="tooltip-value tooltip-previous">
+                        ${formatShortDate(
+                            values.previousYearDate
+                        )}
+                    </span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        전년동기 건수
+                    </span>
+                    <span class="tooltip-value tooltip-previous">
+                        ${formatNumber(
+                            previousYearOrders
+                        )}건
+                    </span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        건수 전년대비
+                    </span>
+                    <span class="tooltip-value ${getComparisonClass(
+                        orderDiff
+                    )}">
+                        ${formatSignedValue(
+                            orderDiff,
+                            "건"
+                        )} (${orderRate.text})
+                    </span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        전년동기 권수
+                    </span>
+                    <span class="tooltip-value tooltip-previous">
+                        ${formatNumber(
+                            previousYearBooks
+                        )}권
+                    </span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">
+                        권수 전년대비
+                    </span>
+                    <span class="tooltip-value ${getComparisonClass(
+                        bookDiff
+                    )}">
+                        ${formatSignedValue(
+                            bookDiff,
+                            "권"
+                        )} (${bookRate.text})
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    element.innerHTML = `
+        <div class="tooltip-title">
+            ${title}
+        </div>
+        ${currentRows}
+        ${comparisonRows}
+    `;
+
+    const canvasBox =
+        chart.canvas.getBoundingClientRect();
+    const containerBox =
+        chart.canvas.parentNode.getBoundingClientRect();
+
+    const cursorX =
+        canvasBox.left
+        - containerBox.left
+        + tooltip.caretX;
+    const top =
+        canvasBox.top
+        - containerBox.top
+        + tooltip.caretY;
+
+    const halfWidth =
+        (element.offsetWidth || 220) / 2;
+    const horizontalOffset = 30;
+
+    let left =
+        cursorX
+        + halfWidth
+        + horizontalOffset;
+
+    if (left + halfWidth + 8 > containerBox.width) {
+        left =
+            cursorX
+            - halfWidth
+            - horizontalOffset;
+    }
+
+    element.style.opacity = 1;
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+}
+
 function createComparisonChart(
     canvasId,
     values
@@ -949,122 +1141,12 @@ function createComparisonChart(
                     },
 
                     tooltip: {
-                        callbacks: {
-                            label(context) {
-                                const unit =
-                                    context.dataset.label ===
-                                    "건수"
-                                        ? "건"
-                                        : "권";
-
-                                return (
-                                    `${context.dataset.label}: `
-                                    + `${formatNumber(
-                                        context.raw
-                                    )}${unit}`
-                                );
-                            },
-
-                            afterBody(tooltipItems) {
-                                const firstItem =
-                                    tooltipItems?.[0];
-
-                                if (
-                                    !firstItem
-                                    || firstItem.dataIndex !== 0
-                                ) {
-                                    return [];
-                                }
-
-                                const todayOrders =
-                                    getNumber(
-                                        values.todayOrders
-                                    );
-
-                                const todayBooks =
-                                    getNumber(
-                                        values.todayBooks
-                                    );
-
-                                const previousYearOrders =
-                                    getNumber(
-                                        values.previousYearOrders
-                                    );
-
-                                const previousYearBooks =
-                                    getNumber(
-                                        values.previousYearBooks
-                                    );
-
-                                const orderDiff =
-                                    todayOrders
-                                    - previousYearOrders;
-
-                                const bookDiff =
-                                    todayBooks
-                                    - previousYearBooks;
-
-                                const orderRate =
-                                    previousYearOrders === 0
-                                        ? null
-                                        : (
-                                            orderDiff
-                                            / previousYearOrders
-                                        ) * 100;
-
-                                const bookRate =
-                                    previousYearBooks === 0
-                                        ? null
-                                        : (
-                                            bookDiff
-                                            / previousYearBooks
-                                        ) * 100;
-
-                                const formatDiff = (
-                                    diff,
-                                    unit,
-                                    rate
-                                ) => {
-                                    const sign =
-                                        diff > 0
-                                            ? "+"
-                                            : "";
-
-                                    const rateText =
-                                        rate === null
-                                            ? "산정불가"
-                                            : `${
-                                                rate > 0
-                                                    ? "+"
-                                                    : ""
-                                            }${rate.toFixed(1)}%`;
-
-                                    return (
-                                        `${sign}${formatNumber(diff)}${unit}`
-                                        + ` (${rateText})`
-                                    );
-                                };
-
-                                return [
-                                    `전년동기 ${formatShortDate(
-                                        values.previousYearDate
-                                    )}`,
-                                    `건수: ${formatNumber(
-                                        previousYearOrders
-                                    )}건 · 전년대비 ${formatDiff(
-                                        orderDiff,
-                                        "건",
-                                        orderRate
-                                    )}`,
-                                    `권수: ${formatNumber(
-                                        previousYearBooks
-                                    )}권 · 전년대비 ${formatDiff(
-                                        bookDiff,
-                                        "권",
-                                        bookRate
-                                    )}`
-                                ];
-                            }
+                        enabled: false,
+                        external(context) {
+                            renderDashboardComparisonTooltip(
+                                context,
+                                values
+                            );
                         }
                     }
                 },
