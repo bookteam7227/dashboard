@@ -963,6 +963,107 @@ function createComparisonChart(
                                         context.raw
                                     )}${unit}`
                                 );
+                            },
+
+                            afterBody(tooltipItems) {
+                                const firstItem =
+                                    tooltipItems?.[0];
+
+                                if (
+                                    !firstItem
+                                    || firstItem.dataIndex !== 0
+                                ) {
+                                    return [];
+                                }
+
+                                const todayOrders =
+                                    getNumber(
+                                        values.todayOrders
+                                    );
+
+                                const todayBooks =
+                                    getNumber(
+                                        values.todayBooks
+                                    );
+
+                                const previousYearOrders =
+                                    getNumber(
+                                        values.previousYearOrders
+                                    );
+
+                                const previousYearBooks =
+                                    getNumber(
+                                        values.previousYearBooks
+                                    );
+
+                                const orderDiff =
+                                    todayOrders
+                                    - previousYearOrders;
+
+                                const bookDiff =
+                                    todayBooks
+                                    - previousYearBooks;
+
+                                const orderRate =
+                                    previousYearOrders === 0
+                                        ? null
+                                        : (
+                                            orderDiff
+                                            / previousYearOrders
+                                        ) * 100;
+
+                                const bookRate =
+                                    previousYearBooks === 0
+                                        ? null
+                                        : (
+                                            bookDiff
+                                            / previousYearBooks
+                                        ) * 100;
+
+                                const formatDiff = (
+                                    diff,
+                                    unit,
+                                    rate
+                                ) => {
+                                    const sign =
+                                        diff > 0
+                                            ? "+"
+                                            : "";
+
+                                    const rateText =
+                                        rate === null
+                                            ? "산정불가"
+                                            : `${
+                                                rate > 0
+                                                    ? "+"
+                                                    : ""
+                                            }${rate.toFixed(1)}%`;
+
+                                    return (
+                                        `${sign}${formatNumber(diff)}${unit}`
+                                        + ` (${rateText})`
+                                    );
+                                };
+
+                                return [
+                                    `전년동기 ${formatShortDate(
+                                        values.previousYearDate
+                                    )}`,
+                                    `건수: ${formatNumber(
+                                        previousYearOrders
+                                    )}건 · 전년대비 ${formatDiff(
+                                        orderDiff,
+                                        "건",
+                                        orderRate
+                                    )}`,
+                                    `권수: ${formatNumber(
+                                        previousYearBooks
+                                    )}권 · 전년대비 ${formatDiff(
+                                        bookDiff,
+                                        "권",
+                                        bookRate
+                                    )}`
+                                ];
                             }
                         }
                     }
@@ -1077,7 +1178,10 @@ function renderComparisonCharts(
                     previousYearRow?.lecture_orders,
 
                 previousYearBooks:
-                    previousYearRow?.lecture_books
+                    previousYearRow?.lecture_books,
+
+                previousYearDate:
+                    previousYearId
             }
         );
 
@@ -1101,7 +1205,10 @@ function renderComparisonCharts(
                     previousYearRow?.bookstore_orders,
 
                 previousYearBooks:
-                    previousYearRow?.bookstore_books
+                    previousYearRow?.bookstore_books,
+
+                previousYearDate:
+                    previousYearId
             }
         );
 
@@ -1125,7 +1232,10 @@ function renderComparisonCharts(
                     previousYearRow?.unistudy_orders,
 
                 previousYearBooks:
-                    previousYearRow?.unistudy_books
+                    previousYearRow?.unistudy_books,
+
+                previousYearDate:
+                    previousYearId
             }
         );
 }
