@@ -703,7 +703,7 @@ function createMarkup() {
             <article class="inventory-risk-summary-card">
                 <div class="inventory-risk-summary-head">
                     <span class="inventory-risk-summary-label">
-                        전체 위험 교재
+                        이슈 교재 전체
                     </span>
                     <span class="inventory-risk-summary-mark">
                         전체
