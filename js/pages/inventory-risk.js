@@ -16,6 +16,7 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let active = false;
 let rows = [];
+let visibleRows = [];
 let currentMeta = null;
 
 let currentSortKey = "";
@@ -600,7 +601,562 @@ function applySearch() {
             currentSortDirection
         );
 
+    visibleRows = [...sorted];
+
     renderTable(sorted);
+}
+
+
+function getSelectedOptionText(elementId) {
+    const select =
+        document.getElementById(elementId);
+
+    if (!select) {
+        return "";
+    }
+
+    return normalizeText(
+        select.options[
+            select.selectedIndex
+        ]?.textContent
+    );
+}
+
+function getExcelReferenceDate() {
+    const sourceRow =
+        visibleRows[0]
+        || rows[0];
+
+    return normalizeText(
+        sourceRow?.work_date
+    ) || "-";
+}
+
+function getExcelSearchConditionText() {
+    const riskText =
+        getSelectedOptionText(
+            "inventoryRiskTypeSelect"
+        ) || "전체";
+
+    const fieldText =
+        getSelectedOptionText(
+            "inventoryRiskFieldSelect"
+        ) || "강사명";
+
+    const keyword =
+        normalizeText(
+            document.getElementById(
+                "inventoryRiskSearchInput"
+            )?.value
+        );
+
+    const keywordText =
+        keyword
+            ? `${fieldText}: ${keyword}`
+            : `${fieldText}: 전체`;
+
+    return (
+        `검색조건: 구분=${riskText} / ${keywordText}`
+        + `    기준일자: ${getExcelReferenceDate()}`
+    );
+}
+
+function getExcelNumber(value) {
+    if (
+        value === null
+        || value === undefined
+        || value === ""
+    ) {
+        return null;
+    }
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+        ? number
+        : null;
+}
+
+function loadExcelLibrary() {
+    if (window.XLSX) {
+        return Promise.resolve(
+            window.XLSX
+        );
+    }
+
+    return new Promise(
+        (resolve, reject) => {
+            const existingScript =
+                document.querySelector(
+                    'script[data-inventory-xlsx="true"]'
+                );
+
+            if (existingScript) {
+                existingScript.addEventListener(
+                    "load",
+                    () => resolve(window.XLSX),
+                    {
+                        once: true
+                    }
+                );
+
+                existingScript.addEventListener(
+                    "error",
+                    () => reject(
+                        new Error(
+                            "엑셀 라이브러리를 불러오지 못했습니다."
+                        )
+                    ),
+                    {
+                        once: true
+                    }
+                );
+
+                return;
+            }
+
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+            script.src =
+                "https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js";
+
+            script.async = true;
+            script.dataset.inventoryXlsx =
+                "true";
+
+            script.addEventListener(
+                "load",
+                () => {
+                    if (!window.XLSX) {
+                        reject(
+                            new Error(
+                                "엑셀 라이브러리 초기화에 실패했습니다."
+                            )
+                        );
+                        return;
+                    }
+
+                    resolve(window.XLSX);
+                },
+                {
+                    once: true
+                }
+            );
+
+            script.addEventListener(
+                "error",
+                () => reject(
+                    new Error(
+                        "엑셀 라이브러리를 불러오지 못했습니다."
+                    )
+                ),
+                {
+                    once: true
+                }
+            );
+
+            document.head.appendChild(
+                script
+            );
+        }
+    );
+}
+
+function applyExcelCellStyle(
+    worksheet,
+    cellAddress,
+    style
+) {
+    const cell =
+        worksheet[cellAddress];
+
+    if (!cell) {
+        return;
+    }
+
+    cell.s = style;
+}
+
+async function downloadInventoryRiskExcel() {
+    if (!visibleRows.length) {
+        window.alert(
+            "다운로드할 교재가 없습니다."
+        );
+        return;
+    }
+
+    const downloadButton =
+        document.getElementById(
+            "inventoryRiskExcelButton"
+        );
+
+    const originalText =
+        downloadButton?.textContent;
+
+    if (downloadButton) {
+        downloadButton.disabled = true;
+        downloadButton.textContent =
+            "생성 중...";
+    }
+
+    try {
+        const XLSX =
+            await loadExcelLibrary();
+
+        const headers = [
+            "교재코드",
+            "바코드",
+            "강사명",
+            "교재명",
+            "거래처",
+            "출고전재고",
+            "파본",
+            "금일 출고",
+            "외부창고",
+            "출고후재고",
+            "출고가능일",
+            "구분"
+        ];
+
+        const dataRows =
+            visibleRows.map(
+                (row) => [
+                    normalizeText(
+                        row.book_code
+                    ),
+                    normalizeText(
+                        row.barcode
+                    ),
+                    normalizeText(
+                        row.instructor_name
+                    ),
+                    normalizeText(
+                        row.book_name
+                    ),
+                    normalizeText(
+                        row.vendor_name
+                    ),
+                    getExcelNumber(
+                        row.stock_before
+                    ),
+                    getExcelNumber(
+                        row.defective_qty
+                    ),
+                    getExcelNumber(
+                        row.dispatch_qty
+                    ),
+                    getExcelNumber(
+                        row.external_stock
+                    ),
+                    getExcelNumber(
+                        row.available_stock
+                    ),
+                    getExcelNumber(
+                        row.available_days
+                    ),
+                    getRiskLabels(row).join(
+                        " / "
+                    )
+                ]
+            );
+
+        const worksheetData = [
+            ["교재 재고 현황"],
+            [
+                getExcelSearchConditionText()
+            ],
+            [],
+            headers,
+            ...dataRows
+        ];
+
+        const worksheet =
+            XLSX.utils.aoa_to_sheet(
+                worksheetData
+            );
+
+        const lastColumnIndex =
+            headers.length - 1;
+
+        const lastRowNumber =
+            worksheetData.length;
+
+        worksheet["!merges"] = [
+            {
+                s: {
+                    r: 0,
+                    c: 0
+                },
+                e: {
+                    r: 0,
+                    c: lastColumnIndex
+                }
+            },
+            {
+                s: {
+                    r: 1,
+                    c: 0
+                },
+                e: {
+                    r: 1,
+                    c: lastColumnIndex
+                }
+            }
+        ];
+
+        worksheet["!rows"] = [
+            {
+                hpx: 13
+            }
+        ];
+
+        worksheet["!cols"] = [
+            {
+                wch: 12
+            },
+            {
+                wch: 16
+            },
+            {
+                wch: 12
+            },
+            {
+                wch: 42
+            },
+            {
+                wch: 18
+            },
+            {
+                wch: 12
+            },
+            {
+                wch: 10
+            },
+            {
+                wch: 10
+            },
+            {
+                wch: 10
+            },
+            {
+                wch: 12
+            },
+            {
+                wch: 12
+            },
+            {
+                wch: 28
+            }
+        ];
+
+        const thinBorder = {
+            top: {
+                style: "thin",
+                color: {
+                    rgb: "BFBFBF"
+                }
+            },
+            bottom: {
+                style: "thin",
+                color: {
+                    rgb: "BFBFBF"
+                }
+            },
+            left: {
+                style: "thin",
+                color: {
+                    rgb: "BFBFBF"
+                }
+            },
+            right: {
+                style: "thin",
+                color: {
+                    rgb: "BFBFBF"
+                }
+            }
+        };
+
+        const titleStyle = {
+            font: {
+                name: "Malgun Gothic",
+                sz: 13,
+                bold: true
+            },
+            alignment: {
+                vertical: "center",
+                horizontal: "left"
+            }
+        };
+
+        const conditionStyle = {
+            font: {
+                name: "Malgun Gothic",
+                sz: 10,
+                bold: true
+            },
+            alignment: {
+                vertical: "center",
+                horizontal: "left"
+            }
+        };
+
+        const headerStyle = {
+            font: {
+                name: "Malgun Gothic",
+                sz: 10,
+                bold: true
+            },
+            fill: {
+                patternType: "solid",
+                fgColor: {
+                    rgb: "D9D9D9"
+                }
+            },
+            alignment: {
+                vertical: "center",
+                horizontal: "center"
+            },
+            border: thinBorder
+        };
+
+        const centeredDataStyle = {
+            font: {
+                name: "Malgun Gothic",
+                sz: 10
+            },
+            alignment: {
+                vertical: "center",
+                horizontal: "center"
+            },
+            border: thinBorder
+        };
+
+        const leftDataStyle = {
+            font: {
+                name: "Malgun Gothic",
+                sz: 10
+            },
+            alignment: {
+                vertical: "center",
+                horizontal: "left"
+            },
+            border: thinBorder
+        };
+
+        applyExcelCellStyle(
+            worksheet,
+            "A1",
+            titleStyle
+        );
+
+        applyExcelCellStyle(
+            worksheet,
+            "A2",
+            conditionStyle
+        );
+
+        for (
+            let columnIndex = 0;
+            columnIndex <= lastColumnIndex;
+            columnIndex += 1
+        ) {
+            const headerCell =
+                XLSX.utils.encode_cell({
+                    r: 3,
+                    c: columnIndex
+                });
+
+            applyExcelCellStyle(
+                worksheet,
+                headerCell,
+                headerStyle
+            );
+        }
+
+        for (
+            let rowIndex = 4;
+            rowIndex < lastRowNumber;
+            rowIndex += 1
+        ) {
+            for (
+                let columnIndex = 0;
+                columnIndex <= lastColumnIndex;
+                columnIndex += 1
+            ) {
+                const cellAddress =
+                    XLSX.utils.encode_cell({
+                        r: rowIndex,
+                        c: columnIndex
+                    });
+
+                applyExcelCellStyle(
+                    worksheet,
+                    cellAddress,
+                    columnIndex === 3
+                        ? leftDataStyle
+                        : centeredDataStyle
+                );
+            }
+        }
+
+        worksheet["!autofilter"] = {
+            ref:
+                `A4:${
+                    XLSX.utils.encode_col(
+                        lastColumnIndex
+                    )
+                }${lastRowNumber}`
+        };
+
+        worksheet["!freeze"] = {
+            xSplit: 0,
+            ySplit: 4,
+            topLeftCell: "A5",
+            activePane: "bottomLeft",
+            state: "frozen"
+        };
+
+        const workbook =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "교재 재고 현황"
+        );
+
+        const referenceDate =
+            getExcelReferenceDate()
+                .replaceAll("-", "");
+
+        XLSX.writeFile(
+            workbook,
+            `교재재고현황_${
+                referenceDate || "data"
+            }.xlsx`
+        );
+    } catch (error) {
+        console.error(
+            "[inventoryRisk:downloadExcel]",
+            error
+        );
+
+        window.alert(
+            "엑셀 파일 생성 중 오류가 발생했습니다."
+        );
+    } finally {
+        if (downloadButton) {
+            downloadButton.disabled =
+                false;
+
+            downloadButton.textContent =
+                originalText
+                || "엑셀 다운로드";
+        }
+    }
 }
 
 function resetSearch() {
@@ -657,6 +1213,15 @@ function bindEvents() {
         ?.addEventListener(
             "click",
             resetSearch
+        );
+
+    document
+        .getElementById(
+            "inventoryRiskExcelButton"
+        )
+        ?.addEventListener(
+            "click",
+            downloadInventoryRiskExcel
         );
 
     document
@@ -1096,12 +1661,22 @@ function createMarkup() {
                     </p>
                 </div>
 
-                <strong
-                    id="inventoryRiskResultCount"
-                    class="inventory-risk-result-count"
-                >
-                    0종
-                </strong>
+                <div class="instructor-filter">
+                    <button
+                        id="inventoryRiskExcelButton"
+                        class="btn primary"
+                        type="button"
+                    >
+                        엑셀 다운로드
+                    </button>
+
+                    <strong
+                        id="inventoryRiskResultCount"
+                        class="inventory-risk-result-count"
+                    >
+                        0종
+                    </strong>
+                </div>
             </div>
 
             <div class="inventory-risk-table-wrap">
