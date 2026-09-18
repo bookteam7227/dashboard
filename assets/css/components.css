@@ -1483,3 +1483,53 @@ background: #eef3f8;
     white-space: nowrap;
 }
 
+/* 교재 재고 현황 - 테이블 헤더 정렬 */
+.inventory-risk-sort-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    text-align: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.inventory-risk-sort-button:hover,
+.inventory-risk-sort-button.is-active {
+    color: rgb(37 99 235);
+}
+
+.inventory-risk-sort-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 10px;
+    height: 14px;
+    align-items: center;
+    justify-content: center;
+}
+
+.inventory-risk-sort-icon::before {
+    content: "↕";
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.45;
+}
+
+.inventory-risk-sort-button.is-active[data-direction="asc"]
+.inventory-risk-sort-icon::before {
+    content: "↑";
+    opacity: 1;
+}
+
+.inventory-risk-sort-button.is-active[data-direction="desc"]
+.inventory-risk-sort-icon::before {
+    content: "↓";
+    opacity: 1;
+}
+
