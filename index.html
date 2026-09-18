@@ -27,7 +27,9 @@
                 alt="megastudy"
             >
 
-            <h1 class="auth-title">교재팀 대시보드 로그인</h1>
+            <h1 class="auth-title">
+                교재팀 대시보드 로그인
+            </h1>
 
             <p class="auth-desc">
                 승인된 계정만 대시보드에 접근할 수 있습니다.
@@ -50,7 +52,11 @@
                     required
                 >
 
-                <button id="loginButton" class="auth-login-btn" type="submit">
+                <button
+                    id="loginButton"
+                    class="auth-login-btn"
+                    type="submit"
+                >
                     로그인
                 </button>
             </form>
@@ -68,7 +74,11 @@
     <section id="dashboardView" hidden>
         <div class="app-shell">
             <aside class="sidebar">
-                <a class="brand" href="#/dashboard" aria-label="Dashboard">
+                <a
+                    class="brand"
+                    href="#/dashboard"
+                    aria-label="Dashboard"
+                >
                     <img
                         class="brand-ci-logo"
                         src="./assets/images/megastudy-logo.jpg"
@@ -76,13 +86,60 @@
                     >
                 </a>
 
-                <nav class="menu" aria-label="대시보드 메뉴">
+                <nav
+                    class="menu"
+                    aria-label="대시보드 메뉴"
+                >
                     <a
                         class="menu-link"
                         data-route="dashboard"
                         href="#/dashboard"
                     >
-                        <span class="menu-icon" aria-hidden="true">⌂</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <rect
+                                x="3"
+                                y="3"
+                                width="7"
+                                height="9"
+                                rx="1"
+                            ></rect>
+
+                            <rect
+                                x="14"
+                                y="3"
+                                width="7"
+                                height="5"
+                                rx="1"
+                            ></rect>
+
+                            <rect
+                                x="14"
+                                y="12"
+                                width="7"
+                                height="9"
+                                rx="1"
+                            ></rect>
+
+                            <rect
+                                x="3"
+                                y="16"
+                                width="7"
+                                height="5"
+                                rx="1"
+                            ></rect>
+                        </svg>
+
                         <span>Dashboard</span>
                     </a>
 
@@ -92,7 +149,35 @@
                         href="#/shipping-statistics"
                         hidden
                     >
-                        <span class="menu-icon" aria-hidden="true">▥</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M3 3v18h18"
+                            ></path>
+
+                            <path
+                                d="M7 15l4-4 3 2 5-6"
+                            ></path>
+
+                            <path
+                                d="M19 7h-4"
+                            ></path>
+
+                            <path
+                                d="M19 7v4"
+                            ></path>
+                        </svg>
+
                         <span>발송 통계</span>
                     </a>
 
@@ -102,7 +187,31 @@
                         href="#/inventory-risk"
                         hidden
                     >
-                        <span class="menu-icon" aria-hidden="true">▧</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"
+                            ></path>
+
+                            <path
+                                d="m3.3 7 8.7 5 8.7-5"
+                            ></path>
+
+                            <path
+                                d="M12 22V12"
+                            ></path>
+                        </svg>
+
                         <span>교재 재고 현황</span>
                     </a>
 
@@ -112,7 +221,39 @@
                         href="#/instructor-sales"
                         hidden
                     >
-                        <span class="menu-icon" aria-hidden="true">▤</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M3 20h18"
+                            ></path>
+
+                            <path
+                                d="M6 16v-4"
+                            ></path>
+
+                            <path
+                                d="M10 16V8"
+                            ></path>
+
+                            <path
+                                d="M14 16v-6"
+                            ></path>
+
+                            <path
+                                d="M18 16V4"
+                            ></path>
+                        </svg>
+
                         <span>강사별 매출 통계</span>
                     </a>
 
@@ -122,7 +263,55 @@
                         href="#/monthly-statistics"
                         hidden
                     >
-                        <span class="menu-icon" aria-hidden="true">▦</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <rect
+                                x="3"
+                                y="4"
+                                width="18"
+                                height="18"
+                                rx="2"
+                            ></rect>
+
+                            <path
+                                d="M16 2v4"
+                            ></path>
+
+                            <path
+                                d="M8 2v4"
+                            ></path>
+
+                            <path
+                                d="M3 10h18"
+                            ></path>
+
+                            <path
+                                d="M8 14h2"
+                            ></path>
+
+                            <path
+                                d="M14 14h2"
+                            ></path>
+
+                            <path
+                                d="M8 18h2"
+                            ></path>
+
+                            <path
+                                d="M14 18h2"
+                            ></path>
+                        </svg>
+
                         <span>월별 통계</span>
                     </a>
 
@@ -132,7 +321,34 @@
                         href="#/firestore-usage"
                         hidden
                     >
-                        <span class="menu-icon" aria-hidden="true">◫</span>
+                        <svg
+                            class="menu-icon"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <ellipse
+                                cx="12"
+                                cy="5"
+                                rx="9"
+                                ry="3"
+                            ></ellipse>
+
+                            <path
+                                d="M3 5v7c0 1.66 4.03 3 9 3s9-1.34 9-3V5"
+                            ></path>
+
+                            <path
+                                d="M3 12v7c0 1.66 4.03 3 9 3s9-1.34 9-3v-7"
+                            ></path>
+                        </svg>
+
                         <span>Firestore 사용량</span>
                     </a>
                 </nav>
@@ -141,15 +357,34 @@
             <main class="main-area">
                 <header class="topbar">
                     <div>
-                        <h1 id="pageTitle" class="page-title">Dashboard</h1>
+                        <h1
+                            id="pageTitle"
+                            class="page-title"
+                        >
+                            Dashboard
+                        </h1>
                     </div>
 
                     <div class="topbar-right">
-                        <div id="pageActions" class="page-actions"></div>
+                        <div
+                            id="pageActions"
+                            class="page-actions"
+                        ></div>
 
                         <div class="session-chip">
-                            <span id="sessionRole" class="session-role">일반</span>
-                            <span id="sessionEmail" class="session-email">-</span>
+                            <span
+                                id="sessionRole"
+                                class="session-role"
+                            >
+                                일반
+                            </span>
+
+                            <span
+                                id="sessionEmail"
+                                class="session-email"
+                            >
+                                -
+                            </span>
 
                             <button
                                 id="logoutButton"
@@ -162,11 +397,17 @@
                     </div>
                 </header>
 
-                <div id="pageContent" class="page-content"></div>
+                <div
+                    id="pageContent"
+                    class="page-content"
+                ></div>
             </main>
         </div>
     </section>
 
-    <script type="module" src="./js/app.js"></script>
+    <script
+        type="module"
+        src="./js/app.js"
+    ></script>
 </body>
 </html>
