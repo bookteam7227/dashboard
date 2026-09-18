@@ -11,7 +11,7 @@ const SNAPSHOT_COLLECTION_NAME = "inventoryRiskSnapshot";
 const META_COLLECTION_NAME = "dashboard_meta";
 const META_DOCUMENT_ID = "inventory-risk";
 
-const CACHE_KEY = "dashboard.inventoryRisk.v1";
+const CACHE_KEY = "dashboard.inventoryRisk.v2";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let active = false;
@@ -75,6 +75,10 @@ function getRiskLabels(row) {
         result.push("장기 재고");
     }
 
+    if (getNumber(row.stock_before) <= 0) {
+        result.push("재고 소진");
+    }
+
     return result;
 }
 
@@ -89,6 +93,12 @@ function isRiskMatch(row, riskType) {
 
     if (riskType === "long-term") {
         return row.is_long_term === true;
+    }
+
+    if (riskType === "depleted") {
+        return getNumber(
+            row.stock_before
+        ) <= 0;
     }
 
     return true;
@@ -281,9 +291,14 @@ function riskBadgeMarkup(row) {
         ) {
             className +=
                 " is-overstock";
-        } else {
+        } else if (
+            label === "장기 재고"
+        ) {
             className +=
                 " is-long-term";
+        } else {
+            className +=
+                " is-depleted";
         }
 
         return `
@@ -797,6 +812,9 @@ function createMarkup() {
                         </option>
                         <option value="long-term">
                             장기 재고
+                        </option>
+                        <option value="depleted">
+                            재고 소진
                         </option>
                     </select>
                 </div>
