@@ -943,7 +943,7 @@ function createMarkup() {
             <article class="inventory-risk-summary-card is-depleted">
                 <div class="inventory-risk-summary-head">
                     <span class="inventory-risk-summary-label">
-                        재고소진
+                        예약판매 / 재고소진
                     </span>
                     <span class="inventory-risk-summary-mark">
                         소진
