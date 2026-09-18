@@ -12,9 +12,12 @@ const COLLECTION_NAME = "inventoryRisk";
 const META_COLLECTION_NAME = "dashboard_meta";
 const META_DOCUMENT_ID = "inventory-risk";
 
+const CACHE_KEY = "dashboard.inventoryRisk.v1";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
 let active = false;
-let cachedRows = [];
-let cachedVersion = null;
+let rows = [];
+let currentMeta = null;
 
 function formatNumber(value) {
     return getNumber(value).toLocaleString("ko-KR");
@@ -36,13 +39,17 @@ function formatAvailableDays(value) {
     }
 
     return `${number.toLocaleString("ko-KR", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 1
     })}일`;
 }
 
 function normalizeText(value) {
     return String(value ?? "").trim();
+}
+
+function normalizeSearchText(value) {
+    return normalizeText(value)
+        .toLocaleLowerCase("ko-KR");
 }
 
 function escapeHtml(value) {
@@ -54,125 +61,190 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-function riskLabels(row) {
-    const labels = [];
+function getRiskLabels(row) {
+    const result = [];
 
-    if (Number(row.is_stockout_risk) === 1) {
-        labels.push("품절 위험");
+    if (row.is_stockout_risk === true) {
+        result.push("품절 위험");
     }
 
-    if (Number(row.is_overstock) === 1) {
-        labels.push("과다 재고");
+    if (row.is_overstock === true) {
+        result.push("과다 재고");
     }
 
-    if (Number(row.is_long_term) === 1) {
-        labels.push("장기 재고");
+    if (row.is_long_term === true) {
+        result.push("장기 재고");
     }
 
-    return labels;
+    return result;
 }
 
-function matchesRiskType(row, riskType) {
-    switch (riskType) {
-        case "stockout":
-            return Number(row.is_stockout_risk) === 1;
+function isRiskMatch(row, riskType) {
+    if (riskType === "stockout") {
+        return row.is_stockout_risk === true;
+    }
 
-        case "overstock":
-            return Number(row.is_overstock) === 1;
+    if (riskType === "overstock") {
+        return row.is_overstock === true;
+    }
 
-        case "long-term":
-            return Number(row.is_long_term) === 1;
+    if (riskType === "long-term") {
+        return row.is_long_term === true;
+    }
 
-        default:
-            return true;
+    return true;
+}
+
+function getSearchFieldName(fieldType) {
+    if (fieldType === "vendor") {
+        return "vendor_name";
+    }
+
+    if (fieldType === "book") {
+        return "book_name";
+    }
+
+    return "instructor_name";
+}
+
+function readCache() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+
+        if (!raw) {
+            return null;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        if (
+            !parsed
+            || !Array.isArray(parsed.rows)
+            || typeof parsed.savedAt !== "number"
+        ) {
+            return null;
+        }
+
+        return parsed;
+    } catch (error) {
+        console.error(
+            "[inventoryRisk:readCache]",
+            error
+        );
+
+        return null;
     }
 }
 
-function uniqueSortedValues(rows, fieldName) {
-    return Array.from(
-        new Set(
-            rows
-                .map((row) => normalizeText(row[fieldName]))
-                .filter(Boolean)
-        )
-    ).sort((a, b) =>
-        a.localeCompare(
-            b,
+function writeCache(version, dataRows) {
+    try {
+        localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+                version: normalizeText(version),
+                savedAt: Date.now(),
+                rows: dataRows
+            })
+        );
+    } catch (error) {
+        console.error(
+            "[inventoryRisk:writeCache]",
+            error
+        );
+    }
+}
+
+function isCacheFresh(cache) {
+    if (!cache) {
+        return false;
+    }
+
+    return (
+        Date.now() - cache.savedAt
+        < CACHE_TTL_MS
+    );
+}
+
+function getMetaVersion(meta) {
+    return normalizeText(
+        meta?.version
+        || meta?.updated_at
+    );
+}
+
+function sortRows(dataRows) {
+    return [...dataRows].sort((a, b) => {
+        const aStockout =
+            a.is_stockout_risk === true
+                ? 1
+                : 0;
+
+        const bStockout =
+            b.is_stockout_risk === true
+                ? 1
+                : 0;
+
+        if (aStockout !== bStockout) {
+            return bStockout - aStockout;
+        }
+
+        const aDays =
+            Number(a.available_days);
+
+        const bDays =
+            Number(b.available_days);
+
+        const safeADays =
+            Number.isFinite(aDays)
+                ? aDays
+                : Number.MAX_SAFE_INTEGER;
+
+        const safeBDays =
+            Number.isFinite(bDays)
+                ? bDays
+                : Number.MAX_SAFE_INTEGER;
+
+        if (safeADays !== safeBDays) {
+            return safeADays - safeBDays;
+        }
+
+        return normalizeText(
+            a.book_name
+        ).localeCompare(
+            normalizeText(
+                b.book_name
+            ),
             "ko-KR",
             {
                 numeric: true
             }
-        )
-    );
-}
-
-function optionMarkup(value) {
-    const safeValue = escapeHtml(value);
-
-    return `
-        <option value="${safeValue}">
-            ${safeValue}
-        </option>
-    `;
-}
-
-function populateSelect(
-    elementId,
-    rows,
-    fieldName,
-    defaultText
-) {
-    const select =
-        document.getElementById(elementId);
-
-    if (!select) {
-        return;
-    }
-
-    const values =
-        uniqueSortedValues(
-            rows,
-            fieldName
         );
-
-    select.innerHTML = [
-        `<option value="">${defaultText}</option>`,
-        ...values.map(optionMarkup)
-    ].join("");
+    });
 }
 
-function renderSummary(rows) {
-    const totalCount =
-        rows.length;
-
+function renderSummary(dataRows) {
     const stockoutCount =
-        rows.filter(
+        dataRows.filter(
             (row) =>
-                Number(
-                    row.is_stockout_risk
-                ) === 1
+                row.is_stockout_risk === true
         ).length;
 
     const overstockCount =
-        rows.filter(
+        dataRows.filter(
             (row) =>
-                Number(
-                    row.is_overstock
-                ) === 1
+                row.is_overstock === true
         ).length;
 
     const longTermCount =
-        rows.filter(
+        dataRows.filter(
             (row) =>
-                Number(
-                    row.is_long_term
-                ) === 1
+                row.is_long_term === true
         ).length;
 
     document.getElementById(
         "inventoryRiskTotalCount"
     ).textContent =
-        `${formatNumber(totalCount)}종`;
+        `${formatNumber(dataRows.length)}종`;
 
     document.getElementById(
         "inventoryRiskStockoutCount"
@@ -192,42 +264,38 @@ function renderSummary(rows) {
 
 function riskBadgeMarkup(row) {
     const labels =
-        riskLabels(row);
+        getRiskLabels(row);
 
     if (!labels.length) {
         return "-";
     }
 
-    return labels
-        .map((label) => {
-            let className =
-                "inventory-risk-badge";
+    return labels.map((label) => {
+        let className =
+            "inventory-risk-badge";
 
-            if (label === "품절 위험") {
-                className +=
-                    " is-stockout";
-            } else if (
-                label === "과다 재고"
-            ) {
-                className +=
-                    " is-overstock";
-            } else if (
-                label === "장기 재고"
-            ) {
-                className +=
-                    " is-long-term";
-            }
+        if (label === "품절 위험") {
+            className +=
+                " is-stockout";
+        } else if (
+            label === "과다 재고"
+        ) {
+            className +=
+                " is-overstock";
+        } else {
+            className +=
+                " is-long-term";
+        }
 
-            return `
-                <span class="${className}">
-                    ${label}
-                </span>
-            `;
-        })
-        .join("");
+        return `
+            <span class="${className}">
+                ${label}
+            </span>
+        `;
+    }).join("");
 }
 
-function renderTable(rows) {
+function renderTable(dataRows) {
     const tbody =
         document.getElementById(
             "inventoryRiskTableBody"
@@ -243,14 +311,14 @@ function renderTable(rows) {
     }
 
     resultCount.textContent =
-        `${formatNumber(rows.length)}종`;
+        `${formatNumber(dataRows.length)}종`;
 
-    if (!rows.length) {
+    if (!dataRows.length) {
         tbody.innerHTML = `
             <tr>
                 <td
-                    class="inventory-risk-empty"
                     colspan="12"
+                    class="inventory-risk-empty"
                 >
                     검색 조건에 해당하는 교재가 없습니다.
                 </td>
@@ -260,52 +328,33 @@ function renderTable(rows) {
     }
 
     tbody.innerHTML =
-        rows.map((row) => `
+        dataRows.map((row) => `
             <tr>
-                <td>
-                    ${escapeHtml(row.book_code)}
-                </td>
-
-                <td>
-                    ${escapeHtml(row.barcode)}
-                </td>
-
-                <td>
-                    ${escapeHtml(row.instructor_name)}
-                </td>
-
+                <td>${escapeHtml(row.book_code)}</td>
+                <td>${escapeHtml(row.barcode)}</td>
+                <td>${escapeHtml(row.instructor_name)}</td>
                 <td class="inventory-risk-book-name">
                     ${escapeHtml(row.book_name)}
                 </td>
-
-                <td>
-                    ${escapeHtml(row.vendor_name)}
-                </td>
-
+                <td>${escapeHtml(row.vendor_name)}</td>
                 <td class="inventory-risk-number">
                     ${formatNumber(row.stock_before)}
                 </td>
-
                 <td class="inventory-risk-number">
                     ${formatNumber(row.defective_qty)}
                 </td>
-
                 <td class="inventory-risk-number">
                     ${formatNumber(row.dispatch_qty)}
                 </td>
-
                 <td class="inventory-risk-number">
                     ${formatNumber(row.external_stock)}
                 </td>
-
                 <td class="inventory-risk-number">
                     ${formatNumber(row.available_stock)}
                 </td>
-
                 <td class="inventory-risk-number">
                     ${formatAvailableDays(row.available_days)}
                 </td>
-
                 <td class="inventory-risk-type-cell">
                     ${riskBadgeMarkup(row)}
                 </td>
@@ -313,39 +362,44 @@ function renderTable(rows) {
         `).join("");
 }
 
-function selectedValue(elementId) {
-    return normalizeText(
-        document.getElementById(
-            elementId
-        )?.value
-    );
+function renderData(dataRows) {
+    rows = sortRows(dataRows);
+
+    renderSummary(rows);
+    renderTable(rows);
 }
 
-function applyFilters() {
+function applySearch() {
     const riskType =
-        selectedValue(
-            "inventoryRiskTypeSelect"
+        normalizeText(
+            document.getElementById(
+                "inventoryRiskTypeSelect"
+            )?.value
         );
 
-    const instructorName =
-        selectedValue(
-            "inventoryRiskInstructorSelect"
+    const fieldType =
+        normalizeText(
+            document.getElementById(
+                "inventoryRiskFieldSelect"
+            )?.value
         );
 
-    const vendorName =
-        selectedValue(
-            "inventoryRiskVendorSelect"
+    const keyword =
+        normalizeSearchText(
+            document.getElementById(
+                "inventoryRiskSearchInput"
+            )?.value
         );
 
-    const bookName =
-        selectedValue(
-            "inventoryRiskBookSelect"
+    const fieldName =
+        getSearchFieldName(
+            fieldType
         );
 
-    const filteredRows =
-        cachedRows.filter((row) => {
+    const filtered =
+        rows.filter((row) => {
             if (
-                !matchesRiskType(
+                !isRiskMatch(
                     row,
                     riskType
                 )
@@ -353,57 +407,48 @@ function applyFilters() {
                 return false;
             }
 
-            if (
-                instructorName
-                && normalizeText(
-                    row.instructor_name
-                ) !== instructorName
-            ) {
-                return false;
+            if (!keyword) {
+                return true;
             }
 
-            if (
-                vendorName
-                && normalizeText(
-                    row.vendor_name
-                ) !== vendorName
-            ) {
-                return false;
-            }
-
-            if (
-                bookName
-                && normalizeText(
-                    row.book_name
-                ) !== bookName
-            ) {
-                return false;
-            }
-
-            return true;
+            return normalizeSearchText(
+                row[fieldName]
+            ).includes(keyword);
         });
 
-    renderTable(filteredRows);
+    renderTable(filtered);
 }
 
-function resetFilters() {
-    [
-        "inventoryRiskTypeSelect",
-        "inventoryRiskInstructorSelect",
-        "inventoryRiskVendorSelect",
-        "inventoryRiskBookSelect"
-    ].forEach((elementId) => {
-        const element =
-            document.getElementById(
-                elementId
-            );
+function resetSearch() {
+    const typeSelect =
+        document.getElementById(
+            "inventoryRiskTypeSelect"
+        );
 
-        if (element) {
-            element.value = "";
-        }
-    });
+    const fieldSelect =
+        document.getElementById(
+            "inventoryRiskFieldSelect"
+        );
 
-    renderTable(cachedRows);
+    const searchInput =
+        document.getElementById(
+            "inventoryRiskSearchInput"
+        );
+
+    if (typeSelect) {
+        typeSelect.value = "";
+    }
+
+    if (fieldSelect) {
+        fieldSelect.value =
+            "instructor";
+    }
+
+    if (searchInput) {
+        searchInput.value = "";
+    }
+
+    renderTable(rows);
 }
 
 function bindEvents() {
@@ -413,7 +458,7 @@ function bindEvents() {
         )
         ?.addEventListener(
             "click",
-            applyFilters
+            applySearch
         );
 
     document
@@ -422,153 +467,117 @@ function bindEvents() {
         )
         ?.addEventListener(
             "click",
-            resetFilters
+            resetSearch
+        );
+
+    document
+        .getElementById(
+            "inventoryRiskSearchInput"
+        )
+        ?.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "Enter") {
+                    applySearch();
+                }
+            }
         );
 }
 
-function populateFilters(rows) {
-    populateSelect(
-        "inventoryRiskInstructorSelect",
-        rows,
-        "instructor_name",
-        "전체 강사"
-    );
-
-    populateSelect(
-        "inventoryRiskVendorSelect",
-        rows,
-        "vendor_name",
-        "전체 거래처"
-    );
-
-    populateSelect(
-        "inventoryRiskBookSelect",
-        rows,
-        "book_name",
-        "전체 교재"
-    );
-}
-
-function sortRows(rows) {
-    return [...rows].sort(
-        (a, b) => {
-            const aStockout =
-                Number(
-                    a.is_stockout_risk
-                );
-
-            const bStockout =
-                Number(
-                    b.is_stockout_risk
-                );
-
-            if (
-                aStockout
-                !== bStockout
-            ) {
-                return (
-                    bStockout
-                    - aStockout
-                );
-            }
-
-            const aDays =
-                Number(
-                    a.available_days
-                );
-
-            const bDays =
-                Number(
-                    b.available_days
-                );
-
-            const safeADays =
-                Number.isFinite(aDays)
-                    ? aDays
-                    : Number.MAX_SAFE_INTEGER;
-
-            const safeBDays =
-                Number.isFinite(bDays)
-                    ? bDays
-                    : Number.MAX_SAFE_INTEGER;
-
-            if (
-                safeADays
-                !== safeBDays
-            ) {
-                return (
-                    safeADays
-                    - safeBDays
-                );
-            }
-
-            return normalizeText(
-                a.book_name
-            ).localeCompare(
-                normalizeText(
-                    b.book_name
-                ),
-                "ko-KR",
-                {
-                    numeric: true
-                }
-            );
-        }
-    );
-}
-
-async function loadRows() {
+function setStatus(message, isError = false) {
     const status =
         document.getElementById(
             "inventoryRiskStatus"
         );
 
-    status.classList.remove(
-        "error"
+    if (!status) {
+        return;
+    }
+
+    status.classList.toggle(
+        "error",
+        isError
     );
 
     status.textContent =
-        "교재 재고 현황을 불러오고 있습니다.";
+        message;
+}
 
-    const meta =
-        await getDocumentRow(
-            META_COLLECTION_NAME,
-            META_DOCUMENT_ID
-        );
+async function loadInventoryRisk() {
+    const cache =
+        readCache();
+
+    setStatus(
+        "교재 재고 현황의 변경 여부를 확인하고 있습니다."
+    );
+
+    let meta;
+
+    try {
+        meta =
+            await getDocumentRow(
+                META_COLLECTION_NAME,
+                META_DOCUMENT_ID
+            );
+    } catch (error) {
+        if (
+            isCacheFresh(cache)
+            && cache.rows.length
+        ) {
+            currentMeta = null;
+            renderData(cache.rows);
+
+            setStatus(
+                "버전 확인에 실패하여 24시간 브라우저 캐시 자료를 표시합니다."
+            );
+
+            return;
+        }
+
+        throw error;
+    }
 
     if (!active) {
         return;
     }
 
+    currentMeta = meta;
+
     const currentVersion =
+        getMetaVersion(meta);
+
+    const cacheVersion =
         normalizeText(
-            meta?.version
-            || meta?.updated_at
+            cache?.version
         );
 
-    if (
-        cachedRows.length > 0
-        && cachedVersion
+    const canUseCache =
+        isCacheFresh(cache)
+        && cache.rows.length > 0
         && currentVersion
-        && cachedVersion
-            === currentVersion
-    ) {
-        renderSummary(cachedRows);
-        populateFilters(cachedRows);
-        renderTable(cachedRows);
+        && currentVersion === cacheVersion;
 
-        status.textContent =
+    if (canUseCache) {
+        renderData(cache.rows);
+
+        setStatus(
             `최종 업데이트: ${
                 normalizeText(
                     meta?.updated_at
-                )
-                || "-"
-            } · 캐시 사용`;
+                ) || "-"
+            } · 브라우저 캐시 사용`
+        );
 
         return;
     }
 
-    const rows =
+    setStatus(
+        currentVersion !== cacheVersion
+            ? "변경된 교재 재고 자료를 불러오고 있습니다."
+            : "24시간 캐시가 만료되어 교재 재고 자료를 새로 불러오고 있습니다."
+    );
+
+    const firestoreRows =
         await getCollectionRows(
             COLLECTION_NAME
         );
@@ -577,30 +586,34 @@ async function loadRows() {
         return;
     }
 
-    cachedRows =
-        sortRows(rows);
+    renderData(firestoreRows);
 
-    cachedVersion =
-        currentVersion;
+    writeCache(
+        currentVersion,
+        rows
+    );
 
-    renderSummary(cachedRows);
-    populateFilters(cachedRows);
-    renderTable(cachedRows);
-
-    status.textContent =
+    setStatus(
         `최종 업데이트: ${
             normalizeText(
                 meta?.updated_at
-            )
-            || "-"
-        }`;
+            ) || "-"
+        }`
+    );
 }
 
 function createMarkup() {
     return `
-        <section
-            class="inventory-risk-status-row"
-        >
+        <section class="inventory-risk-meta-card">
+            <div>
+                <span class="inventory-risk-meta-label">
+                    데이터 기준
+                </span>
+                <strong class="inventory-risk-meta-title">
+                    위험 재고 자동 분석
+                </strong>
+            </div>
+
             <p
                 id="inventoryRiskStatus"
                 class="period-status"
@@ -609,17 +622,16 @@ function createMarkup() {
             </p>
         </section>
 
-        <section
-            class="inventory-risk-summary-grid"
-        >
-            <article
-                class="inventory-risk-summary-card"
-            >
-                <span
-                    class="inventory-risk-summary-label"
-                >
-                    전체 위험 교재
-                </span>
+        <section class="inventory-risk-summary-grid">
+            <article class="inventory-risk-summary-card">
+                <div class="inventory-risk-summary-head">
+                    <span class="inventory-risk-summary-label">
+                        전체 위험 교재
+                    </span>
+                    <span class="inventory-risk-summary-mark">
+                        전체
+                    </span>
+                </div>
 
                 <strong
                     id="inventoryRiskTotalCount"
@@ -628,22 +640,21 @@ function createMarkup() {
                     0종
                 </strong>
 
-                <p
-                    class="inventory-risk-summary-description"
-                >
-                    품절·과다·장기 재고 중
+                <p class="inventory-risk-summary-description">
+                    품절 위험·과다 재고·장기 재고 중
                     하나 이상에 해당하는 교재
                 </p>
             </article>
 
-            <article
-                class="inventory-risk-summary-card"
-            >
-                <span
-                    class="inventory-risk-summary-label"
-                >
-                    품절 위험
-                </span>
+            <article class="inventory-risk-summary-card is-stockout">
+                <div class="inventory-risk-summary-head">
+                    <span class="inventory-risk-summary-label">
+                        품절 위험
+                    </span>
+                    <span class="inventory-risk-summary-mark">
+                        주의
+                    </span>
+                </div>
 
                 <strong
                     id="inventoryRiskStockoutCount"
@@ -652,22 +663,21 @@ function createMarkup() {
                     0종
                 </strong>
 
-                <p
-                    class="inventory-risk-summary-description"
-                >
+                <p class="inventory-risk-summary-description">
                     현우진 31일 이하 ·
                     그 외 강사 16일 이하
                 </p>
             </article>
 
-            <article
-                class="inventory-risk-summary-card"
-            >
-                <span
-                    class="inventory-risk-summary-label"
-                >
-                    과다 재고
-                </span>
+            <article class="inventory-risk-summary-card is-overstock">
+                <div class="inventory-risk-summary-head">
+                    <span class="inventory-risk-summary-label">
+                        과다 재고
+                    </span>
+                    <span class="inventory-risk-summary-mark">
+                        과다
+                    </span>
+                </div>
 
                 <strong
                     id="inventoryRiskOverstockCount"
@@ -676,22 +686,21 @@ function createMarkup() {
                     0종
                 </strong>
 
-                <p
-                    class="inventory-risk-summary-description"
-                >
+                <p class="inventory-risk-summary-description">
                     금일 출고량 기준
                     출고가능일 90일 초과
                 </p>
             </article>
 
-            <article
-                class="inventory-risk-summary-card"
-            >
-                <span
-                    class="inventory-risk-summary-label"
-                >
-                    장기 재고
-                </span>
+            <article class="inventory-risk-summary-card is-long-term">
+                <div class="inventory-risk-summary-head">
+                    <span class="inventory-risk-summary-label">
+                        장기 재고
+                    </span>
+                    <span class="inventory-risk-summary-mark">
+                        장기
+                    </span>
+                </div>
 
                 <strong
                     id="inventoryRiskLongTermCount"
@@ -700,68 +709,62 @@ function createMarkup() {
                     0종
                 </strong>
 
-                <p
-                    class="inventory-risk-summary-description"
-                >
+                <p class="inventory-risk-summary-description">
                     출간일이 기준일로부터
                     2년 이상 경과한 교재
                 </p>
             </article>
         </section>
 
-        <section
-            class="inventory-risk-filter-row"
-        >
-            <div
-                class="inventory-risk-filter-group"
-            >
-                <select
-                    id="inventoryRiskTypeSelect"
-                    aria-label="구분"
-                >
-                    <option value="">
-                        전체 구분
-                    </option>
+        <section class="dashboard-card inventory-risk-search-card">
+            <div class="inventory-risk-search-row">
+                <div class="inventory-risk-search-item">
+                    <label for="inventoryRiskTypeSelect">
+                        구분
+                    </label>
 
-                    <option value="stockout">
-                        품절 위험
-                    </option>
+                    <select id="inventoryRiskTypeSelect">
+                        <option value="">
+                            전체
+                        </option>
+                        <option value="stockout">
+                            품절 위험
+                        </option>
+                        <option value="overstock">
+                            과다 재고
+                        </option>
+                        <option value="long-term">
+                            장기 재고
+                        </option>
+                    </select>
+                </div>
 
-                    <option value="overstock">
-                        과다 재고
-                    </option>
+                <div class="inventory-risk-search-item">
+                    <label for="inventoryRiskFieldSelect">
+                        선택
+                    </label>
 
-                    <option value="long-term">
-                        장기 재고
-                    </option>
-                </select>
+                    <select id="inventoryRiskFieldSelect">
+                        <option value="instructor">
+                            강사명
+                        </option>
+                        <option value="vendor">
+                            거래처
+                        </option>
+                        <option value="book">
+                            교재명
+                        </option>
+                    </select>
+                </div>
 
-                <select
-                    id="inventoryRiskInstructorSelect"
-                    aria-label="강사명"
-                >
-                    <option value="">
-                        전체 강사
-                    </option>
-                </select>
-
-                <select
-                    id="inventoryRiskVendorSelect"
-                    aria-label="거래처명"
-                >
-                    <option value="">
-                        전체 거래처
-                    </option>
-                </select>
-
-                <select
-                    id="inventoryRiskBookSelect"
-                    aria-label="교재명"
-                >
-                    <option value="">
-                        전체 교재
-                    </option>
-                </select>
+                <div class="inventory-risk-keyword-box">
+                    <input
+                        id="inventoryRiskSearchInput"
+                        type="text"
+                        placeholder="검색어를 입력하세요"
+                        autocomplete="off"
+                    >
+                </div>
 
                 <button
                     id="inventoryRiskSearchButton"
@@ -779,22 +782,21 @@ function createMarkup() {
                     초기화
                 </button>
             </div>
+
+            <p class="inventory-risk-search-help">
+                구분과 검색 조건은 AND로 적용되며,
+                검색어는 선택 항목의 일부 단어만 입력해도 조회됩니다.
+                검색어가 없으면 구분 조건만 적용됩니다.
+            </p>
         </section>
 
-        <section
-            class="dashboard-card inventory-risk-table-card"
-        >
-            <div
-                class="dashboard-card-header inventory-risk-table-header"
-            >
+        <section class="dashboard-card inventory-risk-table-card">
+            <div class="dashboard-card-header inventory-risk-table-header">
                 <div>
-                    <h2>
-                        교재 재고 상세
-                    </h2>
-
+                    <h2>교재 재고 상세</h2>
                     <p>
-                        현재 위험 조건에 해당하는
-                        교재만 표시됩니다.
+                        위험 조건에 해당하는 교재의
+                        현재 재고 상태
                     </p>
                 </div>
 
@@ -806,12 +808,8 @@ function createMarkup() {
                 </strong>
             </div>
 
-            <div
-                class="inventory-risk-table-wrap"
-            >
-                <table
-                    class="inventory-risk-table"
-                >
+            <div class="inventory-risk-table-wrap">
+                <table class="inventory-risk-table">
                     <thead>
                         <tr>
                             <th>교재코드</th>
@@ -851,7 +849,7 @@ export async function mount({
     bindEvents();
 
     try {
-        await loadRows();
+        await loadInventoryRisk();
     } catch (error) {
         console.error(
             "[inventoryRisk]",
@@ -862,17 +860,10 @@ export async function mount({
             return;
         }
 
-        const status =
-            document.getElementById(
-                "inventoryRiskStatus"
-            );
-
-        status.classList.add(
-            "error"
+        setStatus(
+            "교재 재고 현황을 불러오지 못했습니다. Firestore 읽기 권한과 컬렉션을 확인해 주십시오.",
+            true
         );
-
-        status.textContent =
-            "교재 재고 현황을 불러오지 못했습니다. Firestore 읽기 권한과 컬렉션을 확인해 주십시오.";
     }
 }
 
