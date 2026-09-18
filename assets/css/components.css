@@ -998,7 +998,7 @@
     top: 0;
     z-index: 2;
     color: #65758b;
-    background: #eef3f8;
+background: #eef3f8;
     font-size: 10.5px;
     font-weight: 900;
     text-align: center;
@@ -1084,183 +1084,382 @@
     }
 }
 
-/* 강사별 매출 통계 그래프 툴팁 영역 보정 */
-.instructor-trend-chart-box,
-.instructor-annual-total-chart-box {
-    min-height: 300px;
-    position: relative;
-}
-
-.instructor-trend-chart-box .chart-tooltip,
-.instructor-annual-total-chart-box .chart-tooltip {
-    max-height: calc(100% - 16px);
-    overflow-y: auto;
-}
-
-
 /* =====================================================
-   Firestore usage
+   교재 재고 현황
    ===================================================== */
 
-.usage-page {
-    width: 100%;
-}
-
-.usage-toolbar {
+.inventory-risk-meta-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 18px;
+    min-height: 58px;
+    margin-bottom: 16px;
+    padding: 0 20px;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.inventory-risk-meta-card > div {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.inventory-risk-meta-label {
+    color: #728197;
+    font-size: 10.5px;
+    font-weight: 800;
+}
+
+.inventory-risk-meta-title {
+    color: #173c6e;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.inventory-risk-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 16px;
 }
 
-.usage-range-buttons {
+.inventory-risk-summary-card {
+    min-width: 0;
+    min-height: 158px;
+    padding: 20px;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.inventory-risk-summary-card.is-stockout {
+    border-top: 3px solid #c83232;
+}
+
+.inventory-risk-summary-card.is-overstock {
+    border-top: 3px solid #0f6fe8;
+}
+
+.inventory-risk-summary-card.is-long-term {
+    border-top: 3px solid #65758b;
+}
+
+.inventory-risk-summary-head {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 10px;
 }
 
-.usage-range-button {
-    height: 36px;
-    border: 1px solid #d7e0eb;
-    color: #52657d;
-    background: #ffffff;
+.inventory-risk-summary-label {
+    color: #65758b;
+    font-size: 12px;
+    font-weight: 900;
 }
 
-.usage-range-button.is-active {
-    border-color: #0f6fe8;
-    color: #ffffff;
-    background: #0f6fe8;
+.inventory-risk-summary-mark {
+    padding: 4px 7px;
+    border-radius: 6px;
+    color: #65758b;
+    background: #eef2f7;
+    font-size: 9.5px;
+    font-weight: 900;
 }
 
-.usage-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+.inventory-risk-summary-card.is-stockout
+.inventory-risk-summary-mark {
+    color: #c83232;
+    background: #fff1f2;
+}
+
+.inventory-risk-summary-card.is-overstock
+.inventory-risk-summary-mark {
+    color: #0c5ecf;
+    background: #e8f1ff;
+}
+
+.inventory-risk-summary-value {
+    display: block;
+    margin-top: 22px;
+    color: #173c6e;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.inventory-risk-summary-description {
+    margin: 12px 0 0;
+    color: #728197;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.inventory-risk-search-card {
     margin-bottom: 16px;
+    padding: 16px 18px 13px;
 }
 
-.usage-summary-card {
+.inventory-risk-search-row {
     display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    width: 100%;
+}
+
+.inventory-risk-search-item {
+    display: flex;
+    min-width: 132px;
     flex-direction: column;
     gap: 6px;
-    min-width: 0;
-    padding: 16px 18px;
-    border: 1px solid #dfe6ef;
-    border-radius: 12px;
-    background: #ffffff;
 }
 
-.usage-summary-card span {
-    color: #728197;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.usage-summary-card strong {
-    overflow: hidden;
-    color: #173c6e;
-    font-size: 19px;
-    font-weight: 900;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.usage-table-card {
-    border: 1px solid #dfe6ef;
-    border-radius: 12px;
-    background: #ffffff;
-    overflow: hidden;
-}
-
-.usage-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.usage-table {
-    width: 100%;
-    min-width: 1120px;
-    border-collapse: collapse;
-}
-
-.usage-table th,
-.usage-table td {
-    padding: 11px 10px;
-    border-bottom: 1px solid #e8edf3;
-    text-align: right;
-    white-space: nowrap;
-}
-
-.usage-table th {
-    color: #53667d;
-    background: #f8fafc;
+.inventory-risk-search-item label {
+    color: #65758b;
     font-size: 10.5px;
     font-weight: 900;
 }
 
-.usage-table td {
-    color: #334a66;
+.inventory-risk-search-item select,
+.inventory-risk-keyword-box input {
+    height: 40px;
+    border: 1px solid #d7e0eb;
+    border-radius: 8px;
+    outline: none;
+    color: #173c6e;
+    background: #ffffff;
     font-size: 11px;
+    font-weight: 800;
+    box-sizing: border-box;
+}
+
+.inventory-risk-search-item select {
+    min-width: 132px;
+    padding: 0 30px 0 11px;
+}
+
+.inventory-risk-keyword-box {
+    flex: 1;
+    min-width: 220px;
+}
+
+.inventory-risk-keyword-box input {
+    width: 100%;
+    padding: 0 12px;
+}
+
+.inventory-risk-search-item select:focus,
+.inventory-risk-keyword-box input:focus {
+    border-color: #0f6fe8;
+}
+
+.inventory-risk-reset-button {
+    color: #4d5c70;
+    border: 1px solid #d7e0eb;
+    background: #eef2f7;
+}
+
+.inventory-risk-reset-button:hover {
+    color: #173c6e;
+    background: #e2e8f0;
+}
+
+.inventory-risk-search-help {
+    margin: 10px 0 0;
+    color: #8290a3;
+    font-size: 10px;
     font-weight: 700;
 }
 
-.usage-table th:first-child,
-.usage-table td:first-child {
-    min-width: 220px;
-    text-align: left;
+.inventory-risk-table-card {
+    min-width: 0;
 }
 
-.usage-user-cell strong,
-.usage-user-cell span {
-    display: block;
+.inventory-risk-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
-.usage-user-cell strong {
+.inventory-risk-result-count {
+    flex-shrink: 0;
     color: #173c6e;
-    font-size: 11.5px;
+    font-size: 17px;
+    font-weight: 900;
 }
 
-.usage-user-cell span {
-    max-width: 220px;
-    margin-top: 3px;
+.inventory-risk-table-wrap {
+    width: 100%;
+    max-height: calc(100vh - 430px);
+    min-height: 280px;
+    overflow: auto;
+}
+
+.inventory-risk-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
+.inventory-risk-table th,
+.inventory-risk-table td {
+    padding: 10px 11px;
+    border-right: 1px solid #e3e8ef;
+    border-bottom: 1px solid #e9eef5;
+    color: #173c6e;
+    background: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.inventory-risk-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    color: #65758b;
+    background: #eef3f8;
+    font-weight: 900;
+}
+
+.inventory-risk-table tbody tr:hover td {
+    background: #f8fafc;
+}
+
+.inventory-risk-table th:nth-child(1),
+.inventory-risk-table td:nth-child(1) {
+    min-width: 92px;
+}
+
+.inventory-risk-table th:nth-child(2),
+.inventory-risk-table td:nth-child(2) {
+    min-width: 118px;
+}
+
+.inventory-risk-table th:nth-child(3),
+.inventory-risk-table td:nth-child(3) {
+    min-width: 86px;
+}
+
+.inventory-risk-table th:nth-child(4),
+.inventory-risk-table td:nth-child(4) {
+    min-width: 280px;
+    max-width: 360px;
+}
+
+.inventory-risk-table th:nth-child(5),
+.inventory-risk-table td:nth-child(5) {
+    min-width: 130px;
+}
+
+.inventory-risk-table th:nth-child(n+6):nth-child(-n+11),
+.inventory-risk-table td:nth-child(n+6):nth-child(-n+11) {
+    min-width: 88px;
+}
+
+.inventory-risk-table th:nth-child(12),
+.inventory-risk-table td:nth-child(12) {
+    min-width: 170px;
+}
+
+.inventory-risk-book-name {
     overflow: hidden;
-    color: #8794a6;
-    font-size: 9.5px;
+    text-align: left !important;
     text-overflow: ellipsis;
 }
 
-.usage-total-cell {
-    color: #0f6fe8 !important;
-    font-weight: 900 !important;
+.inventory-risk-number {
+    text-align: right !important;
 }
 
-.usage-empty {
-    padding: 24px !important;
-    color: #8794a6 !important;
+.inventory-risk-type-cell {
+    white-space: normal !important;
+}
+
+.inventory-risk-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    margin: 2px;
+    padding: 0 7px;
+    border-radius: 6px;
+    font-size: 9.5px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.inventory-risk-badge.is-stockout {
+    color: #c83232;
+    background: #fff1f2;
+}
+
+.inventory-risk-badge.is-overstock {
+    color: #0c5ecf;
+    background: #e8f1ff;
+}
+
+.inventory-risk-badge.is-long-term {
+    color: #65758b;
+    background: #eef2f7;
+}
+
+.inventory-risk-empty {
+    height: 160px;
+    color: #8290a3 !important;
     text-align: center !important;
+    font-weight: 700 !important;
 }
 
-.usage-note {
-    margin: 10px 2px 0;
-    color: #7c899a;
-    font-size: 10px;
-    line-height: 1.5;
-}
-
-@media (max-width: 980px) {
-    .usage-summary-grid {
+@media (max-width: 1180px) {
+    .inventory-risk-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .inventory-risk-search-row {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .inventory-risk-keyword-box {
+        min-width: 300px;
+    }
+
+    .inventory-risk-table-wrap {
+        max-height: none;
+    }
 }
 
-@media (max-width: 640px) {
-    .usage-toolbar {
+@media (max-width: 720px) {
+    .inventory-risk-meta-card {
         align-items: flex-start;
         flex-direction: column;
+        gap: 5px;
+        padding-top: 12px;
+        padding-bottom: 12px;
     }
 
-    .usage-summary-grid {
+    .inventory-risk-summary-grid {
         grid-template-columns: 1fr;
     }
+
+    .inventory-risk-search-item,
+    .inventory-risk-keyword-box,
+    .inventory-risk-search-row .btn {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .inventory-risk-search-item select {
+        width: 100%;
+    }
 }
+
