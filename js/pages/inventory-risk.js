@@ -18,6 +18,9 @@ let active = false;
 let rows = [];
 let currentMeta = null;
 
+let currentSortKey = "";
+let currentSortDirection = "asc";
+
 function formatNumber(value) {
     return getNumber(value).toLocaleString("ko-KR");
 }
@@ -181,54 +184,201 @@ function getMetaVersion(meta) {
     );
 }
 
-function sortRows(dataRows) {
+function compareText(a, b) {
+    return normalizeText(a).localeCompare(
+        normalizeText(b),
+        "ko-KR",
+        {
+            numeric: true,
+            sensitivity: "base"
+        }
+    );
+}
+
+function compareNumber(a, b) {
+    const aNumber = Number(a);
+    const bNumber = Number(b);
+
+    const aValid = Number.isFinite(aNumber);
+    const bValid = Number.isFinite(bNumber);
+
+    if (!aValid && !bValid) {
+        return 0;
+    }
+
+    if (!aValid) {
+        return 1;
+    }
+
+    if (!bValid) {
+        return -1;
+    }
+
+    return aNumber - bNumber;
+}
+
+function getRiskSortText(row) {
+    return getRiskLabels(row).join(" / ");
+}
+
+function defaultSortRows(dataRows) {
     return [...dataRows].sort((a, b) => {
-        const aStockout =
-            a.is_stockout_risk === true
-                ? 1
-                : 0;
+        const vendorCompare = compareText(
+            a.vendor_name,
+            b.vendor_name
+        );
 
-        const bStockout =
-            b.is_stockout_risk === true
-                ? 1
-                : 0;
-
-        if (aStockout !== bStockout) {
-            return bStockout - aStockout;
+        if (vendorCompare !== 0) {
+            return vendorCompare;
         }
 
-        const aDays =
-            Number(a.available_days);
+        const daysCompare = compareNumber(
+            a.available_days,
+            b.available_days
+        );
 
-        const bDays =
-            Number(b.available_days);
-
-        const safeADays =
-            Number.isFinite(aDays)
-                ? aDays
-                : Number.MAX_SAFE_INTEGER;
-
-        const safeBDays =
-            Number.isFinite(bDays)
-                ? bDays
-                : Number.MAX_SAFE_INTEGER;
-
-        if (safeADays !== safeBDays) {
-            return safeADays - safeBDays;
+        if (daysCompare !== 0) {
+            return daysCompare;
         }
 
-        return normalizeText(
-            a.book_name
-        ).localeCompare(
-            normalizeText(
-                b.book_name
-            ),
-            "ko-KR",
-            {
-                numeric: true
-            }
+        return compareText(
+            a.book_code,
+            b.book_code
         );
     });
+}
+
+function sortRowsByColumn(
+    dataRows,
+    sortKey,
+    direction
+) {
+    if (!sortKey) {
+        return defaultSortRows(
+            dataRows
+        );
+    }
+
+    const multiplier =
+        direction === "desc"
+            ? -1
+            : 1;
+
+    return [...dataRows].sort((a, b) => {
+        let result = 0;
+
+        if (sortKey === "book_code") {
+            result = compareText(
+                a.book_code,
+                b.book_code
+            );
+        } else if (sortKey === "barcode") {
+            result = compareText(
+                a.barcode,
+                b.barcode
+            );
+        } else if (
+            sortKey === "instructor_name"
+        ) {
+            result = compareText(
+                a.instructor_name,
+                b.instructor_name
+            );
+        } else if (sortKey === "book_name") {
+            result = compareText(
+                a.book_name,
+                b.book_name
+            );
+        } else if (sortKey === "vendor_name") {
+            result = compareText(
+                a.vendor_name,
+                b.vendor_name
+            );
+        } else if (
+            sortKey === "stock_before"
+            || sortKey === "defective_qty"
+            || sortKey === "dispatch_qty"
+            || sortKey === "external_stock"
+            || sortKey === "available_stock"
+            || sortKey === "available_days"
+        ) {
+            result = compareNumber(
+                a[sortKey],
+                b[sortKey]
+            );
+        } else if (sortKey === "risk") {
+            result = compareText(
+                getRiskSortText(a),
+                getRiskSortText(b)
+            );
+        }
+
+        if (result !== 0) {
+            return result * multiplier;
+        }
+
+        return compareText(
+            a.book_code,
+            b.book_code
+        );
+    });
+}
+
+function updateSortHeaderState() {
+    document
+        .querySelectorAll(
+            ".inventory-risk-sort-button"
+        )
+        .forEach((button) => {
+            const sortKey =
+                normalizeText(
+                    button.dataset.sortKey
+                );
+
+            const isActive =
+                sortKey === currentSortKey;
+
+            button.classList.toggle(
+                "is-active",
+                isActive
+            );
+
+            button.dataset.direction =
+                isActive
+                    ? currentSortDirection
+                    : "";
+
+            button.setAttribute(
+                "aria-sort",
+                isActive
+                    ? (
+                        currentSortDirection
+                        === "asc"
+                            ? "ascending"
+                            : "descending"
+                    )
+                    : "none"
+            );
+        });
+}
+
+function handleSort(sortKey) {
+    if (!sortKey) {
+        return;
+    }
+
+    if (currentSortKey === sortKey) {
+        currentSortDirection =
+            currentSortDirection === "asc"
+                ? "desc"
+                : "asc";
+    } else {
+        currentSortKey = sortKey;
+        currentSortDirection = "asc";
+    }
+
+    updateSortHeaderState();
+    applySearch();
 }
 
 function renderSummary(dataRows) {
@@ -377,10 +527,10 @@ function renderTable(dataRows) {
 }
 
 function renderData(dataRows) {
-    rows = sortRows(dataRows);
+    rows = [...dataRows];
 
     renderSummary(rows);
-    renderTable(rows);
+    applySearch();
 }
 
 function applySearch() {
@@ -430,7 +580,14 @@ function applySearch() {
             ).includes(keyword);
         });
 
-    renderTable(filtered);
+    const sorted =
+        sortRowsByColumn(
+            filtered,
+            currentSortKey,
+            currentSortDirection
+        );
+
+    renderTable(sorted);
 }
 
 function resetSearch() {
@@ -450,7 +607,8 @@ function resetSearch() {
         );
 
     if (typeSelect) {
-        typeSelect.value = "";
+        typeSelect.value =
+            "stockout";
     }
 
     if (fieldSelect) {
@@ -462,7 +620,11 @@ function resetSearch() {
         searchInput.value = "";
     }
 
-    renderTable(rows);
+    currentSortKey = "";
+    currentSortDirection = "asc";
+
+    updateSortHeaderState();
+    applySearch();
 }
 
 function bindEvents() {
@@ -496,6 +658,25 @@ function bindEvents() {
                 }
             }
         );
+
+    document
+        .querySelectorAll(
+            ".inventory-risk-sort-button"
+        )
+        .forEach((button) => {
+            button.addEventListener(
+                "click",
+                () => {
+                    handleSort(
+                        normalizeText(
+                            button.dataset.sortKey
+                        )
+                    );
+                }
+            );
+        });
+
+    updateSortHeaderState();
 }
 
 function setStatus(message, isError = false) {
@@ -718,7 +899,7 @@ function createMarkup() {
                 </strong>
 
                 <p class="inventory-risk-summary-description">
-                    품절 위험·과다 재고·장기 재고 중
+                    품절 위험·과다 재고·장기 재고·재고 소진 중
                     하나 이상에 해당하는 교재
                 </p>
             </article>
@@ -804,7 +985,7 @@ function createMarkup() {
                         <option value="">
                             전체
                         </option>
-                        <option value="stockout">
+                        <option value="stockout" selected>
                             품절 위험
                         </option>
                         <option value="overstock">
@@ -875,8 +1056,8 @@ function createMarkup() {
                 <div>
                     <h2>교재 재고 상세</h2>
                     <p>
-                        위험 조건에 해당하는 교재의
-                        현재 재고 상태
+                        기본값은 품절 위험 교재이며,
+                        거래처 → 출고가능일 오름차순
                     </p>
                 </div>
 
@@ -892,18 +1073,174 @@ function createMarkup() {
                 <table class="inventory-risk-table">
                     <thead>
                         <tr>
-                            <th>교재코드</th>
-                            <th>바코드</th>
-                            <th>강사명</th>
-                            <th>교재명</th>
-                            <th>거래처</th>
-                            <th>출고전재고</th>
-                            <th>파본</th>
-                            <th>금일 출고</th>
-                            <th>외부창고</th>
-                            <th>출고후재고</th>
-                            <th>출고가능일</th>
-                            <th>구분</th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="book_code"
+                                    aria-sort="none"
+                                >
+                                    <span>교재코드</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="barcode"
+                                    aria-sort="none"
+                                >
+                                    <span>바코드</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="instructor_name"
+                                    aria-sort="none"
+                                >
+                                    <span>강사명</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="book_name"
+                                    aria-sort="none"
+                                >
+                                    <span>교재명</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="vendor_name"
+                                    aria-sort="none"
+                                >
+                                    <span>거래처</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="stock_before"
+                                    aria-sort="none"
+                                >
+                                    <span>출고전재고</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="defective_qty"
+                                    aria-sort="none"
+                                >
+                                    <span>파본</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="dispatch_qty"
+                                    aria-sort="none"
+                                >
+                                    <span>금일 출고</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="external_stock"
+                                    aria-sort="none"
+                                >
+                                    <span>외부창고</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="available_stock"
+                                    aria-sort="none"
+                                >
+                                    <span>출고후재고</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="available_days"
+                                    aria-sort="none"
+                                >
+                                    <span>출고가능일</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
+                            <th>
+                                <button
+                                    class="inventory-risk-sort-button"
+                                    type="button"
+                                    data-sort-key="risk"
+                                    aria-sort="none"
+                                >
+                                    <span>구분</span>
+                                    <span
+                                        class="inventory-risk-sort-icon"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+                            </th>
                         </tr>
                     </thead>
 
