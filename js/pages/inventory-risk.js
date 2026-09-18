@@ -1,14 +1,13 @@
 // /js/pages/inventory-risk.js
 
 import {
-    getCollectionRows,
     getDocumentRow
 } from "../services/firestore-service.js";
 import { getNumber } from "../utils/number-utils.js";
 
 export const title = "교재 재고 현황";
 
-const COLLECTION_NAME = "inventoryRisk";
+const SNAPSHOT_COLLECTION_NAME = "inventoryRiskSnapshot";
 const META_COLLECTION_NAME = "dashboard_meta";
 const META_DOCUMENT_ID = "inventory-risk";
 
@@ -503,6 +502,69 @@ function setStatus(message, isError = false) {
         message;
 }
 
+
+async function loadSnapshotRows(meta) {
+    const chunkCount =
+        Number(meta?.chunk_count);
+
+    if (
+        !Number.isInteger(chunkCount)
+        || chunkCount < 0
+    ) {
+        throw new Error(
+            "inventory-risk meta의 chunk_count가 올바르지 않습니다."
+        );
+    }
+
+    if (chunkCount === 0) {
+        return [];
+    }
+
+    const chunkPromises =
+        Array.from(
+            {
+                length: chunkCount
+            },
+            (_, index) =>
+                getDocumentRow(
+                    SNAPSHOT_COLLECTION_NAME,
+                    `chunk_${String(
+                        index + 1
+                    ).padStart(4, "0")}`
+                )
+        );
+
+    const chunkDocuments =
+        await Promise.all(
+            chunkPromises
+        );
+
+    const snapshotRows = [];
+
+    chunkDocuments.forEach(
+        (document, index) => {
+            if (
+                !document
+                || !Array.isArray(
+                    document.rows
+                )
+            ) {
+                throw new Error(
+                    `재고 snapshot chunk_${String(
+                        index + 1
+                    ).padStart(4, "0")}를 읽지 못했습니다.`
+                );
+            }
+
+            snapshotRows.push(
+                ...document.rows
+            );
+        }
+    );
+
+    return snapshotRows;
+}
+
 async function loadInventoryRisk() {
     const cache =
         readCache();
@@ -578,8 +640,8 @@ async function loadInventoryRisk() {
     );
 
     const firestoreRows =
-        await getCollectionRows(
-            COLLECTION_NAME
+        await loadSnapshotRows(
+            meta
         );
 
     if (!active) {
