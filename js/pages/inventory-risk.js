@@ -79,7 +79,7 @@ function getRiskLabels(row) {
     }
 
     if (getNumber(row.stock_before) <= 0) {
-        result.push("재고 소진");
+        result.push("예약 판매 / 재고 소진");
     }
 
     return result;
@@ -912,7 +912,7 @@ function createMarkup() {
                 </strong>
 
                 <p class="inventory-risk-summary-description">
-                    품절 위험·과다 재고·장기 재고·재고 소진 중
+                    품절 위험·과다 재고·장기 재고·예약 판매 / 재고 소진 중
                     하나 이상에 해당하는 교재
                 </p>
             </article>
@@ -1030,7 +1030,7 @@ function createMarkup() {
                             장기 재고
                         </option>
                         <option value="depleted">
-                            재고 소진
+                            예약 판매 / 재고 소진
                         </option>
                     </select>
                 </div>
