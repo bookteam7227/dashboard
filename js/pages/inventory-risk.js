@@ -388,6 +388,14 @@ function renderSummary(dataRows) {
                 row.is_stockout_risk === true
         ).length;
 
+    const depletedCount =
+        dataRows.filter(
+            (row) =>
+                getNumber(
+                    row.stock_before
+                ) <= 0
+        ).length;
+
     const overstockCount =
         dataRows.filter(
             (row) =>
@@ -409,6 +417,11 @@ function renderSummary(dataRows) {
         "inventoryRiskStockoutCount"
     ).textContent =
         `${formatNumber(stockoutCount)}종`;
+
+    document.getElementById(
+        "inventoryRiskDepletedCount"
+    ).textContent =
+        `${formatNumber(depletedCount)}종`;
 
     document.getElementById(
         "inventoryRiskOverstockCount"
@@ -924,6 +937,28 @@ function createMarkup() {
                 <p class="inventory-risk-summary-description">
                     현우진 31일 이하 ·
                     그 외 강사 16일 이하
+                </p>
+            </article>
+
+            <article class="inventory-risk-summary-card is-depleted">
+                <div class="inventory-risk-summary-head">
+                    <span class="inventory-risk-summary-label">
+                        재고소진
+                    </span>
+                    <span class="inventory-risk-summary-mark">
+                        소진
+                    </span>
+                </div>
+
+                <strong
+                    id="inventoryRiskDepletedCount"
+                    class="inventory-risk-summary-value"
+                >
+                    0종
+                </strong>
+
+                <p class="inventory-risk-summary-description">
+                    출고전재고가 0 이하인 교재
                 </p>
             </article>
 
