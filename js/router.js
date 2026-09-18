@@ -2,6 +2,7 @@
 
 import * as dashboardPage from "./pages/dashboard.js";
 import * as shippingStatisticsPage from "./pages/shipping-statistics.js";
+import * as inventoryRiskPage from "./pages/inventory-risk.js";
 import * as instructorSalesPage from "./pages/instructor-sales.js";
 import * as monthlyStatisticsPage from "./pages/monthly-statistics.js";
 import * as firestoreUsagePage from "./pages/firestore-usage.js";
@@ -10,6 +11,7 @@ import { setUsageRoute } from "./services/usage-tracker.js";
 const routes = {
     dashboard: dashboardPage,
     "shipping-statistics": shippingStatisticsPage,
+    "inventory-risk": inventoryRiskPage,
     "instructor-sales": instructorSalesPage,
     "monthly-statistics": monthlyStatisticsPage,
     "firestore-usage": firestoreUsagePage
