@@ -143,22 +143,32 @@ function updateSortButtonState() {
             ".instructor-sort-button"
         )
         .forEach((button) => {
-            const activeSort =
-                button.dataset.sortKey
-                    === comparisonSort.key
-                && button.dataset.direction
-                    === comparisonSort.direction;
+            const sortKey =
+                button.dataset.sortKey;
+
+            const isActive =
+                sortKey === comparisonSort.key;
 
             button.classList.toggle(
-                "active",
-                activeSort
+                "is-active",
+                isActive
             );
 
+            button.dataset.direction =
+                isActive
+                    ? comparisonSort.direction
+                    : "";
+
             button.setAttribute(
-                "aria-pressed",
-                activeSort
-                    ? "true"
-                    : "false"
+                "aria-sort",
+                isActive
+                    ? (
+                        comparisonSort.direction
+                        === "asc"
+                            ? "ascending"
+                            : "descending"
+                    )
+                    : "none"
             );
         });
 }
@@ -322,11 +332,27 @@ function handleComparisonSort(event) {
         return;
     }
 
-    comparisonSort = {
-        key: button.dataset.sortKey,
-        direction:
-            button.dataset.direction
-    };
+    const sortKey =
+        button.dataset.sortKey;
+
+    if (!sortKey) {
+        return;
+    }
+
+    if (comparisonSort.key === sortKey) {
+        comparisonSort = {
+            key: sortKey,
+            direction:
+                comparisonSort.direction === "asc"
+                    ? "desc"
+                    : "asc"
+        };
+    } else {
+        comparisonSort = {
+            key: sortKey,
+            direction: "asc"
+        };
+    }
 
     renderSortedComparisonRows();
 }
@@ -1281,137 +1307,87 @@ function createMarkup() {
                         <thead>
                             <tr>
                                 <th>
-                                    <div class="instructor-sort-header">
+                                    <button
+                                        class="inventory-risk-sort-button instructor-sort-button"
+                                        type="button"
+                                        data-sort-key="instructorName"
+                                        aria-sort="none"
+                                        aria-label="강사명 정렬"
+                                    >
                                         <span>강사명</span>
-
-                                        <span class="instructor-sort-controls">
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="instructorName"
-                                                data-direction="asc"
-                                                aria-label="강사명 오름차순 정렬"
-                                                aria-pressed="false"
-                                            >▲</button>
-
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="instructorName"
-                                                data-direction="desc"
-                                                aria-label="강사명 내림차순 정렬"
-                                                aria-pressed="false"
-                                            >▼</button>
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="inventory-risk-sort-icon"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
                                 </th>
 
                                 <th>
-                                    <div class="instructor-sort-header">
+                                    <button
+                                        class="inventory-risk-sort-button instructor-sort-button"
+                                        type="button"
+                                        data-sort-key="previousValue"
+                                        aria-sort="none"
+                                        aria-label="전년 매출 정렬"
+                                    >
                                         <span id="instructorPreviousYearHeader">
                                             전년
                                         </span>
-
-                                        <span class="instructor-sort-controls">
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="previousValue"
-                                                data-direction="asc"
-                                                aria-label="전년 매출 오름차순 정렬"
-                                                aria-pressed="false"
-                                            >▲</button>
-
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="previousValue"
-                                                data-direction="desc"
-                                                aria-label="전년 매출 내림차순 정렬"
-                                                aria-pressed="false"
-                                            >▼</button>
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="inventory-risk-sort-icon"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
                                 </th>
 
                                 <th>
-                                    <div class="instructor-sort-header">
+                                    <button
+                                        class="inventory-risk-sort-button instructor-sort-button"
+                                        type="button"
+                                        data-sort-key="currentValue"
+                                        aria-sort="none"
+                                        aria-label="금년 매출 정렬"
+                                    >
                                         <span id="instructorCurrentYearHeader">
                                             금년
                                         </span>
-
-                                        <span class="instructor-sort-controls">
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="currentValue"
-                                                data-direction="asc"
-                                                aria-label="금년 매출 오름차순 정렬"
-                                                aria-pressed="false"
-                                            >▲</button>
-
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="currentValue"
-                                                data-direction="desc"
-                                                aria-label="금년 매출 내림차순 정렬"
-                                                aria-pressed="false"
-                                            >▼</button>
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="inventory-risk-sort-icon"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
                                 </th>
 
                                 <th>
-                                    <div class="instructor-sort-header">
+                                    <button
+                                        class="inventory-risk-sort-button instructor-sort-button"
+                                        type="button"
+                                        data-sort-key="change"
+                                        aria-sort="none"
+                                        aria-label="전년대비 증감 정렬"
+                                    >
                                         <span>전년대비 증감</span>
-
-                                        <span class="instructor-sort-controls">
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="change"
-                                                data-direction="asc"
-                                                aria-label="전년대비 증감 오름차순 정렬"
-                                                aria-pressed="false"
-                                            >▲</button>
-
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="change"
-                                                data-direction="desc"
-                                                aria-label="전년대비 증감 내림차순 정렬"
-                                                aria-pressed="false"
-                                            >▼</button>
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="inventory-risk-sort-icon"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
                                 </th>
 
                                 <th>
-                                    <div class="instructor-sort-header">
+                                    <button
+                                        class="inventory-risk-sort-button instructor-sort-button"
+                                        type="button"
+                                        data-sort-key="rateValue"
+                                        aria-sort="none"
+                                        aria-label="전년대비 증감률 정렬"
+                                    >
                                         <span>전년대비 증감률</span>
-
-                                        <span class="instructor-sort-controls">
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="rateValue"
-                                                data-direction="asc"
-                                                aria-label="전년대비 증감률 오름차순 정렬"
-                                                aria-pressed="false"
-                                            >▲</button>
-
-                                            <button
-                                                class="instructor-sort-button"
-                                                type="button"
-                                                data-sort-key="rateValue"
-                                                data-direction="desc"
-                                                aria-label="전년대비 증감률 내림차순 정렬"
-                                                aria-pressed="false"
-                                            >▼</button>
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="inventory-risk-sort-icon"
+                                            aria-hidden="true"
+                                        ></span>
+                                    </button>
                                 </th>
                             </tr>
                         </thead>
