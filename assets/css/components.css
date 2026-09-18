@@ -1122,7 +1122,7 @@ background: #eef3f8;
 
 .inventory-risk-summary-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 16px;
 }
@@ -1138,6 +1138,10 @@ background: #eef3f8;
 }
 
 .inventory-risk-summary-card.is-stockout {
+    border-top: 3px solid #c83232;
+}
+
+.inventory-risk-summary-card.is-depleted {
     border-top: 3px solid #c83232;
 }
 
