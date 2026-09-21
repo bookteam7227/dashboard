@@ -399,17 +399,16 @@ function buildPieLeaderLabelPositions(
             }
         );
 
+    const labelSafeTop = 18;
+
     const chartTop =
         Math.max(
-            chart.chartArea.top + 10,
-            12
+            chart.chartArea.top + 7,
+            labelSafeTop
         );
 
     const chartBottom =
-        Math.min(
-            chart.chartArea.bottom - 10,
-            chart.height - 12
-        );
+        chart.chartArea.bottom - 7;
 
     const minGap = 15;
 
@@ -846,10 +845,10 @@ function createSalesPieChart(
 
                 layout: {
                     padding: {
-                        left: 44,
-                        right: 44,
-                        top: 14,
-                        bottom: 14
+                        left: 42,
+                        right: 42,
+                        top: 6,
+                        bottom: 4
                     }
                 },
 
