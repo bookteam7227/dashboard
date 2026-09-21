@@ -593,6 +593,9 @@ function renderAnnualYearLegend() {
                         }"
                         type="button"
                         data-annual-year="${year}"
+                        data-annual-index="${
+                            getAnnualYears().indexOf(year)
+                        }"
                         aria-pressed="${
                             isVisible
                                 ? "true"
