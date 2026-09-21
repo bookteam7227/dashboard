@@ -261,7 +261,8 @@ function getChangeRankingRows(
                 (a, b) =>
                     Number(b[valueKey])
                     - Number(a[valueKey])
-            );
+            )
+            .slice(0, 5);
 
     const decreases =
         validRows
@@ -271,6 +272,12 @@ function getChangeRankingRows(
                         row[valueKey]
                     ) < 0
             )
+            .sort(
+                (a, b) =>
+                    Number(a[valueKey])
+                    - Number(b[valueKey])
+            )
+            .slice(0, 5)
             .sort(
                 (a, b) =>
                     Number(b[valueKey])
@@ -393,10 +400,16 @@ function buildPieLeaderLabelPositions(
         );
 
     const chartTop =
-        chart.chartArea.top + 7;
+        Math.max(
+            chart.chartArea.top + 10,
+            12
+        );
 
     const chartBottom =
-        chart.chartArea.bottom - 7;
+        Math.min(
+            chart.chartArea.bottom - 10,
+            chart.height - 12
+        );
 
     const minGap = 15;
 
@@ -833,10 +846,10 @@ function createSalesPieChart(
 
                 layout: {
                     padding: {
-                        left: 42,
-                        right: 42,
-                        top: 6,
-                        bottom: 4
+                        left: 44,
+                        right: 44,
+                        top: 14,
+                        bottom: 14
                     }
                 },
 
@@ -2318,7 +2331,7 @@ function createMarkup() {
                     </section>
 
                     <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
-                        <h3>매출 증감</h3>
+                        <h3>매출 증감 TOP5</h3>
 
                         <div class="instructor-analysis-scroll-viewport">
                             <div class="instructor-analysis-scroll-inner">
@@ -2328,7 +2341,7 @@ function createMarkup() {
                     </section>
 
                     <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
-                        <h3>증감률</h3>
+                        <h3>증감률 TOP5</h3>
 
                         <div class="instructor-analysis-scroll-viewport">
                             <div class="instructor-analysis-scroll-inner">
