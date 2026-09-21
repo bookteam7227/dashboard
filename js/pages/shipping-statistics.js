@@ -976,22 +976,22 @@ export async function mount({
                         </div>
                     </div>
 
-                    <div
-                        id="annualYearLegend"
-                        class="annual-year-legend"
-                        aria-label="연도 선택"
-                    ></div>
                 </div>
 
                 <p
                     id="annualStatus"
                     class="annual-status annual-lazy-status"
-                >
-                    금년·전년 택배자료를 불러오고 있습니다.
-                </p>
+                    hidden
+                ></p>
 
-                <div class="chart-box annual-chart-box">
+                <div class="chart-box annual-chart-box annual-chart-with-legend">
                     <canvas id="annualCourierChart"></canvas>
+
+                    <div
+                        id="annualYearLegend"
+                        class="annual-year-legend"
+                        aria-label="연도 선택"
+                    ></div>
                 </div>
             </article>
         </section>
