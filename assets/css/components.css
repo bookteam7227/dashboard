@@ -2020,3 +2020,28 @@ background: #eef3f8;
         min-height: 88px;
     }
 }
+
+/* =====================================================
+   로컬 상태 - 택배사 현황
+   ===================================================== */
+
+.local-status-head {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.local-status-head .local-status-badge {
+    margin-top: 0;
+}
+
+.local-courier-values {
+    margin-top: 10px;
+}
+
+.local-courier-values .local-work-row {
+    min-height: 20px;
+}
+
