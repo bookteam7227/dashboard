@@ -146,13 +146,22 @@
 }
 
 /* 연간 택배 발송 건수 - 연도별 지연 조회 범례 */
+.annual-chart-with-legend {
+    padding-right: 92px;
+}
+
 .annual-year-legend {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    z-index: 3;
     display: flex;
     min-width: 72px;
     flex-direction: column;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 7px;
+    transform: translateY(-50%);
 }
 
 .annual-year-legend-item {
@@ -210,11 +219,6 @@
 
 .annual-year-legend-item:nth-child(5) .annual-year-legend-line {
     background: #f59e0b;
-}
-
-.annual-lazy-status {
-    margin: -3px 0 3px;
-    text-align: right;
 }
 
 @media (max-height: 760px) {
