@@ -1537,3 +1537,159 @@ background: #eef3f8;
     opacity: 1;
 }
 
+
+/* =====================================================
+   강사별 매출 분석 요약
+   ===================================================== */
+
+.instructor-analysis-summary {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.instructor-analysis-summary-card {
+    position: relative;
+    min-height: 210px;
+}
+
+.instructor-analysis-summary-header {
+    min-height: 54px;
+    padding-top: 11px;
+    padding-bottom: 10px;
+}
+
+.instructor-analysis-chart-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 20fr)
+        minmax(0, 20fr)
+        minmax(0, 30fr)
+        minmax(0, 30fr);
+    gap: 0;
+    min-height: 154px;
+}
+
+.instructor-analysis-chart-item {
+    min-width: 0;
+    height: 154px;
+    padding: 8px 10px 10px;
+    border-right: 1px solid #e9eef5;
+    box-sizing: border-box;
+}
+
+.instructor-analysis-chart-item:last-child {
+    border-right: 0;
+}
+
+.instructor-analysis-chart-item h3 {
+    margin: 0;
+    color: #173c6e;
+    font-size: 11px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.instructor-analysis-chart-item p {
+    margin: 2px 0 0;
+    color: #8a98aa;
+    font-size: 8.5px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.instructor-analysis-chart-box {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    margin-top: 4px;
+}
+
+.instructor-analysis-chart-item-bar
+.instructor-analysis-chart-box {
+    height: 112px;
+    margin-top: 1px;
+}
+
+.instructor-analysis-chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.instructor-analysis-empty {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 54px;
+    margin: 0;
+    color: #8290a3;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    pointer-events: none;
+}
+
+.instructor-name-button {
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    color: var(--ink);
+    background: transparent;
+    font: inherit;
+    font-weight: 900;
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.instructor-name-button:hover,
+.instructor-name-button:focus-visible {
+    color: #0f6fe8;
+    text-decoration-color: currentColor;
+}
+
+@media (max-width: 1180px) {
+    .instructor-analysis-chart-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .instructor-analysis-summary-card {
+        min-height: 370px;
+    }
+
+    .instructor-analysis-chart-item {
+        height: 154px;
+        border-bottom: 1px solid #e9eef5;
+    }
+
+    .instructor-analysis-chart-item:nth-child(2) {
+        border-right: 0;
+    }
+
+    .instructor-analysis-chart-item:nth-child(3),
+    .instructor-analysis-chart-item:nth-child(4) {
+        border-bottom: 0;
+    }
+}
+
+@media (max-width: 680px) {
+    .instructor-analysis-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .instructor-analysis-summary-card {
+        min-height: 680px;
+    }
+
+    .instructor-analysis-chart-item {
+        height: 154px;
+        border-right: 0;
+        border-bottom: 1px solid #e9eef5;
+    }
+
+    .instructor-analysis-chart-item:nth-child(3) {
+        border-bottom: 1px solid #e9eef5;
+    }
+}
