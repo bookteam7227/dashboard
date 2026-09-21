@@ -145,65 +145,6 @@
     color: #76839a;
 }
 
-/* 연간 택배 발송 건수 - 연도별 지연 조회 범례 */
-.annual-chart-with-legend {
-    padding-right: 92px;
-}
-
-.annual-year-legend {
-    position: absolute;
-    top: 50%;
-    right: 8px;
-    z-index: 3;
-    display: flex;
-    min-width: 72px;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 7px;
-    transform: translateY(-50%);
-}
-
-.annual-year-legend-item {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font: inherit;
-}
-
-.annual-year-legend-item.is-loading {
-    cursor: wait;
-}
-
-.annual-year-legend-item:not(.is-active) {
-    text-decoration: line-through;
-    text-decoration-thickness: 1px;
-}
-
-.annual-year-legend-line {
-    flex: 0 0 auto;
-}
-
-.annual-year-legend-item[data-annual-index="0"] .annual-year-legend-line {
-    background: #ef3340;
-}
-
-.annual-year-legend-item[data-annual-index="1"] .annual-year-legend-line {
-    background: #1d4ed8;
-}
-
-.annual-year-legend-item[data-annual-index="2"] .annual-year-legend-line {
-    background: #16a34a;
-}
-
-.annual-year-legend-item[data-annual-index="3"] .annual-year-legend-line {
-    background: #9333ea;
-}
-
-.annual-year-legend-item[data-annual-index="4"] .annual-year-legend-line {
-    background: #f59e0b;
-}
-
 @media (max-height: 760px) {
     .chart-card {
         height: calc((100vh - 160px) / 2);
