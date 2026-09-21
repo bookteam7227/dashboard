@@ -253,7 +253,7 @@ function createLocalMarkup() {
                 <div class="local-status-item">
                     <div class="local-status-head">
                         <span class="local-status-number">
-                            ${localNumber}
+                            로컬 ${localNumber}번
                         </span>
 
                         <strong
@@ -547,7 +547,7 @@ function renderLocalCouriers(
 
     const rows =
         Array.isArray(couriers)
-            ? couriers
+            ? couriers.slice(0, 4)
             : [];
 
     rows.forEach((courier) => {
