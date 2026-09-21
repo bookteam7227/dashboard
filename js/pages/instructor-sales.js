@@ -410,7 +410,7 @@ function buildPieLeaderLabelPositions(
     const chartBottom =
         chart.chartArea.bottom - 7;
 
-    const minGap = 15;
+    const minGap = 14;
 
     ["left", "right"].forEach(
         (side) => {
@@ -454,18 +454,10 @@ function buildPieLeaderLabelPositions(
                     sideItems.length - 1
                 ].labelY > chartBottom
             ) {
-                const overflow =
-                    sideItems[
-                        sideItems.length - 1
-                    ].labelY
-                    - chartBottom;
-
-                sideItems.forEach(
-                    (item) => {
-                        item.labelY -=
-                            overflow;
-                    }
-                );
+                sideItems[
+                    sideItems.length - 1
+                ].labelY =
+                    chartBottom;
 
                 for (
                     let index =
@@ -481,6 +473,31 @@ function buildPieLeaderLabelPositions(
                                 index + 1
                             ].labelY
                             - minGap
+                        );
+                }
+            }
+
+            if (
+                sideItems.length
+                && sideItems[0].labelY
+                    < chartTop
+            ) {
+                sideItems[0].labelY =
+                    chartTop;
+
+                for (
+                    let index = 1;
+                    index < sideItems.length;
+                    index += 1
+                ) {
+                    sideItems[index].labelY =
+                        Math.max(
+                            sideItems[index]
+                                .labelY,
+                            sideItems[
+                                index - 1
+                            ].labelY
+                            + minGap
                         );
                 }
             }
