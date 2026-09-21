@@ -2113,3 +2113,23 @@ background: #eef3f8;
     padding-top: 3px;
 }
 
+/* =====================================================
+   로컬 상태 - 작업량 1행 요약
+   ===================================================== */
+
+.local-work-summary {
+    width: 100%;
+    min-height: 22px;
+    color: #173c6e;
+    font-size: 10.5px;
+    font-weight: 900;
+    line-height: 22px;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.local-courier-values {
+    margin-top: 0;
+}
+
