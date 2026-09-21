@@ -2074,3 +2074,42 @@ background: #eef3f8;
     padding-top: 4px;
 }
 
+/* =====================================================
+   로컬 상태 - 작업량 복원 / 택배사 3행 / 진행률 하단 고정
+   ===================================================== */
+
+.local-status-head {
+    min-height: 24px;
+}
+
+.local-status-number {
+    line-height: 1.1;
+}
+
+.local-status-badge {
+    min-height: 24px;
+    padding: 0 7px;
+    font-size: 11px;
+}
+
+.local-work-values {
+    margin-top: 7px;
+    padding-top: 6px;
+}
+
+.local-courier-values {
+    width: 100%;
+    margin-top: 1px;
+}
+
+.local-courier-row span,
+.local-courier-row strong {
+    color: #8a98aa;
+    font-weight: 700;
+}
+
+.local-progress-rate {
+    margin-top: auto;
+    padding-top: 3px;
+}
+
