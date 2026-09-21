@@ -25,6 +25,7 @@ let active = false;
 let cacheVersion = null;
 let instructorSalesChart = null;
 let instructorAnnualTotalChart = null;
+let instructorAnalysisCharts = [];
 
 let comparisonRowsState = [];
 let comparisonTotalRowHtml = "";
@@ -37,8 +38,13 @@ function destroyChart() {
     instructorSalesChart?.destroy();
     instructorAnnualTotalChart?.destroy();
 
+    instructorAnalysisCharts.forEach(
+        (chart) => chart?.destroy()
+    );
+
     instructorSalesChart = null;
     instructorAnnualTotalChart = null;
+    instructorAnalysisCharts = [];
 }
 
 function escapeHtml(value) {
@@ -56,6 +62,24 @@ function getCurrentMonthId() {
     return (
         `${today.getFullYear()}-`
         + `${String(today.getMonth() + 1).padStart(2, "0")}`
+    );
+}
+
+function getDefaultComparisonMonthId() {
+    const today = new Date();
+
+    const previousMonth =
+        new Date(
+            today.getFullYear(),
+            today.getMonth() - 1,
+            1
+        );
+
+    return (
+        `${previousMonth.getFullYear()}-`
+        + `${String(
+            previousMonth.getMonth() + 1
+        ).padStart(2, "0")}`
     );
 }
 
@@ -135,6 +159,457 @@ function getComparisonRateValue(
         )
         / previousValue
     ) * 100;
+}
+
+
+function destroyAnalysisCharts() {
+    instructorAnalysisCharts.forEach(
+        (chart) => chart?.destroy()
+    );
+
+    instructorAnalysisCharts = [];
+}
+
+function getTopSalesComposition(
+    rows,
+    valueKey
+) {
+    const validRows =
+        rows
+            .map((row) => ({
+                instructorName:
+                    row.instructorName,
+                value:
+                    getNumber(
+                        row[valueKey]
+                    )
+            }))
+            .filter(
+                (row) => row.value > 0
+            )
+            .sort(
+                (a, b) => b.value - a.value
+            );
+
+    const topRows =
+        validRows.slice(0, 5);
+
+    const otherValue =
+        validRows
+            .slice(5)
+            .reduce(
+                (sum, row) =>
+                    sum + row.value,
+                0
+            );
+
+    const labels =
+        topRows.map(
+            (row) => row.instructorName
+        );
+
+    const values =
+        topRows.map(
+            (row) => row.value
+        );
+
+    if (otherValue > 0) {
+        labels.push("기타");
+        values.push(otherValue);
+    }
+
+    return {
+        labels,
+        values
+    };
+}
+
+function getChangeTopRows(
+    rows,
+    valueKey
+) {
+    const validRows =
+        rows.filter((row) => {
+            const value =
+                row[valueKey];
+
+            return (
+                value !== null
+                && value !== undefined
+                && Number.isFinite(
+                    Number(value)
+                )
+                && Number(value) !== 0
+            );
+        });
+
+    const decreases =
+        validRows
+            .filter(
+                (row) =>
+                    Number(
+                        row[valueKey]
+                    ) < 0
+            )
+            .sort(
+                (a, b) =>
+                    Number(a[valueKey])
+                    - Number(b[valueKey])
+            )
+            .slice(0, 5);
+
+    const increases =
+        validRows
+            .filter(
+                (row) =>
+                    Number(
+                        row[valueKey]
+                    ) > 0
+            )
+            .sort(
+                (a, b) =>
+                    Number(b[valueKey])
+                    - Number(a[valueKey])
+            )
+            .slice(0, 5);
+
+    return [
+        ...decreases,
+        ...increases
+    ];
+}
+
+function createSalesPieChart(
+    canvas,
+    composition
+) {
+    if (
+        !canvas
+        || !composition.values.length
+    ) {
+        return null;
+    }
+
+    const colors = [
+        "#0f6fe8",
+        "#4f8fe8",
+        "#70a6ee",
+        "#91bcf2",
+        "#b1d0f6",
+        "#d9e2ec"
+    ];
+
+    return new Chart(canvas, {
+        type: "doughnut",
+
+        data: {
+            labels:
+                composition.labels,
+            datasets: [
+                {
+                    data:
+                        composition.values,
+                    backgroundColor:
+                        colors.slice(
+                            0,
+                            composition.values.length
+                        ),
+                    borderColor: "#ffffff",
+                    borderWidth: 2,
+                    hoverOffset: 2
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "52%",
+
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 8,
+                        boxHeight: 8,
+                        padding: 6,
+                        color: "#65758b",
+                        font: {
+                            size: 9,
+                            weight: "bold"
+                        }
+                    }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const label =
+                                context.label || "";
+
+                            return (
+                                `${label}: `
+                                + formatNumber(
+                                    context.raw
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createChangeRankingChart(
+    canvas,
+    rows,
+    valueKey,
+    isRate
+) {
+    if (!canvas || !rows.length) {
+        return null;
+    }
+
+    const values =
+        rows.map(
+            (row) =>
+                Number(row[valueKey])
+        );
+
+    return new Chart(canvas, {
+        type: "bar",
+
+        data: {
+            labels:
+                rows.map(
+                    (row) =>
+                        row.instructorName
+                ),
+            datasets: [
+                {
+                    data: values,
+                    backgroundColor:
+                        values.map(
+                            (value) =>
+                                value > 0
+                                    ? "#ef3340"
+                                    : "#1d4ed8"
+                        ),
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    maxBarThickness: 13
+                }
+            ]
+        },
+
+        options: {
+            indexAxis: "y",
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            const value =
+                                Number(context.raw);
+
+                            if (isRate) {
+                                return (
+                                    `${value > 0 ? "+" : ""}`
+                                    + `${value.toFixed(1)}%`
+                                );
+                            }
+
+                            return formatSignedValue(
+                                value,
+                                ""
+                            );
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    grid: {
+                        color: (context) =>
+                            context.tick.value === 0
+                                ? "#aab6c5"
+                                : "#edf1f5"
+                    },
+                    ticks: {
+                        color: "#76839a",
+                        font: {
+                            size: 8
+                        },
+                        callback: (value) => {
+                            if (isRate) {
+                                return `${value}%`;
+                            }
+
+                            return formatNumber(value);
+                        }
+                    }
+                },
+
+                y: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: "#5f7086",
+                        font: {
+                            size: 8,
+                            weight: "bold"
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderComparisonAnalysis(
+    monthId
+) {
+    const match =
+        /^(\d{4})-(\d{2})$/.exec(
+            String(monthId || "")
+        );
+
+    if (!match) {
+        return;
+    }
+
+    const currentYear =
+        Number(match[1]);
+
+    const previousYear =
+        currentYear - 1;
+
+    const month =
+        Number(match[2]);
+
+    const status =
+        document.getElementById(
+            "instructorAnalysisStatus"
+        );
+
+    if (status) {
+        status.textContent =
+            `${previousYear}년 ${month}월 / ${currentYear}년 ${month}월`;
+    }
+
+    destroyAnalysisCharts();
+
+    const previousComposition =
+        getTopSalesComposition(
+            comparisonRowsState,
+            "previousValue"
+        );
+
+    const currentComposition =
+        getTopSalesComposition(
+            comparisonRowsState,
+            "currentValue"
+        );
+
+    const changeRows =
+        getChangeTopRows(
+            comparisonRowsState,
+            "change"
+        );
+
+    const rateRows =
+        getChangeTopRows(
+            comparisonRowsState,
+            "rateValue"
+        );
+
+    const charts = [
+        createSalesPieChart(
+            document.getElementById(
+                "instructorPreviousTopChart"
+            ),
+            previousComposition
+        ),
+        createSalesPieChart(
+            document.getElementById(
+                "instructorCurrentTopChart"
+            ),
+            currentComposition
+        ),
+        createChangeRankingChart(
+            document.getElementById(
+                "instructorChangeTopChart"
+            ),
+            changeRows,
+            "change",
+            false
+        ),
+        createChangeRankingChart(
+            document.getElementById(
+                "instructorRateTopChart"
+            ),
+            rateRows,
+            "rateValue",
+            true
+        )
+    ].filter(Boolean);
+
+    instructorAnalysisCharts =
+        charts;
+
+    const emptyMessage =
+        document.getElementById(
+            "instructorAnalysisEmpty"
+        );
+
+    if (emptyMessage) {
+        emptyMessage.hidden =
+            charts.length > 0;
+    }
+}
+
+function handleInstructorNameClick(
+    event
+) {
+    const button =
+        event.target.closest(
+            ".instructor-name-button"
+        );
+
+    if (!button) {
+        return;
+    }
+
+    const instructorName =
+        String(
+            button.dataset.instructorName
+            || ""
+        ).trim();
+
+    if (!instructorName) {
+        return;
+    }
+
+    const searchInput =
+        document.getElementById(
+            "instructorNameSearch"
+        );
+
+    if (searchInput) {
+        searchInput.value =
+            instructorName;
+    }
+
+    searchTrend();
 }
 
 function updateSortButtonState() {
@@ -291,9 +766,20 @@ function renderSortedComparisonRows() {
                 return `
                     <tr>
                         <td class="instructor-name-cell">
-                            ${escapeHtml(
-                                row.instructorName
-                            )}
+                            <button
+                                class="instructor-name-button"
+                                type="button"
+                                data-instructor-name="${escapeHtml(
+                                    row.instructorName
+                                )}"
+                                title="${escapeHtml(
+                                    row.instructorName
+                                )} 매출 추이 조회"
+                            >
+                                ${escapeHtml(
+                                    row.instructorName
+                                )}
+                            </button>
                         </td>
                         <td>
                             ${formatNumber(
@@ -456,6 +942,18 @@ function renderComparisonTable(
             </tr>
         `;
 
+        destroyAnalysisCharts();
+
+        const analysisStatus =
+            document.getElementById(
+                "instructorAnalysisStatus"
+            );
+
+        if (analysisStatus) {
+            analysisStatus.textContent =
+                "선택한 연월의 매출 데이터가 없습니다.";
+        }
+
         updateSortButtonState();
         return;
     }
@@ -526,6 +1024,7 @@ function renderComparisonTable(
         totalRow;
 
     renderSortedComparisonRows();
+    renderComparisonAnalysis(monthId);
 }
 
 async function loadComparison(monthId) {
@@ -1268,6 +1767,59 @@ async function searchTrend() {
 
 function createMarkup() {
     return `
+        <section class="instructor-analysis-summary">
+            <article class="dashboard-card instructor-analysis-summary-card">
+                <div class="dashboard-card-header instructor-analysis-summary-header">
+                    <div>
+                        <h2>강사별 매출 분석</h2>
+
+                        <p id="instructorAnalysisStatus">
+                            기준 연월 조회 후 전년/금년 매출 구성과 증감 TOP5를 표시합니다.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="instructor-analysis-chart-grid">
+                    <section class="instructor-analysis-chart-item instructor-analysis-chart-item-pie">
+                        <h3>전년 매출 TOP5</h3>
+                        <div class="instructor-analysis-chart-box">
+                            <canvas id="instructorPreviousTopChart"></canvas>
+                        </div>
+                    </section>
+
+                    <section class="instructor-analysis-chart-item instructor-analysis-chart-item-pie">
+                        <h3>금년 매출 TOP5</h3>
+                        <div class="instructor-analysis-chart-box">
+                            <canvas id="instructorCurrentTopChart"></canvas>
+                        </div>
+                    </section>
+
+                    <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
+                        <h3>매출 증감 TOP5</h3>
+                        <p>감소 ← 0 → 증가</p>
+                        <div class="instructor-analysis-chart-box">
+                            <canvas id="instructorChangeTopChart"></canvas>
+                        </div>
+                    </section>
+
+                    <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
+                        <h3>증감률 TOP5</h3>
+                        <p>감소 ← 0 → 증가</p>
+                        <div class="instructor-analysis-chart-box">
+                            <canvas id="instructorRateTopChart"></canvas>
+                        </div>
+                    </section>
+                </div>
+
+                <p
+                    id="instructorAnalysisEmpty"
+                    class="instructor-analysis-empty"
+                >
+                    기준 연월을 조회하면 분석 그래프가 표시됩니다.
+                </p>
+            </article>
+        </section>
+
         <section class="instructor-sales-grid">
             <article class="dashboard-card instructor-sales-card">
                 <div class="dashboard-card-header instructor-analysis-header">
@@ -1488,7 +2040,7 @@ export async function mount({
         );
 
     monthInput.value =
-        getCurrentMonthId();
+        getDefaultComparisonMonthId();
 
     document
         .getElementById(
@@ -1509,6 +2061,15 @@ export async function mount({
         );
 
     updateSortButtonState();
+
+    document
+        .getElementById(
+            "instructorSalesTableBody"
+        )
+        .addEventListener(
+            "click",
+            handleInstructorNameClick
+        );
 
     document
         .getElementById(
