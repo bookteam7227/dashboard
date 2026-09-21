@@ -265,11 +265,24 @@ function createLocalMarkup() {
                     </div>
 
                     <div class="local-work-values">
-                        <div
-                            id="localWorkSummary${localNumber}"
-                            class="local-work-summary"
-                        >
-                            0건 | 0권
+                        <div class="local-work-row">
+                            <span>작업 건수</span>
+
+                            <strong
+                                id="localWorkOrders${localNumber}"
+                            >
+                                0건
+                            </strong>
+                        </div>
+
+                        <div class="local-work-row">
+                            <span>작업 권수</span>
+
+                            <strong
+                                id="localWorkBooks${localNumber}"
+                            >
+                                0권
+                            </strong>
                         </div>
 
                         <div
@@ -620,9 +633,14 @@ function renderLocalStatuses(row) {
                 `localStatus${index}`
             );
 
-        const workSummaryElement =
+        const workOrdersElement =
             document.getElementById(
-                `localWorkSummary${index}`
+                `localWorkOrders${index}`
+            );
+
+        const workBooksElement =
+            document.getElementById(
+                `localWorkBooks${index}`
             );
 
         const couriersElement =
@@ -650,11 +668,16 @@ function renderLocalStatuses(row) {
             );
         }
 
-        if (workSummaryElement) {
-            workSummaryElement.textContent =
+        if (workOrdersElement) {
+            workOrdersElement.textContent =
                 `${formatNumber(
                     localRow?.work_orders
-                )}건 | ${formatNumber(
+                )}건`;
+        }
+
+        if (workBooksElement) {
+            workBooksElement.textContent =
+                `${formatNumber(
                     localRow?.work_books
                 )}권`;
         }
