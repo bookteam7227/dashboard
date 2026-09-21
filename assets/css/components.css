@@ -1784,46 +1784,32 @@ background: #eef3f8;
 
 
 /* =====================================================
-   Firestore 사용량 - 스타일 복원
-   instructor-sales v7의 기존 스타일은 유지하고
-   사용량 화면에만 적용되는 보완 규칙
+   Firestore 사용량
    ===================================================== */
 
-/*
- * Firestore 사용량 페이지의 기존 JS 마크업을 변경하지 않기 위해
- * class/id에 "usage"가 포함된 요소가 존재하는 pageContent에서만
- * 아래 스타일을 활성화합니다.
- */
-#pageContent:has([class*="usage" i]),
-#pageContent:has([id*="usage" i]) {
-    min-width: 0;
+.usage-page {
+    display: grid;
+    gap: 16px;
+    width: 100%;
 }
 
-/* 기간 선택 영역 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="filter" i],
-    [class*="range" i],
-    [class*="period" i],
-    [class*="toolbar" i]
-),
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="filter" i],
-    [class*="range" i],
-    [class*="period" i],
-    [class*="toolbar" i]
-) {
+.usage-toolbar {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 44px;
 }
 
-/* 오늘 / 최근 7일 / 최근 30일 */
-#pageContent:has([class*="usage" i]) button,
-#pageContent:has([id*="usage" i]) button {
-    min-height: 36px;
+.usage-range-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.usage-range-button {
+    height: 38px;
     padding: 0 14px;
     border: 1px solid #d7e0eb;
     border-radius: 8px;
@@ -1831,246 +1817,206 @@ background: #eef3f8;
     background: #ffffff;
     font-size: 11px;
     font-weight: 900;
-    cursor: pointer;
-    box-sizing: border-box;
 }
 
-#pageContent:has([class*="usage" i]) button:hover,
-#pageContent:has([id*="usage" i]) button:hover {
+.usage-range-button:hover {
     color: #173c6e;
     border-color: #b8c7d8;
     background: #f8fafc;
 }
 
-#pageContent:has([class*="usage" i])
-button:is(
-    .active,
-    .is-active,
-    [aria-pressed="true"]
-),
-#pageContent:has([id*="usage" i])
-button:is(
-    .active,
-    .is-active,
-    [aria-pressed="true"]
-) {
+.usage-range-button.is-active {
     color: #ffffff;
     border-color: #0f6fe8;
     background: #0f6fe8;
 }
 
-/* 조회 상태 문구 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="status" i],
-    [class*="description" i]
-),
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="status" i],
-    [class*="description" i]
-) {
-    color: #728197;
-    font-size: 10.5px;
-    font-weight: 700;
-    line-height: 1.5;
-}
-
-/* 요약 영역 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="summary" i],
-    [class*="metrics" i],
-    [class*="overview" i]
-),
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="summary" i],
-    [class*="metrics" i],
-    [class*="overview" i]
-) {
+.usage-summary-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin: 12px 0 16px;
+    gap: 12px;
 }
 
-/* 요약 항목 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="summary" i],
-    [class*="metrics" i],
-    [class*="overview" i]
-) > *,
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="summary" i],
-    [class*="metrics" i],
-    [class*="overview" i]
-) > * {
+.usage-summary-card {
+    display: flex;
     min-width: 0;
-    padding: 12px 14px;
-    border: 1px solid #e2e8f0;
-    border-radius: 9px;
-    background: #f8fafc;
-    box-sizing: border-box;
-}
-
-/* 표 래퍼 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="table-wrap" i],
-    [class*="table-card" i],
-    [class*="list-card" i]
-),
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="table-wrap" i],
-    [class*="table-card" i],
-    [class*="list-card" i]
-) {
-    width: 100%;
-    margin-top: 12px;
+    min-height: 104px;
+    padding: 18px 20px;
+    flex-direction: column;
+    justify-content: center;
     border: 1px solid #dfe6ef;
     border-radius: 12px;
     background: #ffffff;
-    overflow-x: auto;
     box-sizing: border-box;
 }
 
-/* 사용량 표 */
-#pageContent:has([class*="usage" i]) table,
-#pageContent:has([id*="usage" i]) table {
-    width: 100%;
-    min-width: 980px;
-    border-collapse: collapse;
-    background: #ffffff;
-    table-layout: auto;
+.usage-summary-card span {
+    color: #728197;
+    font-size: 10.5px;
+    font-weight: 800;
 }
 
-#pageContent:has([class*="usage" i]) th,
-#pageContent:has([id*="usage" i]) th {
+.usage-summary-card strong {
+    margin-top: 9px;
+    color: #173c6e;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.25;
+    word-break: keep-all;
+}
+
+.usage-table-card {
+    min-width: 0;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.usage-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.usage-table {
+    width: 100%;
+    min-width: 1180px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.usage-table th,
+.usage-table td {
     padding: 11px 10px;
-    border-bottom: 1px solid #dfe6ef;
+    border-right: 1px solid #e3e8ef;
+    border-bottom: 1px solid #e9eef5;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.usage-table th:last-child,
+.usage-table td:last-child {
+    border-right: 0;
+}
+
+.usage-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     color: #65758b;
     background: #eef3f8;
     font-size: 10.5px;
     font-weight: 900;
-    text-align: center;
-    white-space: nowrap;
 }
 
-#pageContent:has([class*="usage" i]) td,
-#pageContent:has([id*="usage" i]) td {
-    padding: 11px 10px;
-    border-bottom: 1px solid #e9eef5;
+.usage-table td {
     color: #173c6e;
     background: #ffffff;
     font-size: 11px;
     font-weight: 800;
-    text-align: center;
-    white-space: nowrap;
 }
 
-#pageContent:has([class*="usage" i]) tbody tr:last-child td,
-#pageContent:has([id*="usage" i]) tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-#pageContent:has([class*="usage" i]) tbody tr:hover td,
-#pageContent:has([id*="usage" i]) tbody tr:hover td {
+.usage-table tbody tr:hover td {
     background: #f8fafc;
 }
 
-/* 사용자 이메일은 좌측 정렬 */
-#pageContent:has([class*="usage" i]) th:first-child,
-#pageContent:has([class*="usage" i]) td:first-child,
-#pageContent:has([id*="usage" i]) th:first-child,
-#pageContent:has([id*="usage" i]) td:first-child {
+.usage-table th:nth-child(1),
+.usage-table td:nth-child(1) {
+    width: 240px;
     text-align: left;
 }
 
-/* 안내문 */
-#pageContent:has([class*="usage" i])
-:is(
-    [class*="note" i],
-    [class*="notice" i],
-    [class*="help" i],
-    [class*="guide" i]
-),
-#pageContent:has([id*="usage" i])
-:is(
-    [class*="note" i],
-    [class*="notice" i],
-    [class*="help" i],
-    [class*="guide" i]
-) {
-    margin-top: 12px;
-    padding: 11px 13px;
+.usage-table th:nth-child(2),
+.usage-table td:nth-child(2) {
+    width: 70px;
+}
+
+.usage-table th:nth-child(n+3):nth-child(-n+9),
+.usage-table td:nth-child(n+3):nth-child(-n+9) {
+    width: 95px;
+}
+
+.usage-table th:nth-child(10),
+.usage-table td:nth-child(10) {
+    width: 150px;
+}
+
+.usage-user-cell {
+    text-align: left !important;
+}
+
+.usage-user-cell strong {
+    display: block;
+    overflow: hidden;
+    color: #173c6e;
+    font-size: 11px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.usage-user-cell span {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    color: #8a98aa;
+    font-size: 9px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.usage-total-cell {
+    color: #0c5ecf !important;
+    background: #f5f9ff !important;
+    font-weight: 900 !important;
+}
+
+.usage-empty {
+    height: 140px;
+    color: #8290a3 !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+}
+
+.usage-note {
+    margin: 0;
+    padding: 12px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 9px;
     color: #65758b;
     background: #f8fafc;
     font-size: 10px;
     font-weight: 700;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
-/*
- * 일부 기존 마크업이 firestore-usage-* 접두사를 사용하는 경우를
- * 명시적으로 보완합니다.
- */
-.firestore-usage-card,
-.usage-card {
-    border: 1px solid #dfe6ef;
-    border-radius: 12px;
-    background: #ffffff;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-.firestore-usage-table-wrap,
-.usage-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.firestore-usage-table,
-.usage-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-@media (max-width: 900px) {
-    #pageContent:has([class*="usage" i])
-    :is(
-        [class*="summary" i],
-        [class*="metrics" i],
-        [class*="overview" i]
-    ),
-    #pageContent:has([id*="usage" i])
-    :is(
-        [class*="summary" i],
-        [class*="metrics" i],
-        [class*="overview" i]
-    ) {
+@media (max-width: 1100px) {
+    .usage-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 600px) {
-    #pageContent:has([class*="usage" i])
-    :is(
-        [class*="summary" i],
-        [class*="metrics" i],
-        [class*="overview" i]
-    ),
-    #pageContent:has([id*="usage" i])
-    :is(
-        [class*="summary" i],
-        [class*="metrics" i],
-        [class*="overview" i]
-    ) {
+@media (max-width: 760px) {
+    .usage-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .usage-range-buttons {
+        width: 100%;
+    }
+
+    .usage-range-button {
+        flex: 1;
+    }
+
+    .usage-summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .usage-summary-card {
+        min-height: 88px;
     }
 }
