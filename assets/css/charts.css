@@ -165,17 +165,10 @@
 }
 
 .annual-year-legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
     padding: 0;
     border: 0;
-    color: #5f6f84;
     background: transparent;
-    font-size: 9px;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
+    font: inherit;
 }
 
 .annual-year-legend-item.is-loading {
@@ -188,10 +181,7 @@
 }
 
 .annual-year-legend-line {
-    width: 18px;
-    height: 3px;
-    border-radius: 0;
-    background: #8a98aa;
+    flex: 0 0 auto;
 }
 
 .annual-year-legend-item[data-annual-index="0"] .annual-year-legend-line {
