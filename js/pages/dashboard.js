@@ -251,44 +251,22 @@ function createLocalMarkup() {
 
             return `
                 <div class="local-status-item">
-                    <span class="local-status-number">
-                        ${localNumber}
-                    </span>
-
-                    <strong
-                        id="localStatus${localNumber}"
-                        class="local-status-badge is-waiting"
-                    >
-                        대기
-                    </strong>
-
                     <div class="local-work-values">
                         <div class="local-work-row">
-                            <span>작업 건수</span>
+                            <span>
+                                로컬 ${localNumber}
+                            </span>
 
                             <strong
-                                id="localOrders${localNumber}"
+                                id="localStatus${localNumber}"
                             >
-                                0건
+                                대기
                             </strong>
                         </div>
 
-                        <div class="local-work-row">
-                            <span>작업 권수</span>
-
-                            <strong
-                                id="localBooks${localNumber}"
-                            >
-                                0권
-                            </strong>
-                        </div>
-                    </div>
-
-                    <div
-                        id="localProgress${localNumber}"
-                        class="local-progress-rate"
-                    >
-                        진행률 0%
+                        <div
+                            id="localCouriers${localNumber}"
+                        ></div>
                     </div>
                 </div>
             `;
@@ -549,6 +527,60 @@ function createDashboardMarkup() {
     `;
 }
 
+function renderLocalCouriers(
+    container,
+    couriers
+) {
+    if (!container) {
+        return;
+    }
+
+    container.replaceChildren();
+
+    const rows =
+        Array.isArray(couriers)
+            ? couriers
+            : [];
+
+    rows.forEach((courier) => {
+        const courierName =
+            String(
+                courier?.name || ""
+            ).trim();
+
+        if (!courierName) {
+            return;
+        }
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "local-work-row";
+
+        const nameElement =
+            document.createElement("span");
+
+        nameElement.textContent =
+            courierName;
+
+        const countElement =
+            document.createElement("strong");
+
+        countElement.textContent =
+            `${formatNumber(
+                courier?.count
+            )}건`;
+
+        row.append(
+            nameElement,
+            countElement
+        );
+
+        container.appendChild(row);
+    });
+}
+
 function renderLocalStatuses(row) {
     const locals =
         row?.locals || {};
@@ -572,56 +604,20 @@ function renderLocalStatuses(row) {
                 `localStatus${index}`
             );
 
-        const ordersElement =
+        const couriersElement =
             document.getElementById(
-                `localOrders${index}`
-            );
-
-        const booksElement =
-            document.getElementById(
-                `localBooks${index}`
-            );
-
-        const progressElement =
-            document.getElementById(
-                `localProgress${index}`
+                `localCouriers${index}`
             );
 
         if (statusElement) {
             statusElement.textContent =
                 status.text;
-
-            statusElement.classList.remove(
-                "is-waiting",
-                "is-working",
-                "is-complete"
-            );
-
-            statusElement.classList.add(
-                status.className
-            );
         }
 
-        if (ordersElement) {
-            ordersElement.textContent =
-                `${formatNumber(
-                    localRow.work_orders
-                )}건`;
-        }
-
-        if (booksElement) {
-            booksElement.textContent =
-                `${formatNumber(
-                    localRow.work_books
-                )}권`;
-        }
-
-        if (progressElement) {
-            progressElement.textContent =
-                `진행률 ${getLocalProgressRate(
-                    localRow
-                ).toFixed(0)}%`;
-        }
+        renderLocalCouriers(
+            couriersElement,
+            localRow.couriers
+        );
     }
 }
 
