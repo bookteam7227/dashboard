@@ -1781,3 +1781,296 @@ background: #eef3f8;
     border-radius: 999px;
     background: #c8d2df;
 }
+
+
+/* =====================================================
+   Firestore 사용량 - 스타일 복원
+   instructor-sales v7의 기존 스타일은 유지하고
+   사용량 화면에만 적용되는 보완 규칙
+   ===================================================== */
+
+/*
+ * Firestore 사용량 페이지의 기존 JS 마크업을 변경하지 않기 위해
+ * class/id에 "usage"가 포함된 요소가 존재하는 pageContent에서만
+ * 아래 스타일을 활성화합니다.
+ */
+#pageContent:has([class*="usage" i]),
+#pageContent:has([id*="usage" i]) {
+    min-width: 0;
+}
+
+/* 기간 선택 영역 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="filter" i],
+    [class*="range" i],
+    [class*="period" i],
+    [class*="toolbar" i]
+),
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="filter" i],
+    [class*="range" i],
+    [class*="period" i],
+    [class*="toolbar" i]
+) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* 오늘 / 최근 7일 / 최근 30일 */
+#pageContent:has([class*="usage" i]) button,
+#pageContent:has([id*="usage" i]) button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #d7e0eb;
+    border-radius: 8px;
+    color: #4d5c70;
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+#pageContent:has([class*="usage" i]) button:hover,
+#pageContent:has([id*="usage" i]) button:hover {
+    color: #173c6e;
+    border-color: #b8c7d8;
+    background: #f8fafc;
+}
+
+#pageContent:has([class*="usage" i])
+button:is(
+    .active,
+    .is-active,
+    [aria-pressed="true"]
+),
+#pageContent:has([id*="usage" i])
+button:is(
+    .active,
+    .is-active,
+    [aria-pressed="true"]
+) {
+    color: #ffffff;
+    border-color: #0f6fe8;
+    background: #0f6fe8;
+}
+
+/* 조회 상태 문구 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="status" i],
+    [class*="description" i]
+),
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="status" i],
+    [class*="description" i]
+) {
+    color: #728197;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/* 요약 영역 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="summary" i],
+    [class*="metrics" i],
+    [class*="overview" i]
+),
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="summary" i],
+    [class*="metrics" i],
+    [class*="overview" i]
+) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin: 12px 0 16px;
+}
+
+/* 요약 항목 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="summary" i],
+    [class*="metrics" i],
+    [class*="overview" i]
+) > *,
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="summary" i],
+    [class*="metrics" i],
+    [class*="overview" i]
+) > * {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+
+/* 표 래퍼 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="table-wrap" i],
+    [class*="table-card" i],
+    [class*="list-card" i]
+),
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="table-wrap" i],
+    [class*="table-card" i],
+    [class*="list-card" i]
+) {
+    width: 100%;
+    margin-top: 12px;
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+
+/* 사용량 표 */
+#pageContent:has([class*="usage" i]) table,
+#pageContent:has([id*="usage" i]) table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+    background: #ffffff;
+    table-layout: auto;
+}
+
+#pageContent:has([class*="usage" i]) th,
+#pageContent:has([id*="usage" i]) th {
+    padding: 11px 10px;
+    border-bottom: 1px solid #dfe6ef;
+    color: #65758b;
+    background: #eef3f8;
+    font-size: 10.5px;
+    font-weight: 900;
+    text-align: center;
+    white-space: nowrap;
+}
+
+#pageContent:has([class*="usage" i]) td,
+#pageContent:has([id*="usage" i]) td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #e9eef5;
+    color: #173c6e;
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+}
+
+#pageContent:has([class*="usage" i]) tbody tr:last-child td,
+#pageContent:has([id*="usage" i]) tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+#pageContent:has([class*="usage" i]) tbody tr:hover td,
+#pageContent:has([id*="usage" i]) tbody tr:hover td {
+    background: #f8fafc;
+}
+
+/* 사용자 이메일은 좌측 정렬 */
+#pageContent:has([class*="usage" i]) th:first-child,
+#pageContent:has([class*="usage" i]) td:first-child,
+#pageContent:has([id*="usage" i]) th:first-child,
+#pageContent:has([id*="usage" i]) td:first-child {
+    text-align: left;
+}
+
+/* 안내문 */
+#pageContent:has([class*="usage" i])
+:is(
+    [class*="note" i],
+    [class*="notice" i],
+    [class*="help" i],
+    [class*="guide" i]
+),
+#pageContent:has([id*="usage" i])
+:is(
+    [class*="note" i],
+    [class*="notice" i],
+    [class*="help" i],
+    [class*="guide" i]
+) {
+    margin-top: 12px;
+    padding: 11px 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    color: #65758b;
+    background: #f8fafc;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+/*
+ * 일부 기존 마크업이 firestore-usage-* 접두사를 사용하는 경우를
+ * 명시적으로 보완합니다.
+ */
+.firestore-usage-card,
+.usage-card {
+    border: 1px solid #dfe6ef;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.firestore-usage-table-wrap,
+.usage-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.firestore-usage-table,
+.usage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+@media (max-width: 900px) {
+    #pageContent:has([class*="usage" i])
+    :is(
+        [class*="summary" i],
+        [class*="metrics" i],
+        [class*="overview" i]
+    ),
+    #pageContent:has([id*="usage" i])
+    :is(
+        [class*="summary" i],
+        [class*="metrics" i],
+        [class*="overview" i]
+    ) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    #pageContent:has([class*="usage" i])
+    :is(
+        [class*="summary" i],
+        [class*="metrics" i],
+        [class*="overview" i]
+    ),
+    #pageContent:has([id*="usage" i])
+    :is(
+        [class*="summary" i],
+        [class*="metrics" i],
+        [class*="overview" i]
+    ) {
+        grid-template-columns: 1fr;
+    }
+}
