@@ -148,10 +148,11 @@
 /* 연간 택배 발송 건수 - 연도별 지연 조회 범례 */
 .annual-year-legend {
     display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 9px;
-    flex-wrap: wrap;
+    min-width: 72px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 7px;
 }
 
 .annual-year-legend-item {
