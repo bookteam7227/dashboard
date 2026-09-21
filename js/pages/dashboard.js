@@ -251,22 +251,30 @@ function createLocalMarkup() {
 
             return `
                 <div class="local-status-item">
-                    <div class="local-work-values">
-                        <div class="local-work-row">
-                            <span>
-                                로컬 ${localNumber}
-                            </span>
+                    <div class="local-status-head">
+                        <span class="local-status-number">
+                            ${localNumber}
+                        </span>
 
-                            <strong
-                                id="localStatus${localNumber}"
-                            >
-                                대기
-                            </strong>
-                        </div>
+                        <strong
+                            id="localStatus${localNumber}"
+                            class="local-status-badge is-waiting"
+                        >
+                            대기
+                        </strong>
+                    </div>
 
+                    <div class="local-work-values local-courier-values">
                         <div
                             id="localCouriers${localNumber}"
                         ></div>
+                    </div>
+
+                    <div
+                        id="localProgress${localNumber}"
+                        class="local-progress-rate"
+                    >
+                        진행률 0%
                     </div>
                 </div>
             `;
@@ -609,15 +617,37 @@ function renderLocalStatuses(row) {
                 `localCouriers${index}`
             );
 
+        const progressElement =
+            document.getElementById(
+                `localProgress${index}`
+            );
+
         if (statusElement) {
             statusElement.textContent =
                 status.text;
+
+            statusElement.classList.remove(
+                "is-waiting",
+                "is-working",
+                "is-complete"
+            );
+
+            statusElement.classList.add(
+                status.className
+            );
         }
 
         renderLocalCouriers(
             couriersElement,
             localRow.couriers
         );
+
+        if (progressElement) {
+            progressElement.textContent =
+                `진행률 ${getLocalProgressRate(
+                    localRow
+                ).toFixed(0)}%`;
+        }
     }
 }
 
