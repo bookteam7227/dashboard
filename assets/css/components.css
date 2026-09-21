@@ -2045,3 +2045,32 @@ background: #eef3f8;
     min-height: 20px;
 }
 
+/* =====================================================
+   로컬 상태 - 택배사 4행 / 진행률 하단 고정
+   ===================================================== */
+
+.local-status-item {
+    height: 166px;
+}
+
+.local-status-head {
+    flex: 0 0 auto;
+}
+
+.local-courier-values {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+.local-courier-values > div {
+    width: 100%;
+}
+
+.local-progress-rate {
+    flex: 0 0 auto;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
