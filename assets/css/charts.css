@@ -145,6 +145,77 @@
     color: #76839a;
 }
 
+/* 연간 택배 발송 건수 - 연도별 지연 조회 범례 */
+.annual-year-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.annual-year-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    color: #6d7d91;
+    background: transparent;
+    font-size: 9.5px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.annual-year-legend-item.is-unloaded {
+    opacity: 0.35;
+}
+
+.annual-year-legend-item.is-loaded:not(.is-active) {
+    opacity: 0.45;
+}
+
+.annual-year-legend-item.is-active {
+    opacity: 1;
+}
+
+.annual-year-legend-item.is-loading {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.annual-year-legend-line {
+    width: 20px;
+    height: 3px;
+    border-radius: 999px;
+    background: #8a98aa;
+}
+
+.annual-year-legend-item:nth-child(1) .annual-year-legend-line {
+    background: #ef3340;
+}
+
+.annual-year-legend-item:nth-child(2) .annual-year-legend-line {
+    background: #1d4ed8;
+}
+
+.annual-year-legend-item:nth-child(3) .annual-year-legend-line {
+    background: #16a34a;
+}
+
+.annual-year-legend-item:nth-child(4) .annual-year-legend-line {
+    background: #9333ea;
+}
+
+.annual-year-legend-item:nth-child(5) .annual-year-legend-line {
+    background: #f59e0b;
+}
+
+.annual-lazy-status {
+    margin: -3px 0 3px;
+    text-align: right;
+}
+
 @media (max-height: 760px) {
     .chart-card {
         height: calc((100vh - 160px) / 2);
