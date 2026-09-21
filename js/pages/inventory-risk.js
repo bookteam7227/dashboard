@@ -1446,7 +1446,7 @@ function createMarkup() {
                     데이터 기준
                 </span>
                 <strong class="inventory-risk-meta-title">
-                    위험 재고 자동 분석
+                    금일 오전 주문량 기준
                 </strong>
             </div>
 
