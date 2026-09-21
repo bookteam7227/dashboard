@@ -1,8 +1,7 @@
 // /js/pages/shipping-statistics.js
 
 import {
-    getCollectionRowsByDocumentIdRange,
-    getDocumentRow
+    getCollectionRowsByDocumentIdRange
 } from "../services/firestore-service.js";
 import {
     addDays,
@@ -19,24 +18,18 @@ import {
     createAnnualChart,
     createComparisonChart
 } from "../utils/chart-utils.js";
-import {
-    getCachedData,
-    getDataVersion,
-    setCachedData
-} from "../services/data-cache.js";
 
 export const title = "발송 통계";
 
-const YEARLY_SUMMARY_COLLECTION = "yearly_dashboard_statistics";
-const CACHE_SCOPE = "shipping_statistics";
-const CACHE_TTL_MS = 60 * 60 * 1000;
 const dailyMap = new Map();
+const annualYearData = new Map();
+const annualVisibleYears = new Set();
+const annualLoadingYears = new Set();
 
 let ordersChart = null;
 let booksChart = null;
 let annualChart = null;
 let active = false;
-let cacheVersion = null;
 
 function destroyCharts() {
     [
@@ -125,73 +118,6 @@ function setDailyRows(rows) {
     });
 }
 
-function getMonthIdsForRange(
-    startDateId,
-    endDateId
-) {
-    const start =
-        parseDateId(startDateId);
-
-    const end =
-        parseDateId(endDateId);
-
-    if (
-        !start ||
-        !end
-    ) {
-        return [];
-    }
-
-    const monthIds = [];
-    const cursor =
-        new Date(
-            start.getFullYear(),
-            start.getMonth(),
-            1
-        );
-
-    const endMonth =
-        new Date(
-            end.getFullYear(),
-            end.getMonth(),
-            1
-        );
-
-    while (cursor <= endMonth) {
-        monthIds.push(
-            `${cursor.getFullYear()}-${String(
-                cursor.getMonth() + 1
-            ).padStart(2, "0")}`
-        );
-
-        cursor.setMonth(
-            cursor.getMonth() + 1
-        );
-    }
-
-    return monthIds;
-}
-
-function setMonthlySummaryRows(
-    monthlyDocuments
-) {
-    monthlyDocuments.forEach((documentRow) => {
-        if (
-            !documentRow ||
-            !documentRow.days ||
-            typeof documentRow.days !== "object"
-        ) {
-            return;
-        }
-
-        setDailyRows(
-            Object.values(
-                documentRow.days
-            )
-        );
-    });
-}
-
 async function loadDailyRange(
     startDateId,
     endDateId
@@ -206,59 +132,31 @@ async function loadDailyRange(
             endDateId
         );
 
-    const monthIds =
-        Array.from(
-            new Set([
-                ...getMonthIdsForRange(
-                    startDateId,
-                    endDateId
-                ),
-                ...getMonthIdsForRange(
-                    previousStartDateId,
-                    previousEndDateId
-                )
-            ])
-        );
+    const [
+        currentRows,
+        previousRows
+    ] = await Promise.all([
+        getCollectionRowsByDocumentIdRange(
+            "shippingDaily",
+            startDateId,
+            endDateId
+        ),
 
-    const monthlyDocuments =
-        await Promise.all(
-            monthIds.map(async (monthId) => {
-                const cacheKey = `daily:${monthId}`;
-                const cached = getCachedData(
-                    CACHE_SCOPE,
-                    cacheKey,
-                    cacheVersion,
-                    CACHE_TTL_MS
-                );
-
-                if (cached !== null) {
-                    return cached;
-                }
-
-                const row = await getDocumentRow(
-                    "shipping_daily_monthly",
-                    monthId
-                );
-
-                setCachedData(
-                    CACHE_SCOPE,
-                    cacheKey,
-                    cacheVersion,
-                    row
-                );
-
-                return row;
-            })
-        );
+        getCollectionRowsByDocumentIdRange(
+            "shippingDaily",
+            previousStartDateId,
+            previousEndDateId
+        )
+    ]);
 
     if (!active) {
         return false;
     }
 
     dailyMap.clear();
-    setMonthlySummaryRows(
-        monthlyDocuments
-    );
+
+    setDailyRows(currentRows);
+    setDailyRows(previousRows);
 
     return true;
 }
@@ -560,45 +458,46 @@ function yearlyCourierData(
         new Map();
 
     rows.forEach((row) => {
-        const year =
-            Number(
-                row.base_year ||
+        const monthId =
+            String(
+                row.base_month ||
                 row.id
             );
 
-        if (!Number.isFinite(year)) {
+        const match =
+            /^(\d{4})-(\d{2})/.exec(
+                monthId
+            );
+
+        if (!match) {
             return;
         }
 
-        const monthly =
-            row.monthly || {};
+        const year =
+            Number(
+                match[1]
+            );
 
-        const monthlyValues =
-            Array(12).fill(0);
+        const monthIndex =
+            Number(
+                match[2]
+            ) - 1;
 
-        for (
-            let month = 1;
-            month <= 12;
-            month += 1
+        if (
+            !result.has(year)
         ) {
-            const monthKey =
-                String(month).padStart(
-                    2,
-                    "0"
-                );
-
-            monthlyValues[month - 1] =
-                getNumber(
-                    monthly[monthKey]
-                        ?.courier
-                        ?.total_qty
-                );
+            result.set(
+                year,
+                Array(12).fill(0)
+            );
         }
 
-        result.set(
-            year,
-            monthlyValues
-        );
+        result.get(
+            year
+        )[monthIndex] =
+            getNumber(
+                row.total_qty
+            );
     });
 
     return result;
@@ -610,38 +509,34 @@ async function loadDailyData() {
     await applyDefaultPeriod();
 }
 
-async function loadAnnualData() {
+function getAnnualYears() {
     const currentYear =
         new Date().getFullYear();
 
-    const firstYear =
-        currentYear - 4;
-
-    const cacheKey =
-        `annual:${firstYear}-${currentYear}`;
-
-    let rows = getCachedData(
-        CACHE_SCOPE,
-        cacheKey,
-        cacheVersion,
-        CACHE_TTL_MS
+    return Array.from(
+        {
+            length: 5
+        },
+        (_, index) =>
+            currentYear - index
     );
+}
 
-    if (rows === null) {
-        rows =
-            await getCollectionRowsByDocumentIdRange(
-                YEARLY_SUMMARY_COLLECTION,
-                String(firstYear),
-                String(currentYear)
-            );
-
-        setCachedData(
-            CACHE_SCOPE,
-            cacheKey,
-            cacheVersion,
-            rows
-        );
+async function loadAnnualYear(
+    year
+) {
+    if (
+        annualYearData.has(year)
+    ) {
+        return;
     }
+
+    const rows =
+        await getCollectionRowsByDocumentIdRange(
+            "monthly_courier_statistics",
+            `${year}-01`,
+            `${year}-12`
+        );
 
     if (!active) {
         return;
@@ -652,6 +547,91 @@ async function loadAnnualData() {
             rows
         );
 
+    annualYearData.set(
+        year,
+        yearlyData.get(year)
+        || Array(12).fill(0)
+    );
+}
+
+function renderAnnualYearLegend() {
+    const legend =
+        document.getElementById(
+            "annualYearLegend"
+        );
+
+    if (!legend) {
+        return;
+    }
+
+    legend.innerHTML =
+        getAnnualYears().map(
+            (year) => {
+                const isLoaded =
+                    annualYearData.has(year);
+
+                const isVisible =
+                    annualVisibleYears.has(year);
+
+                const isLoading =
+                    annualLoadingYears.has(year);
+
+                return `
+                    <button
+                        class="annual-year-legend-item${
+                            isVisible
+                                ? " is-active"
+                                : ""
+                        }${
+                            isLoaded
+                                ? " is-loaded"
+                                : " is-unloaded"
+                        }${
+                            isLoading
+                                ? " is-loading"
+                                : ""
+                        }"
+                        type="button"
+                        data-annual-year="${year}"
+                        aria-pressed="${
+                            isVisible
+                                ? "true"
+                                : "false"
+                        }"
+                        ${isLoading ? "disabled" : ""}
+                    >
+                        <span
+                            class="annual-year-legend-line"
+                            aria-hidden="true"
+                        ></span>
+                        <span>${year}년</span>
+                    </button>
+                `;
+            }
+        ).join("");
+
+    legend
+        .querySelectorAll(
+            "[data-annual-year]"
+        )
+        .forEach((button) => {
+            button.addEventListener(
+                "click",
+                async () => {
+                    const year =
+                        Number(
+                            button.dataset.annualYear
+                        );
+
+                    await toggleAnnualYear(
+                        year
+                    );
+                }
+            );
+        });
+}
+
+function drawAnnualChart() {
     annualChart?.destroy();
 
     annualChart =
@@ -659,20 +639,190 @@ async function loadAnnualData() {
             document.getElementById(
                 "annualCourierChart"
             ),
-            yearlyData
+            annualYearData
         );
 
+    annualChart.options.plugins.legend.display =
+        false;
+
+    annualChart.data.datasets.forEach(
+        (dataset, index) => {
+            const year =
+                Number.parseInt(
+                    dataset.label,
+                    10
+                );
+
+            annualChart.setDatasetVisibility(
+                index,
+                annualVisibleYears.has(year)
+            );
+        }
+    );
+
+    annualChart.update("none");
+}
+
+function updateAnnualStatus(
+    message = ""
+) {
     const status =
         document.getElementById(
             "annualStatus"
         );
 
+    if (!status) {
+        return;
+    }
+
     status.classList.remove(
         "error"
     );
 
+    if (message) {
+        status.textContent =
+            message;
+
+        return;
+    }
+
+    const loadedYears =
+        getAnnualYears().filter(
+            (year) =>
+                annualYearData.has(year)
+        );
+
     status.textContent =
-        `${firstYear}~${currentYear} · 범례를 누르면 해당 연도를 숨기거나 표시할 수 있습니다.`;
+        `${loadedYears.length}개 연도 조회 완료 · 미조회 연도는 범례 선택 시 불러옵니다.`;
+}
+
+async function toggleAnnualYear(
+    year
+) {
+    if (
+        annualLoadingYears.has(year)
+    ) {
+        return;
+    }
+
+    if (
+        annualYearData.has(year)
+    ) {
+        if (
+            annualVisibleYears.has(year)
+        ) {
+            annualVisibleYears.delete(
+                year
+            );
+        } else {
+            annualVisibleYears.add(
+                year
+            );
+        }
+
+        drawAnnualChart();
+        renderAnnualYearLegend();
+        updateAnnualStatus();
+        return;
+    }
+
+    annualLoadingYears.add(
+        year
+    );
+
+    renderAnnualYearLegend();
+
+    updateAnnualStatus(
+        `${year}년 택배자료를 불러오고 있습니다.`
+    );
+
+    try {
+        await loadAnnualYear(
+            year
+        );
+
+        if (!active) {
+            return;
+        }
+
+        annualVisibleYears.add(
+            year
+        );
+
+        drawAnnualChart();
+        updateAnnualStatus();
+    } catch (error) {
+        console.error(
+            `[monthly_courier_statistics:${year}]`,
+            error
+        );
+
+        if (!active) {
+            return;
+        }
+
+        const status =
+            document.getElementById(
+                "annualStatus"
+            );
+
+        status.classList.add(
+            "error"
+        );
+
+        status.textContent =
+            `${year}년 택배자료를 불러오지 못했습니다.`;
+    } finally {
+        annualLoadingYears.delete(
+            year
+        );
+
+        if (active) {
+            renderAnnualYearLegend();
+        }
+    }
+}
+
+async function loadAnnualData() {
+    const currentYear =
+        new Date().getFullYear();
+
+    const previousYear =
+        currentYear - 1;
+
+    annualYearData.clear();
+    annualVisibleYears.clear();
+    annualLoadingYears.clear();
+
+    annualVisibleYears.add(
+        currentYear
+    );
+
+    annualVisibleYears.add(
+        previousYear
+    );
+
+    renderAnnualYearLegend();
+
+    await Promise.all([
+        loadAnnualYear(
+            currentYear
+        ),
+        loadAnnualYear(
+            previousYear
+        )
+    ]);
+
+    if (!active) {
+        return;
+    }
+
+    drawAnnualChart();
+    renderAnnualYearLegend();
+
+    updateAnnualStatus(
+        `${currentYear}년·${previousYear}년 최초 조회 · 다른 연도는 범례 선택 시 조회`
+    );
 }
 
 export async function mount({
@@ -680,10 +830,6 @@ export async function mount({
     actions
 }) {
     active = true;
-    cacheVersion =
-        await getDataVersion(
-            CACHE_SCOPE
-        );
 
     if (
         typeof Chart ===
@@ -762,6 +908,21 @@ export async function mount({
                         </div>
                     </div>
 
+                    <div class="chart-legend">
+                        <span class="legend-item">
+                            <span
+                                class="legend-line legend-current"
+                            ></span>
+                            금년
+                        </span>
+
+                        <span class="legend-item">
+                            <span
+                                class="legend-line legend-previous"
+                            ></span>
+                            전년 동기간
+                        </span>
+                    </div>
                 </div>
 
                 <div class="chart-box">
@@ -781,6 +942,21 @@ export async function mount({
                         </div>
                     </div>
 
+                    <div class="chart-legend">
+                        <span class="legend-item">
+                            <span
+                                class="legend-line legend-current"
+                            ></span>
+                            금년
+                        </span>
+
+                        <span class="legend-item">
+                            <span
+                                class="legend-line legend-previous"
+                            ></span>
+                            전년 동기간
+                        </span>
+                    </div>
                 </div>
 
                 <div class="chart-box">
@@ -800,13 +976,19 @@ export async function mount({
                         </div>
                     </div>
 
-                    <p
-                        id="annualStatus"
-                        class="annual-status"
-                    >
-                        월간 택배자료를 불러오고 있습니다.
-                    </p>
+                    <div
+                        id="annualYearLegend"
+                        class="annual-year-legend"
+                        aria-label="연도 선택"
+                    ></div>
                 </div>
+
+                <p
+                    id="annualStatus"
+                    class="annual-status annual-lazy-status"
+                >
+                    금년·전년 택배자료를 불러오고 있습니다.
+                </p>
 
                 <div class="chart-box annual-chart-box">
                     <canvas id="annualCourierChart"></canvas>
@@ -876,7 +1058,7 @@ export async function mount({
         "rejected"
     ) {
         console.error(
-            "[yearly_dashboard_statistics]",
+            "[monthly_courier_statistics]",
             annualResult.reason
         );
 
@@ -896,5 +1078,6 @@ export async function mount({
 
 export function unmount() {
     active = false;
+    annualLoadingYears.clear();
     destroyCharts();
 }
