@@ -170,54 +170,47 @@
     gap: 5px;
     padding: 0;
     border: 0;
-    color: #6d7d91;
+    color: #5f6f84;
     background: transparent;
-    font-size: 9.5px;
-    font-weight: 800;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
     white-space: nowrap;
 }
 
-.annual-year-legend-item.is-unloaded {
-    opacity: 0.35;
-}
-
-.annual-year-legend-item.is-loaded:not(.is-active) {
-    opacity: 0.45;
-}
-
-.annual-year-legend-item.is-active {
-    opacity: 1;
-}
-
 .annual-year-legend-item.is-loading {
-    opacity: 0.55;
     cursor: wait;
 }
 
+.annual-year-legend-item:not(.is-active) {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
 .annual-year-legend-line {
-    width: 20px;
+    width: 18px;
     height: 3px;
-    border-radius: 999px;
+    border-radius: 0;
     background: #8a98aa;
 }
 
-.annual-year-legend-item:nth-child(1) .annual-year-legend-line {
+.annual-year-legend-item[data-annual-index="0"] .annual-year-legend-line {
     background: #ef3340;
 }
 
-.annual-year-legend-item:nth-child(2) .annual-year-legend-line {
+.annual-year-legend-item[data-annual-index="1"] .annual-year-legend-line {
     background: #1d4ed8;
 }
 
-.annual-year-legend-item:nth-child(3) .annual-year-legend-line {
+.annual-year-legend-item[data-annual-index="2"] .annual-year-legend-line {
     background: #16a34a;
 }
 
-.annual-year-legend-item:nth-child(4) .annual-year-legend-line {
+.annual-year-legend-item[data-annual-index="3"] .annual-year-legend-line {
     background: #9333ea;
 }
 
-.annual-year-legend-item:nth-child(5) .annual-year-legend-line {
+.annual-year-legend-item[data-annual-index="4"] .annual-year-legend-line {
     background: #f59e0b;
 }
 
