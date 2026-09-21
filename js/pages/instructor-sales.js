@@ -38,13 +38,8 @@ function destroyChart() {
     instructorSalesChart?.destroy();
     instructorAnnualTotalChart?.destroy();
 
-    instructorAnalysisCharts.forEach(
-        (chart) => chart?.destroy()
-    );
-
     instructorSalesChart = null;
     instructorAnnualTotalChart = null;
-    instructorAnalysisCharts = [];
 }
 
 function escapeHtml(value) {
@@ -162,12 +157,23 @@ function getComparisonRateValue(
 }
 
 
+function removeInstructorPieTooltips() {
+    document
+        .querySelectorAll(
+            ".instructor-pie-tooltip"
+        )
+        .forEach(
+            (element) => element.remove()
+        );
+}
+
 function destroyAnalysisCharts() {
     instructorAnalysisCharts.forEach(
         (chart) => chart?.destroy()
     );
 
     instructorAnalysisCharts = [];
+    removeInstructorPieTooltips();
 }
 
 function getTopSalesComposition(
@@ -224,7 +230,7 @@ function getTopSalesComposition(
     };
 }
 
-function getChangeTopRows(
+function getChangeRankingRows(
     rows,
     valueKey
 ) {
@@ -243,21 +249,6 @@ function getChangeTopRows(
             );
         });
 
-    const decreases =
-        validRows
-            .filter(
-                (row) =>
-                    Number(
-                        row[valueKey]
-                    ) < 0
-            )
-            .sort(
-                (a, b) =>
-                    Number(a[valueKey])
-                    - Number(b[valueKey])
-            )
-            .slice(0, 5);
-
     const increases =
         validRows
             .filter(
@@ -270,13 +261,520 @@ function getChangeTopRows(
                 (a, b) =>
                     Number(b[valueKey])
                     - Number(a[valueKey])
+            );
+
+    const decreases =
+        validRows
+            .filter(
+                (row) =>
+                    Number(
+                        row[valueKey]
+                    ) < 0
             )
-            .slice(0, 5);
+            .sort(
+                (a, b) =>
+                    Number(b[valueKey])
+                    - Number(a[valueKey])
+            );
 
     return [
-        ...decreases,
-        ...increases
+        ...increases,
+        ...decreases
     ];
+}
+
+
+function getPieLabelText(
+    label,
+    percentage
+) {
+    const normalizedLabel =
+        String(label || "").trim();
+
+    const shortLabel =
+        normalizedLabel.length > 7
+            ? `${normalizedLabel.slice(0, 7)}…`
+            : normalizedLabel;
+
+    return (
+        `${shortLabel} `
+        + `${percentage.toFixed(1)}%`
+    );
+}
+
+function buildPieLeaderLabelPositions(
+    chart
+) {
+    const meta =
+        chart.getDatasetMeta(0);
+
+    const dataset =
+        chart.data.datasets[0];
+
+    const total =
+        dataset.data.reduce(
+            (sum, value) =>
+                sum + Number(value || 0),
+            0
+        );
+
+    if (!total) {
+        return [];
+    }
+
+    const positions =
+        meta.data.map(
+            (arc, index) => {
+                const props =
+                    arc.getProps(
+                        [
+                            "x",
+                            "y",
+                            "startAngle",
+                            "endAngle",
+                            "outerRadius"
+                        ],
+                        true
+                    );
+
+                const angle =
+                    (
+                        props.startAngle
+                        + props.endAngle
+                    ) / 2;
+
+                const cos =
+                    Math.cos(angle);
+
+                const sin =
+                    Math.sin(angle);
+
+                const value =
+                    Number(
+                        dataset.data[index]
+                        || 0
+                    );
+
+                return {
+                    index,
+                    label:
+                        chart.data.labels[index],
+                    value,
+                    percentage:
+                        (value / total) * 100,
+                    side:
+                        cos >= 0
+                            ? "right"
+                            : "left",
+                    anchorX:
+                        props.x
+                        + cos
+                        * props.outerRadius,
+                    anchorY:
+                        props.y
+                        + sin
+                        * props.outerRadius,
+                    elbowX:
+                        props.x
+                        + cos
+                        * (
+                            props.outerRadius
+                            + 7
+                        ),
+                    preferredY:
+                        props.y
+                        + sin
+                        * (
+                            props.outerRadius
+                            + 7
+                        )
+                };
+            }
+        );
+
+    const chartTop =
+        chart.chartArea.top + 7;
+
+    const chartBottom =
+        chart.chartArea.bottom - 7;
+
+    const minGap = 15;
+
+    ["left", "right"].forEach(
+        (side) => {
+            const sideItems =
+                positions
+                    .filter(
+                        (item) =>
+                            item.side === side
+                    )
+                    .sort(
+                        (a, b) =>
+                            a.preferredY
+                            - b.preferredY
+                    );
+
+            sideItems.forEach(
+                (item, index) => {
+                    if (index === 0) {
+                        item.labelY =
+                            Math.max(
+                                chartTop,
+                                item.preferredY
+                            );
+                        return;
+                    }
+
+                    item.labelY =
+                        Math.max(
+                            item.preferredY,
+                            sideItems[
+                                index - 1
+                            ].labelY
+                            + minGap
+                        );
+                }
+            );
+
+            if (
+                sideItems.length
+                && sideItems[
+                    sideItems.length - 1
+                ].labelY > chartBottom
+            ) {
+                const overflow =
+                    sideItems[
+                        sideItems.length - 1
+                    ].labelY
+                    - chartBottom;
+
+                sideItems.forEach(
+                    (item) => {
+                        item.labelY -=
+                            overflow;
+                    }
+                );
+
+                for (
+                    let index =
+                        sideItems.length - 2;
+                    index >= 0;
+                    index -= 1
+                ) {
+                    sideItems[index].labelY =
+                        Math.min(
+                            sideItems[index]
+                                .labelY,
+                            sideItems[
+                                index + 1
+                            ].labelY
+                            - minGap
+                        );
+                }
+            }
+        }
+    );
+
+    return positions;
+}
+
+const instructorPieLeaderLabelPlugin = {
+    id: "instructorPieLeaderLabel",
+
+    afterDatasetsDraw(chart) {
+        if (
+            chart.config.type
+            !== "doughnut"
+        ) {
+            return;
+        }
+
+        const context =
+            chart.ctx;
+
+        const positions =
+            buildPieLeaderLabelPositions(
+                chart
+            );
+
+        context.save();
+
+        context.font =
+            "700 8.5px Pretendard, Arial, sans-serif";
+
+        context.lineWidth = 1;
+        context.strokeStyle =
+            "#9aa8b8";
+
+        context.fillStyle =
+            "#526276";
+
+        positions.forEach(
+            (item) => {
+                const isRight =
+                    item.side === "right";
+
+                const text =
+                    getPieLabelText(
+                        item.label,
+                        item.percentage
+                    );
+
+                const textWidth =
+                    context.measureText(
+                        text
+                    ).width;
+
+                const labelX =
+                    isRight
+                        ? Math.min(
+                            chart.width
+                                - textWidth
+                                - 3,
+                            item.elbowX + 9
+                        )
+                        : Math.max(
+                            3,
+                            item.elbowX
+                                - 9
+                                - textWidth
+                        );
+
+                const lineEndX =
+                    isRight
+                        ? labelX - 3
+                        : labelX
+                            + textWidth
+                            + 3;
+
+                context.beginPath();
+                context.moveTo(
+                    item.anchorX,
+                    item.anchorY
+                );
+                context.lineTo(
+                    item.elbowX,
+                    item.labelY
+                );
+                context.lineTo(
+                    lineEndX,
+                    item.labelY
+                );
+                context.stroke();
+
+                context.textAlign =
+                    "left";
+
+                context.textBaseline =
+                    "middle";
+
+                context.fillText(
+                    text,
+                    labelX,
+                    item.labelY
+                );
+            }
+        );
+
+        context.restore();
+    }
+};
+
+function getInstructorPieTooltipElement(
+    chart
+) {
+    const tooltipId =
+        `instructorPieTooltip-${chart.canvas.id}`;
+
+    let element =
+        document.getElementById(
+            tooltipId
+        );
+
+    if (element) {
+        return element;
+    }
+
+    element =
+        document.createElement(
+            "div"
+        );
+
+    element.id =
+        tooltipId;
+
+    element.className =
+        "instructor-pie-tooltip";
+
+    document.body.appendChild(
+        element
+    );
+
+    return element;
+}
+
+function renderInstructorPieTooltip(
+    context
+) {
+    const {
+        chart,
+        tooltip
+    } = context;
+
+    const element =
+        getInstructorPieTooltipElement(
+            chart
+        );
+
+    if (
+        !tooltip
+        || tooltip.opacity === 0
+        || !tooltip.dataPoints?.length
+    ) {
+        element.style.opacity =
+            "0";
+
+        element.style.pointerEvents =
+            "none";
+
+        return;
+    }
+
+    const dataPoint =
+        tooltip.dataPoints[0];
+
+    const dataset =
+        chart.data.datasets[
+            dataPoint.datasetIndex
+        ];
+
+    const total =
+        dataset.data.reduce(
+            (sum, value) =>
+                sum + Number(value || 0),
+            0
+        );
+
+    const value =
+        Number(
+            dataPoint.raw || 0
+        );
+
+    const percentage =
+        total
+            ? (value / total) * 100
+            : 0;
+
+    const rank =
+        dataPoint.dataIndex + 1;
+
+    const label =
+        String(
+            dataPoint.label || ""
+        );
+
+    const rankText =
+        label === "기타"
+            ? "기타"
+            : `${rank}위`;
+
+    element.innerHTML = `
+        <strong>${escapeHtml(label)}</strong>
+        <span>매출: ${formatNumber(value)}</span>
+        <span>전체 매출 대비: ${percentage.toFixed(1)}%</span>
+        <span>순위: ${rankText}</span>
+    `;
+
+    element.style.opacity =
+        "1";
+
+    element.style.pointerEvents =
+        "none";
+
+    const canvasRect =
+        chart.canvas.getBoundingClientRect();
+
+    const tooltipWidth =
+        172;
+
+    const tooltipHeight =
+        84;
+
+    const gap =
+        12;
+
+    const viewportPadding =
+        8;
+
+    const pointerX =
+        canvasRect.left
+        + tooltip.caretX;
+
+    const canvasCenterX =
+        canvasRect.left
+        + canvasRect.width / 2;
+
+    let left;
+
+    if (
+        pointerX
+        <= canvasCenterX
+    ) {
+        left =
+            canvasRect.right
+            + gap;
+    } else {
+        left =
+            canvasRect.left
+            - tooltipWidth
+            - gap;
+    }
+
+    if (
+        left + tooltipWidth
+        > window.innerWidth
+        - viewportPadding
+    ) {
+        left =
+            canvasRect.left
+            - tooltipWidth
+            - gap;
+    }
+
+    if (
+        left < viewportPadding
+    ) {
+        left =
+            Math.min(
+                window.innerWidth
+                    - tooltipWidth
+                    - viewportPadding,
+                canvasRect.right
+                    + gap
+            );
+    }
+
+    let top =
+        canvasRect.top
+        + tooltip.caretY
+        - tooltipHeight / 2;
+
+    top =
+        Math.max(
+            viewportPadding,
+            Math.min(
+                top,
+                window.innerHeight
+                    - tooltipHeight
+                    - viewportPadding
+            )
+        );
+
+    element.style.left =
+        `${Math.round(left)}px`;
+
+    element.style.top =
+        `${Math.round(top)}px`;
 }
 
 function createSalesPieChart(
@@ -299,67 +797,70 @@ function createSalesPieChart(
         "#d9e2ec"
     ];
 
-    return new Chart(canvas, {
-        type: "doughnut",
+    return new Chart(
+        canvas,
+        {
+            type: "doughnut",
 
-        data: {
-            labels:
-                composition.labels,
-            datasets: [
-                {
-                    data:
-                        composition.values,
-                    backgroundColor:
-                        colors.slice(
-                            0,
-                            composition.values.length
-                        ),
-                    borderColor: "#ffffff",
-                    borderWidth: 2,
-                    hoverOffset: 2
-                }
-            ]
-        },
+            plugins: [
+                instructorPieLeaderLabelPlugin
+            ],
 
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "52%",
+            data: {
+                labels:
+                    composition.labels,
+                datasets: [
+                    {
+                        data:
+                            composition.values,
+                        backgroundColor:
+                            colors.slice(
+                                0,
+                                composition.values.length
+                            ),
+                        borderColor:
+                            "#ffffff",
+                        borderWidth: 2,
+                        hoverOffset: 2
+                    }
+                ]
+            },
 
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: {
-                        boxWidth: 8,
-                        boxHeight: 8,
-                        padding: 6,
-                        color: "#65758b",
-                        font: {
-                            size: 9,
-                            weight: "bold"
-                        }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "50%",
+
+                layout: {
+                    padding: {
+                        left: 42,
+                        right: 42,
+                        top: 6,
+                        bottom: 4
                     }
                 },
 
-                tooltip: {
-                    callbacks: {
-                        label: (context) => {
-                            const label =
-                                context.label || "";
+                interaction: {
+                    mode: "nearest",
+                    intersect: true
+                },
 
-                            return (
-                                `${label}: `
-                                + formatNumber(
-                                    context.raw
-                                )
-                            );
-                        }
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        enabled: false,
+                        external:
+                            renderInstructorPieTooltip
                     }
                 }
             }
         }
-    });
+    );
 }
+
 
 function createChangeRankingChart(
     canvas,
@@ -376,6 +877,28 @@ function createChangeRankingChart(
             (row) =>
                 Number(row[valueKey])
         );
+
+    const minimumHeight =
+        112;
+
+    const rowHeight =
+        22;
+
+    const contentHeight =
+        Math.max(
+            minimumHeight,
+            rows.length * rowHeight
+        );
+
+    const inner =
+        canvas.closest(
+            ".instructor-analysis-scroll-inner"
+        );
+
+    if (inner) {
+        inner.style.height =
+            `${contentHeight}px`;
+    }
 
     return new Chart(canvas, {
         type: "bar",
@@ -521,13 +1044,13 @@ function renderComparisonAnalysis(
         );
 
     const changeRows =
-        getChangeTopRows(
+        getChangeRankingRows(
             comparisonRowsState,
             "change"
         );
 
     const rateRows =
-        getChangeTopRows(
+        getChangeRankingRows(
             comparisonRowsState,
             "rateValue"
         );
@@ -1795,18 +2318,22 @@ function createMarkup() {
                     </section>
 
                     <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
-                        <h3>매출 증감 TOP5</h3>
-                        <p>감소 ← 0 → 증가</p>
-                        <div class="instructor-analysis-chart-box">
-                            <canvas id="instructorChangeTopChart"></canvas>
+                        <h3>매출 증감</h3>
+
+                        <div class="instructor-analysis-scroll-viewport">
+                            <div class="instructor-analysis-scroll-inner">
+                                <canvas id="instructorChangeTopChart"></canvas>
+                            </div>
                         </div>
                     </section>
 
                     <section class="instructor-analysis-chart-item instructor-analysis-chart-item-bar">
-                        <h3>증감률 TOP5</h3>
-                        <p>감소 ← 0 → 증가</p>
-                        <div class="instructor-analysis-chart-box">
-                            <canvas id="instructorRateTopChart"></canvas>
+                        <h3>증감률</h3>
+
+                        <div class="instructor-analysis-scroll-viewport">
+                            <div class="instructor-analysis-scroll-inner">
+                                <canvas id="instructorRateTopChart"></canvas>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -2098,4 +2625,5 @@ export async function mount({
 export function unmount() {
     active = false;
     destroyChart();
+    destroyAnalysisCharts();
 }
