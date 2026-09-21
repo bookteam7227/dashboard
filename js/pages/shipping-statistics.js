@@ -545,6 +545,17 @@ async function loadAnnualData() {
             yearlyData
         );
 
+    annualChart.data.datasets.forEach(
+        (dataset, index) => {
+            annualChart.setDatasetVisibility(
+                index,
+                index < 2
+            );
+        }
+    );
+
+    annualChart.update("none");
+
     const status =
         document.getElementById(
             "annualStatus"
