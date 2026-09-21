@@ -578,7 +578,7 @@ function renderAnnualYearLegend() {
 
                 return `
                     <button
-                        class="annual-year-legend-item${
+                        class="legend-item annual-year-legend-item${
                             isVisible
                                 ? " is-active"
                                 : ""
@@ -604,7 +604,7 @@ function renderAnnualYearLegend() {
                         ${isLoading ? "disabled" : ""}
                     >
                         <span
-                            class="annual-year-legend-line"
+                            class="legend-line annual-year-legend-line"
                             aria-hidden="true"
                         ></span>
                         <span>${year}년</span>
@@ -992,7 +992,7 @@ export async function mount({
 
                     <div
                         id="annualYearLegend"
-                        class="annual-year-legend"
+                        class="chart-legend annual-year-legend"
                         aria-label="연도 선택"
                     ></div>
                 </div>
