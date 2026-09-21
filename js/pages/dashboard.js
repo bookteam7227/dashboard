@@ -264,9 +264,30 @@ function createLocalMarkup() {
                         </strong>
                     </div>
 
-                    <div class="local-work-values local-courier-values">
+                    <div class="local-work-values">
+                        <div class="local-work-row">
+                            <span>작업 건수</span>
+
+                            <strong
+                                id="localWorkOrders${localNumber}"
+                            >
+                                0건
+                            </strong>
+                        </div>
+
+                        <div class="local-work-row">
+                            <span>작업 권수</span>
+
+                            <strong
+                                id="localWorkBooks${localNumber}"
+                            >
+                                0권
+                            </strong>
+                        </div>
+
                         <div
                             id="localCouriers${localNumber}"
+                            class="local-courier-values"
                         ></div>
                     </div>
 
@@ -547,7 +568,7 @@ function renderLocalCouriers(
 
     const rows =
         Array.isArray(couriers)
-            ? couriers.slice(0, 4)
+            ? couriers.slice(0, 3)
             : [];
 
     rows.forEach((courier) => {
@@ -564,7 +585,7 @@ function renderLocalCouriers(
             document.createElement("div");
 
         row.className =
-            "local-work-row";
+            "local-work-row local-courier-row";
 
         const nameElement =
             document.createElement("span");
@@ -612,6 +633,16 @@ function renderLocalStatuses(row) {
                 `localStatus${index}`
             );
 
+        const workOrdersElement =
+            document.getElementById(
+                `localWorkOrders${index}`
+            );
+
+        const workBooksElement =
+            document.getElementById(
+                `localWorkBooks${index}`
+            );
+
         const couriersElement =
             document.getElementById(
                 `localCouriers${index}`
@@ -635,6 +666,20 @@ function renderLocalStatuses(row) {
             statusElement.classList.add(
                 status.className
             );
+        }
+
+        if (workOrdersElement) {
+            workOrdersElement.textContent =
+                `${formatNumber(
+                    localRow?.work_orders
+                )}건`;
+        }
+
+        if (workBooksElement) {
+            workBooksElement.textContent =
+                `${formatNumber(
+                    localRow?.work_books
+                )}권`;
         }
 
         renderLocalCouriers(
