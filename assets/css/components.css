@@ -1693,3 +1693,91 @@ background: #eef3f8;
         border-bottom: 1px solid #e9eef5;
     }
 }
+
+
+/* =====================================================
+   강사별 매출 분석 - 파이 외부 라벨 / 툴팁
+   ===================================================== */
+
+.instructor-analysis-chart-item-pie
+.instructor-analysis-chart-box {
+    height: 126px;
+    margin-top: 0;
+}
+
+.instructor-pie-tooltip {
+    position: fixed;
+    z-index: 9999;
+    display: flex;
+    width: 172px;
+    min-height: 84px;
+    padding: 10px 12px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    border: 1px solid #dfe6ef;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 39, 71, 0.14);
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.08s ease;
+}
+
+.instructor-pie-tooltip strong {
+    color: #173c6e;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.instructor-pie-tooltip span {
+    color: #65758b;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+
+/* =====================================================
+   강사별 매출 분석 - 전체 강사 증감 스크롤
+   ===================================================== */
+
+.instructor-analysis-chart-item-bar {
+    display: flex;
+    flex-direction: column;
+}
+
+.instructor-analysis-scroll-viewport {
+    width: 100%;
+    height: 116px;
+    margin-top: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #c8d2df transparent;
+}
+
+.instructor-analysis-scroll-inner {
+    position: relative;
+    width: 100%;
+    min-height: 112px;
+}
+
+.instructor-analysis-scroll-inner canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.instructor-analysis-scroll-viewport::-webkit-scrollbar {
+    width: 6px;
+}
+
+.instructor-analysis-scroll-viewport::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.instructor-analysis-scroll-viewport::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #c8d2df;
+}
