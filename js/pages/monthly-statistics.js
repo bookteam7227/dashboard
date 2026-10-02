@@ -377,12 +377,8 @@ const TABLES = [
                 getField(d, "otherCosts", "building_rent_amount")
             ),
             valueColumn(
-                "합계",
-                (d) =>
-                    getField(d, "otherCosts", "telecommunication_amount")
-                    + getField(d, "otherCosts", "electricity_amount")
-                    + getField(d, "otherCosts", "water_amount")
-                    + getField(d, "otherCosts", "building_rent_amount"),
+                "소계",
+                getOtherCostsSubtotal1,
                 {
                     includeDiff: true
                 }
@@ -428,9 +424,15 @@ const TABLES = [
                 getField(d, "otherCosts", "shuttle_bus_amount")
             ),
             valueColumn(
-                "합계",
-                (d) =>
-                    getField(d, "otherCosts", "total_amount"),
+                "소계",
+                getOtherCostsSubtotal2,
+                {
+                    includeDiff: true
+                }
+            ),
+            valueColumn(
+                "비용합계",
+                getOtherCostsTotal,
                 {
                     includeDiff: true
                 }
@@ -536,6 +538,36 @@ function getOutsourcingLogisticsCost(dataset) {
             "lectureUnistudyOutsourcing",
             "unistudy_logistics_cost_amount"
         )
+    );
+}
+
+function getOtherCostsSubtotal1(dataset) {
+    return (
+        getField(dataset, "otherCosts", "telecommunication_amount")
+        + getField(dataset, "otherCosts", "electricity_amount")
+        + getField(dataset, "otherCosts", "water_amount")
+        + getField(dataset, "otherCosts", "building_rent_amount")
+    );
+}
+
+function getOtherCostsSubtotal2(dataset) {
+    return (
+        getField(dataset, "otherCosts", "quick_service_amount")
+        + getField(dataset, "otherCosts", "envelope_production_amount")
+        + getField(dataset, "otherCosts", "other_rent_amount")
+        + getField(dataset, "otherCosts", "snack_amount")
+        + getField(dataset, "otherCosts", "dinner_and_weekend_meal_amount")
+        + getField(dataset, "otherCosts", "operating_amount")
+        + getField(dataset, "otherCosts", "part_time_lunch_amount")
+        + getField(dataset, "otherCosts", "water_purifier_rental_amount")
+        + getField(dataset, "otherCosts", "shuttle_bus_amount")
+    );
+}
+
+function getOtherCostsTotal(dataset) {
+    return (
+        getOtherCostsSubtotal1(dataset)
+        + getOtherCostsSubtotal2(dataset)
     );
 }
 
