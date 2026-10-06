@@ -1080,7 +1080,12 @@ function renderComparisonAnalysis(
 
     const rateRows =
         getChangeRankingRows(
-            comparisonRowsState,
+            comparisonRowsState.filter(
+                (row) =>
+                    getNumber(
+                        row.currentValue
+                    ) > 0
+            ),
             "rateValue"
         );
 
