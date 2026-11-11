@@ -5,6 +5,7 @@ import * as shippingStatisticsPage from "./pages/shipping-statistics.js";
 import * as inventoryRiskPage from "./pages/inventory-risk.js";
 import * as instructorSalesPage from "./pages/instructor-sales.js";
 import * as monthlyStatisticsPage from "./pages/monthly-statistics.js";
+import * as dailyReportPage from "./pages/daily-report.js";
 import * as firestoreUsagePage from "./pages/firestore-usage.js";
 import { setUsageRoute } from "./services/usage-tracker.js";
 
@@ -14,6 +15,7 @@ const routes = {
     "inventory-risk": inventoryRiskPage,
     "instructor-sales": instructorSalesPage,
     "monthly-statistics": monthlyStatisticsPage,
+    "daily-report": dailyReportPage,
     "firestore-usage": firestoreUsagePage
 };
 
@@ -65,40 +67,24 @@ function getAllowedRouteNames() {
 }
 
 function canAccessRoute(routeName) {
-    return getAllowedRouteNames()
-        .includes(routeName);
+    return getAllowedRouteNames().includes(routeName);
 }
 
 function updateMenuVisibility() {
-    const allowedRoutes =
-        new Set(
-            getAllowedRouteNames()
-        );
+    const allowedRoutes = new Set(getAllowedRouteNames());
 
     document
         .querySelectorAll(".menu-link")
         .forEach((link) => {
-            const routeName =
-                link.dataset.route;
-
-            const visible =
-                allowedRoutes.has(routeName);
-
-            link.hidden = !visible;
+            const routeName = link.dataset.route;
+            link.hidden = !allowedRoutes.has(routeName);
         });
 }
 
 function routeNameFromHash() {
-    const name =
-        window.location.hash.replace(
-            /^#\/?/,
-            ""
-        );
+    const name = window.location.hash.replace(/^#\/?/, "");
 
-    if (
-        !routes[name]
-        || !canAccessRoute(name)
-    ) {
+    if (!routes[name] || !canAccessRoute(name)) {
         return "dashboard";
     }
 
@@ -111,14 +97,10 @@ export function setAccessControl({
     canViewFirestoreUsage
 }) {
     accessControl = {
-        role:
-            String(role || "viewer")
-                .trim()
-                .toLowerCase(),
-        allowedMenus:
-            Array.isArray(allowedMenus)
-                ? [...allowedMenus]
-                : ["dashboard"],
+        role: String(role || "viewer").trim().toLowerCase(),
+        allowedMenus: Array.isArray(allowedMenus)
+            ? [...allowedMenus]
+            : ["dashboard"],
         canViewFirestoreUsage:
             canViewFirestoreUsage === true
     };
@@ -126,52 +108,32 @@ export function setAccessControl({
     updateMenuVisibility();
 
     const requestedRoute =
-        window.location.hash.replace(
-            /^#\/?/,
-            ""
-        );
+        window.location.hash.replace(/^#\/?/, "");
 
-    if (
-        requestedRoute
-        && !canAccessRoute(requestedRoute)
-    ) {
-        window.location.hash =
-            "#/dashboard";
+    if (requestedRoute && !canAccessRoute(requestedRoute)) {
+        window.location.hash = "#/dashboard";
     }
 }
 
 export async function renderRoute() {
     const requestedRoute =
-        window.location.hash.replace(
-            /^#\/?/,
-            ""
-        );
+        window.location.hash.replace(/^#\/?/, "");
 
-    const routeName =
-        routeNameFromHash();
+    const routeName = routeNameFromHash();
 
-    if (
-        requestedRoute
-        && requestedRoute !== routeName
-    ) {
-        window.location.hash =
-            `#/${routeName}`;
-
+    if (requestedRoute && requestedRoute !== routeName) {
+        window.location.hash = `#/${routeName}`;
         return;
     }
 
-    const page =
-        routes[routeName];
+    const page = routes[routeName];
 
     setUsageRoute(routeName);
 
     currentPage?.unmount?.();
     currentPage = page;
 
-    document.getElementById(
-        "pageTitle"
-    ).textContent =
-        page.title;
+    document.getElementById("pageTitle").textContent = page.title;
 
     document
         .querySelectorAll(".menu-link")
@@ -182,15 +144,8 @@ export async function renderRoute() {
             );
         });
 
-    const content =
-        document.getElementById(
-            "pageContent"
-        );
-
-    const actions =
-        document.getElementById(
-            "pageActions"
-        );
+    const content = document.getElementById("pageContent");
+    const actions = document.getElementById("pageActions");
 
     content.innerHTML = "";
     actions.innerHTML = "";
@@ -198,13 +153,16 @@ export async function renderRoute() {
     try {
         await page.mount({
             content,
-            actions
+            actions,
+            accessControl: {
+                role: accessControl.role,
+                allowedMenus: [...accessControl.allowedMenus],
+                canViewFirestoreUsage:
+                    accessControl.canViewFirestoreUsage
+            }
         });
     } catch (error) {
-        console.error(
-            `[route:${routeName}]`,
-            error
-        );
+        console.error(`[route:${routeName}]`, error);
 
         content.innerHTML = `
             <div class="data-message">
@@ -217,15 +175,10 @@ export async function renderRoute() {
 export function startRouter() {
     updateMenuVisibility();
 
-    window.addEventListener(
-        "hashchange",
-        renderRoute
-    );
+    window.addEventListener("hashchange", renderRoute);
 
     if (!window.location.hash) {
-        window.location.hash =
-            "#/dashboard";
-
+        window.location.hash = "#/dashboard";
         return;
     }
 
@@ -236,8 +189,5 @@ export function stopRouter() {
     currentPage?.unmount?.();
     currentPage = null;
 
-    window.removeEventListener(
-        "hashchange",
-        renderRoute
-    );
+    window.removeEventListener("hashchange", renderRoute);
 }
