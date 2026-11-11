@@ -399,16 +399,17 @@ function createDashboardMarkup() {
             <article class="dashboard-card work-summary-card">
                 <div class="dashboard-card-header">
                     <div>
-                        <h2>
-                            인강
-                            <small id="textbookShippingSummary">
-                                교재 총 0건·0권 발송(교재팀·모아 합계)
-                            </small>
-                        </h2>
+                        <h2>인강</h2>
 
                         <p id="dashboardStatus">
                             오늘 작업현황을 불러오고 있습니다.
                         </p>
+                    </div>
+
+                    <div class="dashboard-header-summary">
+                        <span id="textbookShippingSummary">
+                            교재 총 0건·0권 발송(교재팀·모아 합계)
+                        </span>
                     </div>
                 </div>
 
