@@ -399,7 +399,12 @@ function createDashboardMarkup() {
             <article class="dashboard-card work-summary-card">
                 <div class="dashboard-card-header">
                     <div>
-                        <h2>인강</h2>
+                        <h2>
+                            인강
+                            <small id="textbookShippingSummary">
+                                교재 총 0건·0권 발송(교재팀·모아 합계)
+                            </small>
+                        </h2>
 
                         <p id="dashboardStatus">
                             오늘 작업현황을 불러오고 있습니다.
@@ -824,6 +829,25 @@ function renderDashboardRow(
         `${formatNumber(
             row.unistudy_books
         )}권`;
+
+    const textbookTotalOrders =
+        getNumber(row.total_orders)
+        + getNumber(row.bookstore_orders)
+        + getNumber(row.unistudy_orders);
+
+    const textbookTotalBooks =
+        getNumber(row.total_books)
+        + getNumber(row.bookstore_books)
+        + getNumber(row.unistudy_books);
+
+    document.getElementById(
+        "textbookShippingSummary"
+    ).textContent =
+        `교재 총 ${formatNumber(
+            textbookTotalOrders
+        )}건·${formatNumber(
+            textbookTotalBooks
+        )}권 발송(교재팀·모아 합계)`;
 
     document.getElementById(
         "dashboardStatus"
