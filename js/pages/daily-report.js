@@ -371,8 +371,7 @@ function renderEventRows() {
     container.innerHTML = eventRows.map((row) => {
         const editable = canEditRow(row) && (!draftFinalized || isAdminUser);
         const text =
-            `${row.name} ${formatNumber(row.orders)}건`
-            + `·${formatNumber(row.quantity)}개 발송`;
+            eventReportText(row);
 
         return `
             <div class="daily-report-draft-item">
