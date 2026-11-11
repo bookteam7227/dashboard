@@ -104,6 +104,32 @@ function textbookShippingText(shipping) {
     );
 }
 
+function normalizePrizeNames(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .map((item) => String(item || "").trim())
+        .filter(Boolean)
+        .slice(0, 5);
+}
+
+function eventReportText(row) {
+    const prizeNames = normalizePrizeNames(row?.prizeNames);
+    const prizeText =
+        prizeNames.length
+            ? ` 경품(${prizeNames.join("·")})`
+            : "";
+
+    return (
+        `${String(row?.name || "").trim()}`
+        + prizeText
+        + ` ${formatNumber(row?.orders)}건`
+        + `·${formatNumber(row?.quantity)}개 발송`
+    );
+}
+
 function setStatus(message, isError = false) {
     const element = document.getElementById("dailyReportStatus");
 
@@ -179,12 +205,31 @@ function createMarkup() {
                     <span>항목별 개별 저장</span>
                 </div>
 
+                <div class="daily-report-event-headline">
+                    <span>이벤트명</span>
+                    <span>물품명</span>
+                    <span>건수</span>
+                    <span>수량</span>
+                </div>
+
                 <div class="daily-report-event-form">
                     <input id="dailyReportEventName" type="text" placeholder="이벤트명" aria-label="이벤트명">
+
+                    <div class="daily-report-prize-inputs">
+                        <input id="dailyReportPrizeName1" type="text" placeholder="물품명 1" aria-label="물품명 1">
+                        <input id="dailyReportPrizeName2" type="text" placeholder="물품명 2" aria-label="물품명 2">
+                        <input id="dailyReportPrizeName3" type="text" placeholder="물품명 3" aria-label="물품명 3">
+                        <input id="dailyReportPrizeName4" type="text" placeholder="물품명 4" aria-label="물품명 4">
+                        <input id="dailyReportPrizeName5" type="text" placeholder="물품명 5" aria-label="물품명 5">
+                    </div>
+
                     <input id="dailyReportEventOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
                     <input id="dailyReportEventQuantity" type="number" min="0" step="1" placeholder="수량" aria-label="수량">
-                    <button id="dailyReportEventSave" class="btn primary" type="button">추가</button>
-                    <button id="dailyReportEventCancel" class="btn" type="button" hidden>취소</button>
+
+                    <div class="daily-report-event-form-actions">
+                        <button id="dailyReportEventSave" class="btn primary" type="button">추가</button>
+                        <button id="dailyReportEventCancel" class="btn" type="button" hidden>취소</button>
+                    </div>
                 </div>
 
                 <div id="dailyReportEventList" class="daily-report-draft-list"></div>
@@ -237,6 +282,17 @@ function resetEventForm() {
     editingEventId = null;
 
     document.getElementById("dailyReportEventName").value = "";
+
+    Array.from(
+        { length: 5 },
+        (_, index) =>
+            document.getElementById(
+                `dailyReportPrizeName${index + 1}`
+            )
+    ).forEach((input) => {
+        input.value = "";
+    });
+
     document.getElementById("dailyReportEventOrders").value = "";
     document.getElementById("dailyReportEventQuantity").value = "";
     document.getElementById("dailyReportEventSave").textContent = "추가";
@@ -254,6 +310,11 @@ function resetWorkForm() {
 function setDraftInputsDisabled(disabled) {
     [
         "dailyReportEventName",
+        "dailyReportPrizeName1",
+        "dailyReportPrizeName2",
+        "dailyReportPrizeName3",
+        "dailyReportPrizeName4",
+        "dailyReportPrizeName5",
         "dailyReportEventOrders",
         "dailyReportEventQuantity",
         "dailyReportEventSave",
@@ -466,6 +527,16 @@ async function saveEvent() {
 
         const user = getCurrentUser();
         const name = document.getElementById("dailyReportEventName").value.trim();
+        const prizeNames =
+            normalizePrizeNames(
+                Array.from(
+                    { length: 5 },
+                    (_, index) =>
+                        document.getElementById(
+                            `dailyReportPrizeName${index + 1}`
+                        ).value
+                )
+            );
         const orders = Number(document.getElementById("dailyReportEventOrders").value);
         const quantity = Number(document.getElementById("dailyReportEventQuantity").value);
 
@@ -487,6 +558,7 @@ async function saveEvent() {
                 editingEventId,
                 {
                     name,
+                    prizeNames,
                     orders,
                     quantity,
                     updatedAt: serverTimestamp(),
@@ -500,6 +572,7 @@ async function saveEvent() {
                 {
                     date: draftDate,
                     name,
+                    prizeNames,
                     orders,
                     quantity,
                     createdAt: serverTimestamp(),
@@ -583,6 +656,22 @@ function startEventEdit(id) {
 
     editingEventId = id;
     document.getElementById("dailyReportEventName").value = row.name || "";
+
+    const prizeNames =
+        normalizePrizeNames(
+            row.prizeNames
+        );
+
+    Array.from(
+        { length: 5 },
+        (_, index) =>
+            document.getElementById(
+                `dailyReportPrizeName${index + 1}`
+            )
+    ).forEach((input, index) => {
+        input.value = prizeNames[index] || "";
+    });
+
     document.getElementById("dailyReportEventOrders").value = getNumber(row.orders);
     document.getElementById("dailyReportEventQuantity").value = getNumber(row.quantity);
     document.getElementById("dailyReportEventSave").textContent = "수정 저장";
@@ -686,6 +775,7 @@ async function finalizeReport() {
                 },
                 events: sortedEvents.map((row) => ({
                     name: String(row.name || ""),
+                    prizeNames: normalizePrizeNames(row.prizeNames),
                     orders: getNumber(row.orders),
                     quantity: getNumber(row.quantity),
                     createdByUid: String(row.createdByUid || ""),
@@ -754,8 +844,7 @@ function reportCardMarkup(report) {
                         events.length
                             ? events.map((item) => `
                                 <p>- ${escapeHtml(
-                                    `${item.name} ${formatNumber(item.orders)}건`
-                                    + `·${formatNumber(item.quantity)}개 발송`
+                                    eventReportText(item)
                                 )}</p>
                             `).join("")
                             : `<p class="daily-report-muted">- 없음</p>`
