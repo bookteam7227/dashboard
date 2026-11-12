@@ -337,11 +337,12 @@ function createMarkup() {
                 </button>
             </div>
 
-            <textarea
+            <div
                 id="dailyReportPlainText"
                 class="daily-report-plain-textarea"
-                readonly
-            ></textarea>
+                contenteditable="false"
+                aria-label="메일용 텍스트 미리보기"
+            ></div>
 
             <div class="daily-report-plain-actions">
                 <button
@@ -1043,42 +1044,48 @@ function createHtmlReport(report) {
     const blocks = [];
 
     blocks.push(
-        `<p>${escapeHtml(
+        `<div>${escapeHtml(
             String(report?.id || "").trim()
-        )}</p>`
+        )}</div>`
     );
 
+    blocks.push("<div><br></div>");
+
     blocks.push(
-        `<p><strong>${sectionNumber++}. 교재 발송</strong></p>`
+        `<div><strong>${sectionNumber++}. 교재 발송</strong></div>`
     );
 
     textbookShippingDetailLines(
         shipping
     ).forEach((line) => {
         blocks.push(
-            `<p>${escapeHtml(
+            `<div>${escapeHtml(
                 String(line || "").trim()
-            )}</p>`
+            )}</div>`
         );
     });
 
     if (events.length) {
+        blocks.push("<div><br></div>");
+
         blocks.push(
-            `<p><strong>${sectionNumber++}. 이벤트 경품 발송</strong></p>`
+            `<div><strong>${sectionNumber++}. 이벤트 경품 발송</strong></div>`
         );
 
         events.forEach((item) => {
             blocks.push(
-                `<p>- ${escapeHtml(
+                `<div>- ${escapeHtml(
                     eventReportText(item).trim()
-                )}</p>`
+                )}</div>`
             );
         });
     }
 
     if (workItems.length) {
+        blocks.push("<div><br></div>");
+
         blocks.push(
-            `<p><strong>${sectionNumber++}. 업무 내용 및 기안 상신</strong></p>`
+            `<div><strong>${sectionNumber++}. 업무 내용 및 기안 상신</strong></div>`
         );
 
         workItems.forEach((item) => {
@@ -1089,7 +1096,7 @@ function createHtmlReport(report) {
 
             if (content) {
                 blocks.push(
-                    `<p>- ${escapeHtml(content)}</p>`
+                    `<div>- ${escapeHtml(content)}</div>`
                 );
             }
         });
@@ -1302,8 +1309,8 @@ function openPlainReport(dateId) {
             "dailyReportPlainText"
         );
 
-    textarea.value =
-        createPlainTextReport(
+    textarea.innerHTML =
+        createHtmlReport(
             report
         );
 
@@ -1311,8 +1318,6 @@ function openPlainReport(dateId) {
         dateId;
 
     panel.hidden = false;
-    textarea.focus();
-    textarea.select();
 }
 
 function closePlainReport() {
@@ -1327,16 +1332,13 @@ function closePlainReport() {
 }
 
 async function copyPlainReport() {
-    const textarea =
+    const preview =
         document.getElementById(
             "dailyReportPlainText"
         );
 
-    const text =
-        textarea?.value || "";
-
     const dateId =
-        textarea?.dataset?.date || "";
+        preview?.dataset?.date || "";
 
     const report =
         loadedReports.find(
@@ -1344,16 +1346,21 @@ async function copyPlainReport() {
                 item.id === dateId
         );
 
-    if (!text || !report) {
+    if (!report) {
         return;
     }
 
-    try {
-        const html =
-            createHtmlReport(
-                report
-            );
+    const text =
+        createPlainTextReport(
+            report
+        );
 
+    const html =
+        createHtmlReport(
+            report
+        );
+
+    try {
         if (
             navigator.clipboard
             && typeof ClipboardItem !== "undefined"
@@ -1397,11 +1404,8 @@ async function copyPlainReport() {
             error
         );
 
-        textarea.focus();
-        textarea.select();
-
         setStatus(
-            "자동 복사에 실패했습니다. 선택된 텍스트를 Ctrl+C로 복사해 주십시오.",
+            "자동 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해 주십시오.",
             true
         );
     }
