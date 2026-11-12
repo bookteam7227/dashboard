@@ -85,23 +85,49 @@ function canEditRow(row) {
 }
 
 function calculateTextbookShipping(row) {
-    return {
+    const textbookTeam = {
+        orders: getNumber(row?.total_orders),
+        books: getNumber(row?.total_books)
+    };
+
+    const moa = {
         orders:
-            getNumber(row?.total_orders)
-            + getNumber(row?.bookstore_orders)
+            getNumber(row?.bookstore_orders)
             + getNumber(row?.unistudy_orders),
         books:
-            getNumber(row?.total_books)
-            + getNumber(row?.bookstore_books)
+            getNumber(row?.bookstore_books)
             + getNumber(row?.unistudy_books)
+    };
+
+    return {
+        textbookTeam,
+        moa,
+        total: {
+            orders:
+                textbookTeam.orders
+                + moa.orders,
+            books:
+                textbookTeam.books
+                + moa.books
+        }
     };
 }
 
 function textbookShippingText(shipping) {
     return (
-        `교재 총 ${formatNumber(shipping?.orders)}건`
-        + `·${formatNumber(shipping?.books)}권 발송(교재팀·모아 합계)`
+        `교재 총 ${formatNumber(shipping?.total?.orders)}건`
+        + `·${formatNumber(shipping?.total?.books)}권 발송(교재팀·모아 합계)`
     );
+}
+
+function textbookShippingDetailLines(shipping) {
+    return [
+        `- 교재팀: ${formatNumber(shipping?.textbookTeam?.orders)}건`
+            + `·${formatNumber(shipping?.textbookTeam?.books)}권`,
+        `- (주)모아: ${formatNumber(shipping?.moa?.orders)}건`
+            + `·${formatNumber(shipping?.moa?.books)}권`,
+        `- ${textbookShippingText(shipping)}`
+    ];
 }
 
 function normalizePrizeNames(value) {
@@ -428,8 +454,10 @@ async function loadTextbookShipping(dateId) {
     const row = await getDocumentRow("shippingProgress", dateId);
     const shipping = calculateTextbookShipping(row);
 
-    document.getElementById("dailyReportTextbookShipping").textContent =
-        textbookShippingText(shipping);
+    document.getElementById("dailyReportTextbookShipping").innerHTML =
+        textbookShippingDetailLines(shipping)
+            .map((line) => `<span>${escapeHtml(line)}</span>`)
+            .join("");
 
     return shipping;
 }
@@ -769,8 +797,18 @@ async function finalizeReport() {
             {
                 date: draftDate,
                 textbookShipping: {
-                    orders: shipping.orders,
-                    books: shipping.books
+                    textbookTeam: {
+                        orders: shipping.textbookTeam.orders,
+                        books: shipping.textbookTeam.books
+                    },
+                    moa: {
+                        orders: shipping.moa.orders,
+                        books: shipping.moa.books
+                    },
+                    total: {
+                        orders: shipping.total.orders,
+                        books: shipping.total.books
+                    }
                 },
                 events: sortedEvents.map((row) => ({
                     name: String(row.name || ""),
@@ -793,8 +831,10 @@ async function finalizeReport() {
 
         draftFinalized = true;
         renderDraftState();
-        document.getElementById("dailyReportTextbookShipping").textContent =
-            textbookShippingText(shipping);
+        document.getElementById("dailyReportTextbookShipping").innerHTML =
+            textbookShippingDetailLines(shipping)
+                .map((line) => `<span>${escapeHtml(line)}</span>`)
+                .join("");
         setComposerStatus("일일보고가 확정되었습니다.");
         await searchReports();
     } catch (error) {
@@ -806,10 +846,104 @@ async function finalizeReport() {
     }
 }
 
+function normalizeStoredTextbookShipping(value) {
+    if (
+        value?.textbookTeam
+        || value?.moa
+        || value?.total
+    ) {
+        return {
+            textbookTeam: {
+                orders: getNumber(value?.textbookTeam?.orders),
+                books: getNumber(value?.textbookTeam?.books)
+            },
+            moa: {
+                orders: getNumber(value?.moa?.orders),
+                books: getNumber(value?.moa?.books)
+            },
+            total: {
+                orders: getNumber(value?.total?.orders),
+                books: getNumber(value?.total?.books)
+            }
+        };
+    }
+
+    return {
+        textbookTeam: {
+            orders: 0,
+            books: 0
+        },
+        moa: {
+            orders: 0,
+            books: 0
+        },
+        total: {
+            orders: getNumber(value?.orders),
+            books: getNumber(value?.books)
+        }
+    };
+}
+
 function reportCardMarkup(report) {
-    const shipping = report?.textbookShipping || {};
-    const events = Array.isArray(report?.events) ? report.events : [];
-    const workItems = Array.isArray(report?.workItems) ? report.workItems : [];
+    const shipping =
+        normalizeStoredTextbookShipping(
+            report?.textbookShipping
+        );
+
+    const events =
+        Array.isArray(report?.events)
+            ? report.events
+            : [];
+
+    const workItems =
+        Array.isArray(report?.workItems)
+            ? report.workItems
+            : [];
+
+    let sectionNumber = 1;
+    const sections = [];
+
+    sections.push(`
+        <section>
+            <h3>${sectionNumber++}. 교재 발송</h3>
+
+            ${textbookShippingDetailLines(shipping)
+                .map((line) => `
+                    <p>${escapeHtml(line)}</p>
+                `)
+                .join("")}
+        </section>
+    `);
+
+    if (events.length) {
+        sections.push(`
+            <section>
+                <h3>${sectionNumber++}. 이벤트 경품 발송</h3>
+
+                ${events
+                    .map((item) => `
+                        <p>- ${escapeHtml(eventReportText(item))}</p>
+                    `)
+                    .join("")}
+            </section>
+        `);
+    }
+
+    if (workItems.length) {
+        sections.push(`
+            <section>
+                <h3>${sectionNumber++}. 업무 내용 및 기안 상신</h3>
+
+                ${workItems
+                    .map((item) => `
+                        <p class="daily-report-prewrap">
+                            - ${escapeHtml(item.content)}
+                        </p>
+                    `)
+                    .join("")}
+            </section>
+        `);
+    }
 
     return `
         <article class="daily-report-card">
@@ -832,34 +966,7 @@ function reportCardMarkup(report) {
             </div>
 
             <div class="daily-report-card-body">
-                <section>
-                    <h3>1. 교재 발송</h3>
-                    <p>- ${escapeHtml(textbookShippingText(shipping))}</p>
-                </section>
-
-                <section>
-                    <h3>2. 이벤트 경품 발송</h3>
-                    ${
-                        events.length
-                            ? events.map((item) => `
-                                <p>- ${escapeHtml(
-                                    eventReportText(item)
-                                )}</p>
-                            `).join("")
-                            : `<p class="daily-report-muted">- 없음</p>`
-                    }
-                </section>
-
-                <section>
-                    <h3>3. 업무 내용 및 기안 상신</h3>
-                    ${
-                        workItems.length
-                            ? workItems.map((item) => `
-                                <p class="daily-report-prewrap">- ${escapeHtml(item.content)}</p>
-                            `).join("")
-                            : `<p class="daily-report-muted">- 없음</p>`
-                    }
-                </section>
+                ${sections.join("")}
             </div>
         </article>
     `;
