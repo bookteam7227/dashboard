@@ -2326,7 +2326,6 @@ background: #eef3f8;
 .daily-report-work-form textarea {
     min-height: 86px;
     padding: 10px 12px;
-    resize: vertical;
     line-height: 1.5;
 }
 
@@ -2614,4 +2613,13 @@ background: #eef3f8;
     display: flex;
     justify-content: flex-end;
     padding: 12px 20px 18px;
+}
+
+
+.daily-report-plain-textarea strong {
+    font-weight: 700;
+}
+
+.daily-report-plain-textarea div {
+    margin: 0;
 }
