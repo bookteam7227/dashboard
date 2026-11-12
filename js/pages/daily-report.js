@@ -1152,9 +1152,7 @@ function reportCardMarkup(report) {
 
                 ${workItems
                     .map((item) => `
-                        <p class="daily-report-prewrap">
-                            - ${escapeHtml(String(item.content || "").trim())}
-                        </p>
+                        <p class="daily-report-prewrap">- ${escapeHtml(String(item.content || "").trim())}</p>
                     `)
                     .join("")}
             </section>
