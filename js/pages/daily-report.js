@@ -950,6 +950,41 @@ function normalizeStoredTextbookShipping(value) {
     };
 }
 
+function formatReportMonthDay(dateId) {
+    const parts =
+        String(dateId || "")
+            .split("-")
+            .map((value) =>
+                Number(value)
+            );
+
+    if (
+        parts.length !== 3
+        || !parts[1]
+        || !parts[2]
+    ) {
+        return "";
+    }
+
+    return `${parts[1]}/${parts[2]}`;
+}
+
+function getReportIntroLines(dateId) {
+    const monthDay =
+        formatReportMonthDay(
+            dateId
+        );
+
+    return [
+        `[교재팀] 일일보고(${monthDay})`,
+        "",
+        "안녕하세요? 교재팀 김정우입니다.",
+        "",
+        "교재팀 일일보고 드립니다.",
+        ""
+    ];
+}
+
 function createPlainTextReport(report) {
     const shipping =
         normalizeStoredTextbookShipping(
@@ -969,10 +1004,10 @@ function createPlainTextReport(report) {
             : [];
 
     let sectionNumber = 1;
-    const lines = [
-        String(report?.id || "").trim(),
-        ""
-    ];
+    const lines =
+        getReportIntroLines(
+            report?.id
+        );
 
     lines.push(
         `${sectionNumber++}. 교재 발송`
@@ -1043,12 +1078,22 @@ function createHtmlReport(report) {
     let sectionNumber = 1;
     const blocks = [];
 
-    blocks.push(
-        `<div>${escapeHtml(
-            String(report?.id || "").trim()
-        )}</div>`
-    );
+    const monthDay =
+        formatReportMonthDay(
+            report?.id
+        );
 
+    blocks.push(
+        `<div><strong>[교재팀] 일일보고(${escapeHtml(monthDay)})</strong></div>`
+    );
+    blocks.push("<div><br></div>");
+    blocks.push(
+        "<div>안녕하세요? 교재팀 김정우입니다.</div>"
+    );
+    blocks.push("<div><br></div>");
+    blocks.push(
+        "<div>교재팀 일일보고 드립니다.</div>"
+    );
     blocks.push("<div><br></div>");
 
     blocks.push(
@@ -1196,6 +1241,12 @@ function reportCardMarkup(report) {
             </div>
 
             <div class="daily-report-card-body">
+                <section>
+                    <h3>[교재팀] 일일보고(${escapeHtml(formatReportMonthDay(report.id))})</h3>
+                    <p>안녕하세요? 교재팀 김정우입니다.</p>
+                    <p>교재팀 일일보고 드립니다.</p>
+                </section>
+
                 ${sections.join("")}
             </div>
         </article>
