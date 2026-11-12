@@ -2547,3 +2547,13 @@ background: #eef3f8;
         flex: 1;
     }
 }
+
+
+.daily-report-preview-line {
+    display: grid;
+    gap: 4px;
+}
+
+.daily-report-preview-line > span {
+    display: block;
+}
