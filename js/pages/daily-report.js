@@ -142,6 +142,25 @@ function normalizePrizeNames(value) {
         .slice(0, 5);
 }
 
+function sortEventRowsByOrders(rows) {
+    return [...rows].sort((a, b) => {
+        const difference =
+            getNumber(b?.orders)
+            - getNumber(a?.orders);
+
+        if (difference !== 0) {
+            return difference;
+        }
+
+        const aMillis =
+            a?.createdAt?.toMillis?.() || 0;
+        const bMillis =
+            b?.createdAt?.toMillis?.() || 0;
+
+        return aMillis - bMillis;
+    });
+}
+
 function eventReportText(row) {
     const prizeNames = normalizePrizeNames(row?.prizeNames);
     const prizeText =
@@ -521,7 +540,10 @@ function subscribeDrafts(dateId) {
                 return;
             }
 
-            eventRows = normalizeRows(rows);
+            eventRows =
+                    sortEventRowsByOrders(
+                        rows
+                    );
             renderEventRows();
         },
         (error) => {
@@ -828,7 +850,10 @@ async function finalizeReport() {
         ]);
 
         const shipping = calculateTextbookShipping(shippingRow);
-        const sortedEvents = normalizeRows(events);
+        const sortedEvents =
+            sortEventRowsByOrders(
+                events
+            );
         const sortedWorks = normalizeRows(works);
 
         await setCollectionDocument(
@@ -932,7 +957,9 @@ function createPlainTextReport(report) {
 
     const events =
         Array.isArray(report?.events)
-            ? report.events
+            ? sortEventRowsByOrders(
+                report.events
+            )
             : [];
 
     const workItems =
@@ -1002,7 +1029,9 @@ function createHtmlReport(report) {
 
     const events =
         Array.isArray(report?.events)
-            ? report.events
+            ? sortEventRowsByOrders(
+                report.events
+            )
             : [];
 
     const workItems =
@@ -1077,7 +1106,9 @@ function reportCardMarkup(report) {
 
     const events =
         Array.isArray(report?.events)
-            ? report.events
+            ? sortEventRowsByOrders(
+                report.events
+            )
             : [];
 
     const workItems =
