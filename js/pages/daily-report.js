@@ -1018,7 +1018,7 @@ function createPlainTextReport(report) {
         });
     }
 
-    return lines.join("\\n").trim();
+    return lines.join("\n").trim();
 }
 
 function createHtmlReport(report) {
