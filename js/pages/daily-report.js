@@ -31,6 +31,7 @@ let unsubscribeEvents = null;
 let unsubscribeWork = null;
 let editingEventId = null;
 let editingWorkId = null;
+let loadedReports = [];
 
 function formatNumber(value) {
     return getNumber(value).toLocaleString("ko-KR");
@@ -294,6 +295,45 @@ function createMarkup() {
 
         <div id="dailyReportStatus" class="daily-report-status"></div>
         <section id="dailyReportResults" class="daily-report-results"></section>
+
+        <section
+            id="dailyReportPlainPanel"
+            class="daily-report-plain-panel"
+            hidden
+        >
+            <div class="daily-report-plain-head">
+                <div>
+                    <h2>메일용 텍스트</h2>
+                    <p>
+                        메일의 기본 글꼴은 유지하고, 1·2·3 항목 제목만 굵게 복사됩니다.
+                    </p>
+                </div>
+
+                <button
+                    id="dailyReportPlainClose"
+                    class="btn"
+                    type="button"
+                >
+                    닫기
+                </button>
+            </div>
+
+            <textarea
+                id="dailyReportPlainText"
+                class="daily-report-plain-textarea"
+                readonly
+            ></textarea>
+
+            <div class="daily-report-plain-actions">
+                <button
+                    id="dailyReportPlainCopy"
+                    class="btn primary"
+                    type="button"
+                >
+                    텍스트 복사
+                </button>
+            </div>
+        </section>
     `;
 }
 
@@ -884,6 +924,151 @@ function normalizeStoredTextbookShipping(value) {
     };
 }
 
+function createPlainTextReport(report) {
+    const shipping =
+        normalizeStoredTextbookShipping(
+            report?.textbookShipping
+        );
+
+    const events =
+        Array.isArray(report?.events)
+            ? report.events
+            : [];
+
+    const workItems =
+        Array.isArray(report?.workItems)
+            ? report.workItems
+            : [];
+
+    let sectionNumber = 1;
+    const lines = [
+        String(report?.id || "").trim(),
+        ""
+    ];
+
+    lines.push(
+        `${sectionNumber++}. 교재 발송`
+    );
+
+    textbookShippingDetailLines(
+        shipping
+    ).forEach((line) => {
+        lines.push(
+            String(line || "").trim()
+        );
+    });
+
+    if (events.length) {
+        lines.push("");
+        lines.push(
+            `${sectionNumber++}. 이벤트 경품 발송`
+        );
+
+        events.forEach((item) => {
+            lines.push(
+                `- ${eventReportText(item).trim()}`
+            );
+        });
+    }
+
+    if (workItems.length) {
+        lines.push("");
+        lines.push(
+            `${sectionNumber++}. 업무 내용 및 기안 상신`
+        );
+
+        workItems.forEach((item) => {
+            const content =
+                String(
+                    item?.content || ""
+                ).trim();
+
+            if (content) {
+                lines.push(
+                    `- ${content}`
+                );
+            }
+        });
+    }
+
+    return lines.join("\\n").trim();
+}
+
+function createHtmlReport(report) {
+    const shipping =
+        normalizeStoredTextbookShipping(
+            report?.textbookShipping
+        );
+
+    const events =
+        Array.isArray(report?.events)
+            ? report.events
+            : [];
+
+    const workItems =
+        Array.isArray(report?.workItems)
+            ? report.workItems
+            : [];
+
+    let sectionNumber = 1;
+    const blocks = [];
+
+    blocks.push(
+        `<p>${escapeHtml(
+            String(report?.id || "").trim()
+        )}</p>`
+    );
+
+    blocks.push(
+        `<p><strong>${sectionNumber++}. 교재 발송</strong></p>`
+    );
+
+    textbookShippingDetailLines(
+        shipping
+    ).forEach((line) => {
+        blocks.push(
+            `<p>${escapeHtml(
+                String(line || "").trim()
+            )}</p>`
+        );
+    });
+
+    if (events.length) {
+        blocks.push(
+            `<p><strong>${sectionNumber++}. 이벤트 경품 발송</strong></p>`
+        );
+
+        events.forEach((item) => {
+            blocks.push(
+                `<p>- ${escapeHtml(
+                    eventReportText(item).trim()
+                )}</p>`
+            );
+        });
+    }
+
+    if (workItems.length) {
+        blocks.push(
+            `<p><strong>${sectionNumber++}. 업무 내용 및 기안 상신</strong></p>`
+        );
+
+        workItems.forEach((item) => {
+            const content =
+                String(
+                    item?.content || ""
+                ).trim();
+
+            if (content) {
+                blocks.push(
+                    `<p>- ${escapeHtml(content)}</p>`
+                );
+            }
+        });
+    }
+
+    return blocks.join("");
+}
+
 function reportCardMarkup(report) {
     const shipping =
         normalizeStoredTextbookShipping(
@@ -937,7 +1122,7 @@ function reportCardMarkup(report) {
                 ${workItems
                     .map((item) => `
                         <p class="daily-report-prewrap">
-                            - ${escapeHtml(item.content)}
+                            - ${escapeHtml(String(item.content || "").trim())}
                         </p>
                     `)
                     .join("")}
@@ -953,16 +1138,25 @@ function reportCardMarkup(report) {
                     <span>확정 일일보고</span>
                 </div>
 
-                ${
-                    isAdminUser
-                        ? `
-                            <div class="daily-report-card-actions">
+                <div class="daily-report-card-actions">
+                    ${
+                        isAdminUser
+                            ? `
                                 <button class="btn" type="button" data-action="edit-report" data-date="${escapeHtml(report.id)}">수정</button>
                                 <button class="btn" type="button" data-action="delete-report" data-date="${escapeHtml(report.id)}">삭제</button>
-                            </div>
-                        `
-                        : ""
-                }
+                            `
+                            : ""
+                    }
+
+                    <button
+                        class="btn"
+                        type="button"
+                        data-action="plain-report"
+                        data-date="${escapeHtml(report.id)}"
+                    >
+                        메일용 보기/복사
+                    </button>
+                </div>
             </div>
 
             <div class="daily-report-card-body">
@@ -1002,6 +1196,8 @@ async function searchReports() {
         const sortedRows = [...rows].sort((a, b) =>
             String(a.id).localeCompare(String(b.id))
         );
+
+        loadedReports = sortedRows;
 
         const container = document.getElementById("dailyReportResults");
 
@@ -1052,6 +1248,136 @@ async function deleteFinalReport(dateId) {
     }
 }
 
+function openPlainReport(dateId) {
+    const report =
+        loadedReports.find(
+            (item) =>
+                item.id === dateId
+        );
+
+    if (!report) {
+        setStatus(
+            "복사용 일일보고 내용을 찾지 못했습니다.",
+            true
+        );
+        return;
+    }
+
+    const panel =
+        document.getElementById(
+            "dailyReportPlainPanel"
+        );
+
+    const textarea =
+        document.getElementById(
+            "dailyReportPlainText"
+        );
+
+    textarea.value =
+        createPlainTextReport(
+            report
+        );
+
+    textarea.dataset.date =
+        dateId;
+
+    panel.hidden = false;
+    textarea.focus();
+    textarea.select();
+}
+
+function closePlainReport() {
+    const panel =
+        document.getElementById(
+            "dailyReportPlainPanel"
+        );
+
+    if (panel) {
+        panel.hidden = true;
+    }
+}
+
+async function copyPlainReport() {
+    const textarea =
+        document.getElementById(
+            "dailyReportPlainText"
+        );
+
+    const text =
+        textarea?.value || "";
+
+    const dateId =
+        textarea?.dataset?.date || "";
+
+    const report =
+        loadedReports.find(
+            (item) =>
+                item.id === dateId
+        );
+
+    if (!text || !report) {
+        return;
+    }
+
+    try {
+        const html =
+            createHtmlReport(
+                report
+            );
+
+        if (
+            navigator.clipboard
+            && typeof ClipboardItem !== "undefined"
+        ) {
+            const item =
+                new ClipboardItem({
+                    "text/plain":
+                        new Blob(
+                            [text],
+                            {
+                                type:
+                                    "text/plain"
+                            }
+                        ),
+
+                    "text/html":
+                        new Blob(
+                            [html],
+                            {
+                                type:
+                                    "text/html"
+                            }
+                        )
+                });
+
+            await navigator.clipboard.write([
+                item
+            ]);
+        } else {
+            await navigator.clipboard.writeText(
+                text
+            );
+        }
+
+        setStatus(
+            "메일용 내용을 복사했습니다. 메일 기본 글꼴을 유지하고 항목 제목만 굵게 붙여넣습니다."
+        );
+    } catch (error) {
+        console.error(
+            "[daily-report:copy-plain]",
+            error
+        );
+
+        textarea.focus();
+        textarea.select();
+
+        setStatus(
+            "자동 복사에 실패했습니다. 선택된 텍스트를 Ctrl+C로 복사해 주십시오.",
+            true
+        );
+    }
+}
+
 function bindEvents() {
     document.getElementById("dailyReportSearch").addEventListener("click", searchReports);
     document.getElementById("dailyReportOpenComposer").addEventListener("click", () => {
@@ -1068,6 +1394,10 @@ function bindEvents() {
     document.getElementById("dailyReportWorkSave").addEventListener("click", saveWork);
     document.getElementById("dailyReportWorkCancel").addEventListener("click", resetWorkForm);
     document.getElementById("dailyReportFinalize").addEventListener("click", finalizeReport);
+    document.getElementById("dailyReportPlainClose").addEventListener("click", closePlainReport);
+    document.getElementById("dailyReportPlainCopy").addEventListener("click", () => {
+        void copyPlainReport();
+    });
 
     document.getElementById("dailyReportEventList").addEventListener("click", (event) => {
         const button = event.target.closest("button[data-action]");
@@ -1115,6 +1445,10 @@ function bindEvents() {
         if (button.dataset.action === "delete-report") {
             void deleteFinalReport(button.dataset.date);
         }
+
+        if (button.dataset.action === "plain-report") {
+            openPlainReport(button.dataset.date);
+        }
     });
 }
 
@@ -1142,4 +1476,5 @@ export function unmount() {
     draftFinalized = false;
     editingEventId = null;
     editingWorkId = null;
+    loadedReports = [];
 }
