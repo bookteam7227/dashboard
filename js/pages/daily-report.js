@@ -612,16 +612,31 @@ async function openComposer(dateId = todayId()) {
         await refreshFinalizedState(dateId);
 
     if (finalizedReport) {
-        const shipping =
-            normalizeStoredTextbookShipping(
-                finalizedReport.textbookShipping
-            );
+        const isToday =
+            dateId === todayId();
 
-        renderTextbookShipping(shipping);
+        const shipping =
+            isToday
+                ? await loadTextbookShipping(
+                    dateId
+                )
+                : normalizeStoredTextbookShipping(
+                    finalizedReport.textbookShipping
+                );
+
+        if (!isToday) {
+            renderTextbookShipping(
+                shipping
+            );
+        }
+
         document.getElementById("dailyReportComposerTitle").textContent =
             `${dateId} 일일보고 수정`;
+
         setComposerStatus(
-            "확정 당시 교재 발송 수치는 고정되며, 이벤트 경품 발송과 업무 내용만 수정할 수 있습니다."
+            isToday
+                ? "오늘 일일보고는 대시보드의 최신 교재 발송 수치를 반영하며, 이벤트 경품 발송과 업무 내용을 수정할 수 있습니다."
+                : "과거 일일보고는 확정 당시 교재 발송 수치를 고정하며, 이벤트 경품 발송과 업무 내용만 수정할 수 있습니다."
         );
         return;
     }
@@ -892,21 +907,28 @@ async function finalizeReport() {
                 )
                 : null;
 
+        const shouldRefreshShipping =
+            !existingReport
+            || draftDate === todayId();
+
         const [shippingRow, events, works] = await Promise.all([
-            existingReport
-                ? Promise.resolve(null)
-                : getDocumentRow("shippingProgress", draftDate),
+            shouldRefreshShipping
+                ? getDocumentRow(
+                    "shippingProgress",
+                    draftDate
+                )
+                : Promise.resolve(null),
             getCollectionRowsByFieldEquals(EVENT_COLLECTION, "date", draftDate),
             getCollectionRowsByFieldEquals(WORK_COLLECTION, "date", draftDate)
         ]);
 
         const shipping =
-            existingReport
-                ? normalizeStoredTextbookShipping(
-                    existingReport.textbookShipping
-                )
-                : calculateTextbookShipping(
+            shouldRefreshShipping
+                ? calculateTextbookShipping(
                     shippingRow
+                )
+                : normalizeStoredTextbookShipping(
+                    existingReport.textbookShipping
                 );
 
         const sortedEvents =
