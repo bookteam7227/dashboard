@@ -228,7 +228,7 @@ function createMarkup() {
                 </div>
 
                 <button id="dailyReportCloseComposer" class="btn" type="button">
-                    닫기
+                    입력 완료
                 </button>
             </div>
 
@@ -510,14 +510,18 @@ function renderWorkRows() {
     }).join("");
 }
 
-async function loadTextbookShipping(dateId) {
-    const row = await getDocumentRow("shippingProgress", dateId);
-    const shipping = calculateTextbookShipping(row);
-
+function renderTextbookShipping(shipping) {
     document.getElementById("dailyReportTextbookShipping").innerHTML =
         textbookShippingDetailLines(shipping)
             .map((line) => `<span>${escapeHtml(line)}</span>`)
             .join("");
+}
+
+async function loadTextbookShipping(dateId) {
+    const row = await getDocumentRow("shippingProgress", dateId);
+    const shipping = calculateTextbookShipping(row);
+
+    renderTextbookShipping(shipping);
 
     return shipping;
 }
@@ -593,10 +597,25 @@ async function openComposer(dateId = todayId()) {
     setComposerStatus("작성 내용을 불러오고 있습니다.");
     subscribeDrafts(dateId);
 
-    await Promise.all([
-        loadTextbookShipping(dateId),
-        refreshFinalizedState(dateId)
-    ]);
+    const finalizedReport =
+        await refreshFinalizedState(dateId);
+
+    if (finalizedReport) {
+        const shipping =
+            normalizeStoredTextbookShipping(
+                finalizedReport.textbookShipping
+            );
+
+        renderTextbookShipping(shipping);
+        document.getElementById("dailyReportComposerTitle").textContent =
+            `${dateId} 일일보고 수정`;
+        setComposerStatus(
+            "확정 당시 교재 발송 수치는 고정되며, 이벤트 경품 발송과 업무 내용만 수정할 수 있습니다."
+        );
+        return;
+    }
+
+    await loadTextbookShipping(dateId);
 }
 
 function closeComposer() {
@@ -844,13 +863,31 @@ async function finalizeReport() {
         const user = getCurrentUser();
         setComposerStatus("최신 작성 내용을 취합하여 일일보고를 확정하고 있습니다.");
 
+        const existingReport =
+            draftFinalized
+                ? await getDocumentRow(
+                    REPORT_COLLECTION,
+                    draftDate
+                )
+                : null;
+
         const [shippingRow, events, works] = await Promise.all([
-            getDocumentRow("shippingProgress", draftDate),
+            existingReport
+                ? Promise.resolve(null)
+                : getDocumentRow("shippingProgress", draftDate),
             getCollectionRowsByFieldEquals(EVENT_COLLECTION, "date", draftDate),
             getCollectionRowsByFieldEquals(WORK_COLLECTION, "date", draftDate)
         ]);
 
-        const shipping = calculateTextbookShipping(shippingRow);
+        const shipping =
+            existingReport
+                ? normalizeStoredTextbookShipping(
+                    existingReport.textbookShipping
+                )
+                : calculateTextbookShipping(
+                    shippingRow
+                );
+
         const sortedEvents =
             sortEventRowsByOrders(
                 events
@@ -897,10 +934,7 @@ async function finalizeReport() {
 
         draftFinalized = true;
         renderDraftState();
-        document.getElementById("dailyReportTextbookShipping").innerHTML =
-            textbookShippingDetailLines(shipping)
-                .map((line) => `<span>${escapeHtml(line)}</span>`)
-                .join("");
+        renderTextbookShipping(shipping);
         setComposerStatus("일일보고가 확정되었습니다.");
         await searchReports();
     } catch (error) {
