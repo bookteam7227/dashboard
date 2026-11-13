@@ -220,7 +220,7 @@ function createActionsMarkup() {
 
 function createMarkup() {
     return `
-        <section id="dailyReportComposer" class="daily-report-composer" hidden>
+        <section id="dailyReportComposer" class="daily-report-composer daily-report-drawer" hidden>
             <div class="daily-report-composer-head">
                 <div>
                     <h2 id="dailyReportComposerTitle">일일보고 작성</h2>
@@ -589,7 +589,18 @@ async function openComposer(dateId = todayId()) {
     resetEventForm();
     resetWorkForm();
 
-    document.getElementById("dailyReportComposer").hidden = false;
+    const composer =
+        document.getElementById(
+            "dailyReportComposer"
+        );
+
+    composer.hidden = false;
+
+    requestAnimationFrame(() => {
+        composer.classList.add(
+            "is-open"
+        );
+    });
     document.getElementById("dailyReportDraftDate").value = dateId;
     document.getElementById("dailyReportComposerTitle").textContent =
         `${dateId} 일일보고 작성`;
@@ -620,7 +631,17 @@ async function openComposer(dateId = todayId()) {
 
 function closeComposer() {
     stopDraftSubscriptions();
-    document.getElementById("dailyReportComposer").hidden = true;
+
+    const composer =
+        document.getElementById(
+            "dailyReportComposer"
+        );
+
+    composer.classList.remove(
+        "is-open"
+    );
+    composer.hidden = true;
+
     draftDate = "";
     eventRows = [];
     workRows = [];
