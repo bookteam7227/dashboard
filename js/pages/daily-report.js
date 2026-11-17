@@ -237,6 +237,10 @@ function createActionsMarkup() {
             <button id="dailyReportOpenComposer" class="btn primary" type="button">
                 + 일일보고 작성
             </button>
+
+            <button id="dailyReportOpenWeekly" class="btn" type="button">
+                주간보고 보기
+            </button>
         </div>
     `;
 }
@@ -373,6 +377,46 @@ function createMarkup() {
 
         <div id="dailyReportStatus" class="daily-report-status"></div>
         <section id="dailyReportResults" class="daily-report-results"></section>
+
+        <section
+            id="dailyReportWeeklyPanel"
+            class="daily-report-plain-panel daily-report-weekly-panel"
+            hidden
+        >
+            <div class="daily-report-plain-head">
+                <div>
+                    <h2>주간보고</h2>
+                    <p>
+                        현재 검색된 일일보고를 기준으로 주간 내용을 통합합니다.
+                    </p>
+                </div>
+
+                <div class="daily-report-plain-head-actions">
+                    <button
+                        id="dailyReportWeeklyCopy"
+                        class="btn primary"
+                        type="button"
+                    >
+                        텍스트 복사
+                    </button>
+
+                    <button
+                        id="dailyReportWeeklyClose"
+                        class="btn"
+                        type="button"
+                    >
+                        닫기
+                    </button>
+                </div>
+            </div>
+
+            <div
+                id="dailyReportWeeklyText"
+                class="daily-report-plain-textarea daily-report-weekly-text"
+                contenteditable="false"
+                aria-label="주간보고 미리보기"
+            ></div>
+        </section>
 
         <section
             id="dailyReportPlainPanel"
@@ -1420,6 +1464,292 @@ function normalizeStoredTextbookShipping(value) {
     };
 }
 
+function getWeeklyReportGroups() {
+    const reservations = [];
+    const works = [];
+    const events = [];
+
+    loadedReports.forEach((report) => {
+        const dateLabel =
+            formatReportMonthDay(
+                report?.id
+            );
+
+        const reportReservations =
+            Array.isArray(
+                report?.reservations
+            )
+                ? sortEventRowsByOrders(
+                    report.reservations
+                )
+                : [];
+
+        reportReservations.forEach((item) => {
+            reservations.push({
+                text:
+                    reservationReportText(
+                        item
+                    ).trim(),
+                dateLabel
+            });
+        });
+
+        const reportWorks =
+            Array.isArray(
+                report?.workItems
+            )
+                ? report.workItems
+                : [];
+
+        reportWorks.forEach((item) => {
+            const text =
+                String(
+                    item?.content || ""
+                ).trim();
+
+            if (text) {
+                works.push({
+                    text,
+                    dateLabel
+                });
+            }
+        });
+
+        const reportEvents =
+            Array.isArray(
+                report?.events
+            )
+                ? sortEventRowsByOrders(
+                    report.events
+                )
+                : [];
+
+        reportEvents.forEach((item) => {
+            events.push({
+                text:
+                    eventReportText(
+                        item
+                    ).trim(),
+                dateLabel
+            });
+        });
+    });
+
+    return {
+        reservations,
+        works,
+        events
+    };
+}
+
+function createWeeklyPlainText() {
+    const {
+        reservations,
+        works,
+        events
+    } = getWeeklyReportGroups();
+
+    const lines = [];
+
+    const appendSection =
+        (title, rows) => {
+            if (!rows.length) {
+                return;
+            }
+
+            if (lines.length) {
+                lines.push("");
+            }
+
+            lines.push(title);
+
+            rows.forEach((row) => {
+                lines.push(
+                    `${row.text} ${row.dateLabel}`
+                );
+            });
+        };
+
+    appendSection(
+        "예약판매 교재 발송 진행",
+        reservations
+    );
+
+    appendSection(
+        "주요 업무 및 기안 상신 업무 진행",
+        works
+    );
+
+    appendSection(
+        "이벤트 물품 발송 진행",
+        events
+    );
+
+    return lines.join("\n").trim();
+}
+
+function createWeeklyHtml() {
+    const {
+        reservations,
+        works,
+        events
+    } = getWeeklyReportGroups();
+
+    const blocks = [];
+
+    const appendSection =
+        (title, rows) => {
+            if (!rows.length) {
+                return;
+            }
+
+            if (blocks.length) {
+                blocks.push(
+                    '<div class="daily-report-weekly-spacer"><br></div>'
+                );
+            }
+
+            blocks.push(
+                `<div class="daily-report-weekly-title"><strong>${escapeHtml(title)}</strong></div>`
+            );
+
+            rows.forEach((row) => {
+                blocks.push(
+                    `<div>${escapeHtml(row.text)} <span class="daily-report-weekly-date">${escapeHtml(row.dateLabel)}</span></div>`
+                );
+            });
+        };
+
+    appendSection(
+        "예약판매 교재 발송 진행",
+        reservations
+    );
+
+    appendSection(
+        "주요 업무 및 기안 상신 업무 진행",
+        works
+    );
+
+    appendSection(
+        "이벤트 물품 발송 진행",
+        events
+    );
+
+    return blocks.join("");
+}
+
+function openWeeklyReport() {
+    if (!loadedReports.length) {
+        setStatus(
+            "먼저 주간보고에 사용할 날짜 범위를 검색해 주십시오.",
+            true
+        );
+        return;
+    }
+
+    const html =
+        createWeeklyHtml();
+
+    if (!html) {
+        setStatus(
+            "검색 기간에 주간보고로 표시할 항목이 없습니다.",
+            true
+        );
+        return;
+    }
+
+    const panel =
+        document.getElementById(
+            "dailyReportWeeklyPanel"
+        );
+
+    const preview =
+        document.getElementById(
+            "dailyReportWeeklyText"
+        );
+
+    preview.innerHTML = html;
+    panel.hidden = false;
+
+    panel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function closeWeeklyReport() {
+    const panel =
+        document.getElementById(
+            "dailyReportWeeklyPanel"
+        );
+
+    if (panel) {
+        panel.hidden = true;
+    }
+}
+
+async function copyWeeklyReport() {
+    const text =
+        createWeeklyPlainText();
+
+    const html =
+        createWeeklyHtml();
+
+    if (!text || !html) {
+        return;
+    }
+
+    try {
+        if (
+            navigator.clipboard
+            && typeof ClipboardItem
+                !== "undefined"
+        ) {
+            const item =
+                new ClipboardItem({
+                    "text/plain":
+                        new Blob(
+                            [text],
+                            {
+                                type:
+                                    "text/plain"
+                            }
+                        ),
+                    "text/html":
+                        new Blob(
+                            [html],
+                            {
+                                type:
+                                    "text/html"
+                            }
+                        )
+                });
+
+            await navigator.clipboard.write([
+                item
+            ]);
+        } else {
+            await navigator.clipboard.writeText(
+                text
+            );
+        }
+
+        setStatus(
+            "주간보고 내용을 복사했습니다."
+        );
+    } catch (error) {
+        console.error(
+            "[daily-report:copy-weekly]",
+            error
+        );
+
+        setStatus(
+            "주간보고 자동 복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해 주십시오.",
+            true
+        );
+    }
+}
+
 function formatReportMonthDay(dateId) {
     const parts =
         String(dateId || "")
@@ -1796,6 +2126,7 @@ async function searchReports() {
     }
 
     try {
+        closeWeeklyReport();
         setStatus("일일보고를 불러오고 있습니다.");
 
         const rows = await getCollectionRowsByDocumentIdRange(
@@ -1817,6 +2148,8 @@ async function searchReports() {
         const container = document.getElementById("dailyReportResults");
 
         if (!sortedRows.length) {
+            loadedReports = [];
+
             container.innerHTML = `
                 <div class="data-message">
                     조회 기간에 확정된 일일보고가 없습니다.
@@ -1995,6 +2328,7 @@ function bindEvents() {
     document.getElementById("dailyReportOpenComposer").addEventListener("click", () => {
         void openComposer(todayId());
     });
+    document.getElementById("dailyReportOpenWeekly").addEventListener("click", openWeeklyReport);
     document.getElementById("dailyReportCloseComposer").addEventListener("click", closeComposer);
     document.getElementById("dailyReportDraftDate").addEventListener("change", (event) => {
         if (event.target.value) {
@@ -2008,6 +2342,10 @@ function bindEvents() {
     document.getElementById("dailyReportWorkSave").addEventListener("click", saveWork);
     document.getElementById("dailyReportWorkCancel").addEventListener("click", resetWorkForm);
     document.getElementById("dailyReportFinalize").addEventListener("click", finalizeReport);
+    document.getElementById("dailyReportWeeklyClose").addEventListener("click", closeWeeklyReport);
+    document.getElementById("dailyReportWeeklyCopy").addEventListener("click", () => {
+        void copyWeeklyReport();
+    });
     document.getElementById("dailyReportPlainClose").addEventListener("click", closePlainReport);
     document.getElementById("dailyReportPlainCopy").addEventListener("click", () => {
         void copyPlainReport();
