@@ -2926,3 +2926,27 @@ background: #eef3f8;
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+
+/* v18 weekly report */
+.daily-report-weekly-panel {
+    margin-top: 18px;
+}
+
+.daily-report-weekly-text {
+    line-height: 1.7;
+}
+
+.daily-report-weekly-title {
+    font-weight: 700;
+}
+
+.daily-report-weekly-date {
+    color: #dc2626;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.daily-report-weekly-spacer {
+    line-height: 0.8;
+}
