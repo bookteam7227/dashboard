@@ -18,6 +18,7 @@ import { getNumber } from "../utils/number-utils.js";
 export const title = "일일보고";
 
 const EVENT_COLLECTION = "dailyReportEventDrafts";
+const RESERVATION_COLLECTION = "dailyReportReservationDrafts";
 const WORK_COLLECTION = "dailyReportWorkDrafts";
 const REPORT_COLLECTION = "dailyReports";
 
@@ -26,10 +27,13 @@ let isAdminUser = false;
 let draftDate = "";
 let draftFinalized = false;
 let eventRows = [];
+let reservationRows = [];
 let workRows = [];
 let unsubscribeEvents = null;
+let unsubscribeReservations = null;
 let unsubscribeWork = null;
 let editingEventId = null;
+let editingReservationId = null;
 let editingWorkId = null;
 let loadedReports = [];
 
@@ -161,6 +165,25 @@ function sortEventRowsByOrders(rows) {
     });
 }
 
+function reservationReportText(row) {
+    const bookNames =
+        normalizePrizeNames(
+            row?.bookNames
+        );
+
+    const bookText =
+        bookNames.length
+            ? ` 교재(${bookNames.join("·")})`
+            : "";
+
+    return (
+        `${String(row?.name || "").trim()}`
+        + bookText
+        + ` ${formatNumber(row?.orders)}건`
+        + `·${formatNumber(row?.quantity)}권 발송`
+    );
+}
+
 function eventReportText(row) {
     const prizeNames = normalizePrizeNames(row?.prizeNames);
     const prizeText =
@@ -283,7 +306,43 @@ function createMarkup() {
 
             <section class="daily-report-section">
                 <div class="daily-report-section-head">
-                    <h3>3. 업무 내용 및 기안 상신</h3>
+                    <h3>3. 예약판매 교재 발송</h3>
+                    <span>항목별 개별 저장</span>
+                </div>
+
+                <div class="daily-report-event-headline">
+                    <span>예약판매명</span>
+                    <span>교재명</span>
+                    <span>건수</span>
+                    <span>수량</span>
+                </div>
+
+                <div class="daily-report-event-form daily-report-reservation-form">
+                    <input id="dailyReportReservationName" type="text" placeholder="예약판매명" aria-label="예약판매명">
+
+                    <div class="daily-report-prize-inputs daily-report-book-inputs">
+                        <input id="dailyReportBookName1" type="text" placeholder="교재명 1" aria-label="교재명 1">
+                        <input id="dailyReportBookName2" type="text" placeholder="교재명 2" aria-label="교재명 2">
+                        <input id="dailyReportBookName3" type="text" placeholder="교재명 3" aria-label="교재명 3">
+                        <input id="dailyReportBookName4" type="text" placeholder="교재명 4" aria-label="교재명 4">
+                        <input id="dailyReportBookName5" type="text" placeholder="교재명 5" aria-label="교재명 5">
+                    </div>
+
+                    <input id="dailyReportReservationOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
+                    <input id="dailyReportReservationQuantity" type="number" min="0" step="1" placeholder="수량" aria-label="수량">
+
+                    <div class="daily-report-event-form-actions">
+                        <button id="dailyReportReservationSave" class="btn primary" type="button">추가</button>
+                        <button id="dailyReportReservationCancel" class="btn" type="button" hidden>취소</button>
+                    </div>
+                </div>
+
+                <div id="dailyReportReservationList" class="daily-report-draft-list"></div>
+            </section>
+
+            <section class="daily-report-section">
+                <div class="daily-report-section-head">
+                    <h3>4. 업무 내용 및 기안 상신</h3>
                     <span>항목별 개별 저장</span>
                 </div>
 
@@ -324,7 +383,7 @@ function createMarkup() {
                 <div>
                     <h2>메일용 텍스트</h2>
                     <p>
-                        메일의 기본 글꼴은 유지하고, 1·2·3 항목 제목만 굵게 복사됩니다.
+                        메일의 기본 글꼴은 유지하고, 각 항목 제목만 굵게 복사됩니다.
                     </p>
                 </div>
 
@@ -359,8 +418,10 @@ function createMarkup() {
 
 function stopDraftSubscriptions() {
     unsubscribeEvents?.();
+    unsubscribeReservations?.();
     unsubscribeWork?.();
     unsubscribeEvents = null;
+    unsubscribeReservations = null;
     unsubscribeWork = null;
 }
 
@@ -385,6 +446,27 @@ function resetEventForm() {
     document.getElementById("dailyReportEventCancel").hidden = true;
 }
 
+function resetReservationForm() {
+    editingReservationId = null;
+
+    document.getElementById("dailyReportReservationName").value = "";
+
+    Array.from(
+        { length: 5 },
+        (_, index) =>
+            document.getElementById(
+                `dailyReportBookName${index + 1}`
+            )
+    ).forEach((input) => {
+        input.value = "";
+    });
+
+    document.getElementById("dailyReportReservationOrders").value = "";
+    document.getElementById("dailyReportReservationQuantity").value = "";
+    document.getElementById("dailyReportReservationSave").textContent = "추가";
+    document.getElementById("dailyReportReservationCancel").hidden = true;
+}
+
 function resetWorkForm() {
     editingWorkId = null;
 
@@ -404,6 +486,15 @@ function setDraftInputsDisabled(disabled) {
         "dailyReportEventOrders",
         "dailyReportEventQuantity",
         "dailyReportEventSave",
+        "dailyReportReservationName",
+        "dailyReportBookName1",
+        "dailyReportBookName2",
+        "dailyReportBookName3",
+        "dailyReportBookName4",
+        "dailyReportBookName5",
+        "dailyReportReservationOrders",
+        "dailyReportReservationQuantity",
+        "dailyReportReservationSave",
         "dailyReportWorkContent",
         "dailyReportWorkSave"
     ].forEach((id) => {
@@ -475,6 +566,48 @@ function renderEventRows() {
             </div>
         `;
     }).join("");
+}
+
+function renderReservationRows() {
+    const container =
+        document.getElementById(
+            "dailyReportReservationList"
+        );
+
+    if (!reservationRows.length) {
+        container.innerHTML = `
+            <div class="daily-report-empty">
+                등록된 예약판매 교재 발송이 없습니다.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML =
+        reservationRows.map((row) => {
+            const editable =
+                canEditRow(row)
+                && (!draftFinalized || isAdminUser);
+
+            const text =
+                reservationReportText(row);
+
+            return `
+                <div class="daily-report-draft-item">
+                    <div class="daily-report-draft-text">- ${escapeHtml(text)}</div>
+                    ${
+                        editable
+                            ? `
+                                <div class="daily-report-item-actions">
+                                    <button class="daily-report-link-button" type="button" data-action="edit-reservation" data-id="${escapeHtml(row.id)}">수정</button>
+                                    <button class="daily-report-link-button is-danger" type="button" data-action="delete-reservation" data-id="${escapeHtml(row.id)}">삭제</button>
+                                </div>
+                            `
+                            : ""
+                    }
+                </div>
+            `;
+        }).join("");
 }
 
 function renderWorkRows() {
@@ -560,6 +693,36 @@ function subscribeDrafts(dateId) {
         }
     );
 
+    unsubscribeReservations =
+        subscribeCollectionRowsByFieldEquals(
+            RESERVATION_COLLECTION,
+            "date",
+            dateId,
+            (rows) => {
+                if (!active || dateId !== draftDate) {
+                    return;
+                }
+
+                reservationRows =
+                    sortEventRowsByOrders(
+                        rows
+                    );
+
+                renderReservationRows();
+            },
+            (error) => {
+                console.error(
+                    "[daily-report:reservation-subscribe]",
+                    error
+                );
+
+                setComposerStatus(
+                    "예약판매 교재 발송 항목을 실시간으로 불러오지 못했습니다.",
+                    true
+                );
+            }
+        );
+
     unsubscribeWork = subscribeCollectionRowsByFieldEquals(
         WORK_COLLECTION,
         "date",
@@ -585,8 +748,10 @@ function subscribeDrafts(dateId) {
 async function openComposer(dateId = todayId()) {
     draftDate = dateId;
     eventRows = [];
+    reservationRows = [];
     workRows = [];
     resetEventForm();
+    resetReservationForm();
     resetWorkForm();
 
     const composer =
@@ -659,8 +824,10 @@ function closeComposer() {
 
     draftDate = "";
     eventRows = [];
+    reservationRows = [];
     workRows = [];
     resetEventForm();
+    resetReservationForm();
     resetWorkForm();
 }
 
@@ -736,6 +903,111 @@ async function saveEvent() {
         console.error("[daily-report:save-event]", error);
         setComposerStatus(
             error?.message || "이벤트 경품 발송 항목을 저장하지 못했습니다.",
+            true
+        );
+    }
+}
+
+async function saveReservation() {
+    try {
+        if (draftFinalized && !isAdminUser) {
+            throw new Error(
+                "확정된 일일보고는 수정할 수 없습니다."
+            );
+        }
+
+        const user = getCurrentUser();
+        const name =
+            document.getElementById(
+                "dailyReportReservationName"
+            ).value.trim();
+
+        const bookNames =
+            normalizePrizeNames(
+                Array.from(
+                    { length: 5 },
+                    (_, index) =>
+                        document.getElementById(
+                            `dailyReportBookName${index + 1}`
+                        ).value
+                )
+            );
+
+        const orders =
+            Number(
+                document.getElementById(
+                    "dailyReportReservationOrders"
+                ).value
+            );
+
+        const quantity =
+            Number(
+                document.getElementById(
+                    "dailyReportReservationQuantity"
+                ).value
+            );
+
+        if (!name) {
+            throw new Error(
+                "예약판매명을 입력해 주십시오."
+            );
+        }
+
+        if (!Number.isInteger(orders) || orders < 0) {
+            throw new Error(
+                "건수는 0 이상의 정수로 입력해 주십시오."
+            );
+        }
+
+        if (!Number.isInteger(quantity) || quantity < 0) {
+            throw new Error(
+                "수량은 0 이상의 정수로 입력해 주십시오."
+            );
+        }
+
+        const payload = {
+            name,
+            bookNames,
+            orders,
+            quantity,
+            updatedAt: serverTimestamp(),
+            updatedByUid: user.uid,
+            updatedByEmail: user.email || ""
+        };
+
+        if (editingReservationId) {
+            await updateCollectionDocument(
+                RESERVATION_COLLECTION,
+                editingReservationId,
+                payload
+            );
+        } else {
+            await addCollectionDocument(
+                RESERVATION_COLLECTION,
+                {
+                    date: draftDate,
+                    ...payload,
+                    createdAt: serverTimestamp(),
+                    createdByUid: user.uid,
+                    createdByEmail: user.email || ""
+                }
+            );
+        }
+
+        resetReservationForm();
+
+        setComposerStatus(
+            "예약판매 교재 발송 항목이 저장되었습니다."
+        );
+    } catch (error) {
+        console.error(
+            "[daily-report:save-reservation]",
+            error
+        );
+
+        setComposerStatus(
+            error?.message
+                || "예약판매 교재 발송 항목을 저장하지 못했습니다.",
             true
         );
     }
@@ -823,6 +1095,56 @@ function startEventEdit(id) {
     document.getElementById("dailyReportEventCancel").hidden = false;
 }
 
+function startReservationEdit(id) {
+    const row =
+        reservationRows.find(
+            (item) =>
+                item.id === id
+        );
+
+    if (!row || !canEditRow(row)) {
+        return;
+    }
+
+    editingReservationId = id;
+
+    document.getElementById(
+        "dailyReportReservationName"
+    ).value = row.name || "";
+
+    const bookNames =
+        normalizePrizeNames(
+            row.bookNames
+        );
+
+    Array.from(
+        { length: 5 },
+        (_, index) =>
+            document.getElementById(
+                `dailyReportBookName${index + 1}`
+            )
+    ).forEach((input, index) => {
+        input.value =
+            bookNames[index] || "";
+    });
+
+    document.getElementById(
+        "dailyReportReservationOrders"
+    ).value = getNumber(row.orders);
+
+    document.getElementById(
+        "dailyReportReservationQuantity"
+    ).value = getNumber(row.quantity);
+
+    document.getElementById(
+        "dailyReportReservationSave"
+    ).textContent = "수정 저장";
+
+    document.getElementById(
+        "dailyReportReservationCancel"
+    ).hidden = false;
+}
+
 function startWorkEdit(id) {
     const row = workRows.find((item) => item.id === id);
 
@@ -856,6 +1178,47 @@ async function deleteEvent(id) {
     } catch (error) {
         console.error("[daily-report:delete-event]", error);
         setComposerStatus("이벤트 경품 발송 항목을 삭제하지 못했습니다.", true);
+    }
+}
+
+async function deleteReservation(id) {
+    const row =
+        reservationRows.find(
+            (item) =>
+                item.id === id
+        );
+
+    if (!row || !canEditRow(row)) {
+        return;
+    }
+
+    if (
+        !window.confirm(
+            "이 예약판매 교재 발송 항목을 삭제하시겠습니까?"
+        )
+    ) {
+        return;
+    }
+
+    try {
+        await deleteCollectionDocument(
+            RESERVATION_COLLECTION,
+            id
+        );
+
+        if (editingReservationId === id) {
+            resetReservationForm();
+        }
+    } catch (error) {
+        console.error(
+            "[daily-report:delete-reservation]",
+            error
+        );
+
+        setComposerStatus(
+            "예약판매 교재 발송 항목을 삭제하지 못했습니다.",
+            true
+        );
     }
 }
 
@@ -911,15 +1274,33 @@ async function finalizeReport() {
             !existingReport
             || draftDate === todayId();
 
-        const [shippingRow, events, works] = await Promise.all([
+        const [
+            shippingRow,
+            events,
+            reservations,
+            works
+        ] = await Promise.all([
             shouldRefreshShipping
                 ? getDocumentRow(
                     "shippingProgress",
                     draftDate
                 )
                 : Promise.resolve(null),
-            getCollectionRowsByFieldEquals(EVENT_COLLECTION, "date", draftDate),
-            getCollectionRowsByFieldEquals(WORK_COLLECTION, "date", draftDate)
+            getCollectionRowsByFieldEquals(
+                EVENT_COLLECTION,
+                "date",
+                draftDate
+            ),
+            getCollectionRowsByFieldEquals(
+                RESERVATION_COLLECTION,
+                "date",
+                draftDate
+            ),
+            getCollectionRowsByFieldEquals(
+                WORK_COLLECTION,
+                "date",
+                draftDate
+            )
         ]);
 
         const shipping =
@@ -934,6 +1315,10 @@ async function finalizeReport() {
         const sortedEvents =
             sortEventRowsByOrders(
                 events
+            );
+        const sortedReservations =
+            sortEventRowsByOrders(
+                reservations
             );
         const sortedWorks = normalizeRows(works);
 
@@ -959,6 +1344,14 @@ async function finalizeReport() {
                 events: sortedEvents.map((row) => ({
                     name: String(row.name || ""),
                     prizeNames: normalizePrizeNames(row.prizeNames),
+                    orders: getNumber(row.orders),
+                    quantity: getNumber(row.quantity),
+                    createdByUid: String(row.createdByUid || ""),
+                    createdByEmail: String(row.createdByEmail || "")
+                })),
+                reservations: sortedReservations.map((row) => ({
+                    name: String(row.name || ""),
+                    bookNames: normalizePrizeNames(row.bookNames),
                     orders: getNumber(row.orders),
                     quantity: getNumber(row.quantity),
                     createdByUid: String(row.createdByUid || ""),
@@ -1075,6 +1468,13 @@ function createPlainTextReport(report) {
             )
             : [];
 
+    const reservations =
+        Array.isArray(report?.reservations)
+            ? sortEventRowsByOrders(
+                report.reservations
+            )
+            : [];
+
     const workItems =
         Array.isArray(report?.workItems)
             ? report.workItems
@@ -1107,6 +1507,19 @@ function createPlainTextReport(report) {
         events.forEach((item) => {
             lines.push(
                 `- ${eventReportText(item).trim()}`
+            );
+        });
+    }
+
+    if (reservations.length) {
+        lines.push("");
+        lines.push(
+            `${sectionNumber++}. 예약판매 교재 발송`
+        );
+
+        reservations.forEach((item) => {
+            lines.push(
+                `- ${reservationReportText(item).trim()}`
             );
         });
     }
@@ -1144,6 +1557,13 @@ function createHtmlReport(report) {
         Array.isArray(report?.events)
             ? sortEventRowsByOrders(
                 report.events
+            )
+            : [];
+
+    const reservations =
+        Array.isArray(report?.reservations)
+            ? sortEventRowsByOrders(
+                report.reservations
             )
             : [];
 
@@ -1203,6 +1623,22 @@ function createHtmlReport(report) {
         });
     }
 
+    if (reservations.length) {
+        blocks.push("<div><br></div>");
+
+        blocks.push(
+            `<div><strong>${sectionNumber++}. 예약판매 교재 발송</strong></div>`
+        );
+
+        reservations.forEach((item) => {
+            blocks.push(
+                `<div>- ${escapeHtml(
+                    reservationReportText(item).trim()
+                )}</div>`
+            );
+        });
+    }
+
     if (workItems.length) {
         blocks.push("<div><br></div>");
 
@@ -1240,6 +1676,13 @@ function reportCardMarkup(report) {
             )
             : [];
 
+    const reservations =
+        Array.isArray(report?.reservations)
+            ? sortEventRowsByOrders(
+                report.reservations
+            )
+            : [];
+
     const workItems =
         Array.isArray(report?.workItems)
             ? report.workItems
@@ -1268,6 +1711,20 @@ function reportCardMarkup(report) {
                 ${events
                     .map((item) => `
                         <p>- ${escapeHtml(eventReportText(item))}</p>
+                    `)
+                    .join("")}
+            </section>
+        `);
+    }
+
+    if (reservations.length) {
+        sections.push(`
+            <section>
+                <h3>${sectionNumber++}. 예약판매 교재 발송</h3>
+
+                ${reservations
+                    .map((item) => `
+                        <p>- ${escapeHtml(reservationReportText(item))}</p>
                     `)
                     .join("")}
             </section>
@@ -1546,6 +2003,8 @@ function bindEvents() {
     });
     document.getElementById("dailyReportEventSave").addEventListener("click", saveEvent);
     document.getElementById("dailyReportEventCancel").addEventListener("click", resetEventForm);
+    document.getElementById("dailyReportReservationSave").addEventListener("click", saveReservation);
+    document.getElementById("dailyReportReservationCancel").addEventListener("click", resetReservationForm);
     document.getElementById("dailyReportWorkSave").addEventListener("click", saveWork);
     document.getElementById("dailyReportWorkCancel").addEventListener("click", resetWorkForm);
     document.getElementById("dailyReportFinalize").addEventListener("click", finalizeReport);
@@ -1567,6 +2026,35 @@ function bindEvents() {
 
         if (button.dataset.action === "delete-event") {
             void deleteEvent(button.dataset.id);
+        }
+    });
+
+    document.getElementById("dailyReportReservationList").addEventListener("click", (event) => {
+        const button =
+            event.target.closest(
+                "button[data-action]"
+            );
+
+        if (!button) {
+            return;
+        }
+
+        if (
+            button.dataset.action
+            === "edit-reservation"
+        ) {
+            startReservationEdit(
+                button.dataset.id
+            );
+        }
+
+        if (
+            button.dataset.action
+            === "delete-reservation"
+        ) {
+            void deleteReservation(
+                button.dataset.id
+            );
         }
     });
 
@@ -1626,10 +2114,12 @@ export function unmount() {
     active = false;
     stopDraftSubscriptions();
     eventRows = [];
+    reservationRows = [];
     workRows = [];
     draftDate = "";
     draftFinalized = false;
     editingEventId = null;
+    editingReservationId = null;
     editingWorkId = null;
     loadedReports = [];
 }
