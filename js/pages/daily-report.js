@@ -328,13 +328,23 @@ function createMarkup() {
                     </p>
                 </div>
 
-                <button
-                    id="dailyReportPlainClose"
-                    class="btn"
-                    type="button"
-                >
-                    닫기
-                </button>
+                <div class="daily-report-plain-head-actions">
+                    <button
+                        id="dailyReportPlainCopy"
+                        class="btn primary"
+                        type="button"
+                    >
+                        텍스트 복사
+                    </button>
+
+                    <button
+                        id="dailyReportPlainClose"
+                        class="btn"
+                        type="button"
+                    >
+                        닫기
+                    </button>
+                </div>
             </div>
 
             <div
@@ -343,16 +353,6 @@ function createMarkup() {
                 contenteditable="false"
                 aria-label="메일용 텍스트 미리보기"
             ></div>
-
-            <div class="daily-report-plain-actions">
-                <button
-                    id="dailyReportPlainCopy"
-                    class="btn primary"
-                    type="button"
-                >
-                    텍스트 복사
-                </button>
-            </div>
         </section>
     `;
 }
@@ -1318,12 +1318,6 @@ function reportCardMarkup(report) {
             </div>
 
             <div class="daily-report-card-body">
-                <section>
-                    <h3>[교재팀] 일일보고(${escapeHtml(formatReportMonthDay(report.id))})</h3>
-                    <p>안녕하세요? 교재팀 김정우입니다.</p>
-                    <p>교재팀 일일보고 드립니다.</p>
-                </section>
-
                 ${sections.join("")}
             </div>
         </article>
