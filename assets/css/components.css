@@ -2745,3 +2745,22 @@ background: #eef3f8;
         flex: 1;
     }
 }
+
+
+.daily-report-plain-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .daily-report-plain-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .daily-report-plain-head-actions {
+        justify-content: flex-end;
+    }
+}
