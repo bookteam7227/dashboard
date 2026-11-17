@@ -314,7 +314,7 @@ function createMarkup() {
                     <span>예약판매명</span>
                     <span>교재명</span>
                     <span>건수</span>
-                    <span>수량</span>
+                    <span>권수</span>
                 </div>
 
                 <div class="daily-report-event-form daily-report-reservation-form">
@@ -329,7 +329,7 @@ function createMarkup() {
                     </div>
 
                     <input id="dailyReportReservationOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
-                    <input id="dailyReportReservationQuantity" type="number" min="0" step="1" placeholder="수량" aria-label="수량">
+                    <input id="dailyReportReservationQuantity" type="number" min="0" step="1" placeholder="권수" aria-label="권수">
 
                     <div class="daily-report-event-form-actions">
                         <button id="dailyReportReservationSave" class="btn primary" type="button">추가</button>
