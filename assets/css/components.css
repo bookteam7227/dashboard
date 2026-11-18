@@ -2952,13 +2952,7 @@ background: #eef3f8;
 }
 
 
-/* =====================================================
-   일일보고 입력 레이아웃 최종 보정
-   - 이벤트명/예약판매명 + 건수 + 수량/권수: 1행
-   - 물품명/교재명 1~5: 2행
-   - 600px 이하에서만 모바일 1열
-   ===================================================== */
-
+/* v19 daily report exact two-row layout */
 .daily-report-drawer .daily-report-event-form,
 .daily-report-drawer .daily-report-reservation-form {
     display: grid;
@@ -2973,21 +2967,18 @@ background: #eef3f8;
 .daily-report-drawer #dailyReportEventName,
 .daily-report-drawer #dailyReportReservationName {
     grid-column: 1;
-    min-width: 0;
 }
 
 .daily-report-drawer #dailyReportEventOrders,
 .daily-report-drawer #dailyReportReservationOrders {
     grid-column: 2;
     width: 110px;
-    min-width: 0;
 }
 
 .daily-report-drawer #dailyReportEventQuantity,
 .daily-report-drawer #dailyReportReservationQuantity {
     grid-column: 3;
     width: 110px;
-    min-width: 0;
 }
 
 .daily-report-drawer .daily-report-prize-inputs,
@@ -2996,13 +2987,17 @@ background: #eef3f8;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
-    min-width: 0;
+}
+
+.daily-report-drawer .daily-report-event-form-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
 }
 
 @media (max-width: 600px) {
     .daily-report-drawer .daily-report-event-form,
     .daily-report-drawer .daily-report-reservation-form {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 1fr;
     }
 
     .daily-report-drawer #dailyReportEventName,
@@ -3017,6 +3012,6 @@ background: #eef3f8;
 
     .daily-report-drawer .daily-report-prize-inputs,
     .daily-report-drawer .daily-report-book-inputs {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 1fr;
     }
 }
