@@ -3015,3 +3015,65 @@ background: #eef3f8;
         grid-template-columns: 1fr;
     }
 }
+
+
+/* v20 daily report exact five-column alignment */
+.daily-report-drawer .daily-report-event-form,
+.daily-report-drawer .daily-report-reservation-form {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    align-items: center;
+}
+
+.daily-report-drawer #dailyReportEventName,
+.daily-report-drawer #dailyReportReservationName {
+    grid-column: 1 / 4;
+    min-width: 0;
+    width: 100%;
+}
+
+.daily-report-drawer #dailyReportEventOrders,
+.daily-report-drawer #dailyReportReservationOrders {
+    grid-column: 4;
+    min-width: 0;
+    width: 100%;
+}
+
+.daily-report-drawer #dailyReportEventQuantity,
+.daily-report-drawer #dailyReportReservationQuantity {
+    grid-column: 5;
+    min-width: 0;
+    width: 100%;
+}
+
+.daily-report-drawer .daily-report-prize-inputs,
+.daily-report-drawer .daily-report-book-inputs {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .daily-report-drawer .daily-report-event-form,
+    .daily-report-drawer .daily-report-reservation-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .daily-report-drawer #dailyReportEventName,
+    .daily-report-drawer #dailyReportReservationName,
+    .daily-report-drawer #dailyReportEventOrders,
+    .daily-report-drawer #dailyReportReservationOrders,
+    .daily-report-drawer #dailyReportEventQuantity,
+    .daily-report-drawer #dailyReportReservationQuantity {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .daily-report-drawer .daily-report-prize-inputs,
+    .daily-report-drawer .daily-report-book-inputs {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
