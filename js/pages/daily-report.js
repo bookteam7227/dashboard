@@ -287,6 +287,8 @@ function createMarkup() {
 
                 <div class="daily-report-event-form">
                     <input id="dailyReportEventName" type="text" placeholder="이벤트명" aria-label="이벤트명">
+                    <input id="dailyReportEventOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
+                    <input id="dailyReportEventQuantity" type="number" min="0" step="1" placeholder="수량" aria-label="수량">
 
                     <div class="daily-report-prize-inputs">
                         <input id="dailyReportPrizeName1" type="text" placeholder="물품명 1" aria-label="물품명 1">
@@ -295,9 +297,6 @@ function createMarkup() {
                         <input id="dailyReportPrizeName4" type="text" placeholder="물품명 4" aria-label="물품명 4">
                         <input id="dailyReportPrizeName5" type="text" placeholder="물품명 5" aria-label="물품명 5">
                     </div>
-
-                    <input id="dailyReportEventOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
-                    <input id="dailyReportEventQuantity" type="number" min="0" step="1" placeholder="수량" aria-label="수량">
 
                     <div class="daily-report-event-form-actions">
                         <button id="dailyReportEventSave" class="btn primary" type="button">추가</button>
@@ -323,6 +322,8 @@ function createMarkup() {
 
                 <div class="daily-report-event-form daily-report-reservation-form">
                     <input id="dailyReportReservationName" type="text" placeholder="예약판매명" aria-label="예약판매명">
+                    <input id="dailyReportReservationOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
+                    <input id="dailyReportReservationQuantity" type="number" min="0" step="1" placeholder="권수" aria-label="권수">
 
                     <div class="daily-report-prize-inputs daily-report-book-inputs">
                         <input id="dailyReportBookName1" type="text" placeholder="교재명 1" aria-label="교재명 1">
@@ -331,9 +332,6 @@ function createMarkup() {
                         <input id="dailyReportBookName4" type="text" placeholder="교재명 4" aria-label="교재명 4">
                         <input id="dailyReportBookName5" type="text" placeholder="교재명 5" aria-label="교재명 5">
                     </div>
-
-                    <input id="dailyReportReservationOrders" type="number" min="0" step="1" placeholder="건수" aria-label="건수">
-                    <input id="dailyReportReservationQuantity" type="number" min="0" step="1" placeholder="권수" aria-label="권수">
 
                     <div class="daily-report-event-form-actions">
                         <button id="dailyReportReservationSave" class="btn primary" type="button">추가</button>
