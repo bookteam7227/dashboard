@@ -1519,6 +1519,69 @@ function getWeeklyTextbookShippingTotal() {
     );
 }
 
+function getWeeklyPreviousYearShippingTotal() {
+    return loadedReports.reduce(
+        (total, report) => {
+            const previousYear =
+                report?.shippingComparison?.previous_year;
+
+            if (!previousYear) {
+                return total;
+            }
+
+            total.orders +=
+                getNumber(
+                    previousYear?.lecture_orders
+                )
+                + getNumber(
+                    previousYear?.unistudy_orders
+                )
+                + getNumber(
+                    previousYear?.bookstore_orders
+                );
+
+            total.books +=
+                getNumber(
+                    previousYear?.lecture_books
+                )
+                + getNumber(
+                    previousYear?.unistudy_books
+                )
+                + getNumber(
+                    previousYear?.bookstore_books
+                );
+
+            total.availableDays += 1;
+
+            return total;
+        },
+        {
+            orders: 0,
+            books: 0,
+            availableDays: 0
+        }
+    );
+}
+
+function formatYearOverYearRate(
+    currentValue,
+    previousValue
+) {
+    const current = getNumber(currentValue);
+    const previous = getNumber(previousValue);
+
+    if (previous <= 0) {
+        return "비교불가";
+    }
+
+    const rate =
+        ((current - previous) / previous) * 100;
+
+    const sign = rate > 0 ? "+" : "";
+
+    return `${sign}${rate.toFixed(1)}%`;
+}
+
 function getWeeklyReportGroups() {
     const reservations = [];
     const works = [];
@@ -1607,13 +1670,23 @@ function createWeeklyPlainText() {
     const shipping =
         getWeeklyTextbookShippingTotal();
 
+    const previousYear =
+        getWeeklyPreviousYearShippingTotal();
+
     const lines = [
         `교재팀: ${formatNumber(shipping.textbookTeam.orders)}건`
             + `·${formatNumber(shipping.textbookTeam.books)}권`,
         `(주)모아: ${formatNumber(shipping.moa.orders)}건`
             + `·${formatNumber(shipping.moa.books)}권`,
         `교재 총 ${formatNumber(shipping.total.orders)}건`
-            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)`
+            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)`,
+        `전년대비 건수 ${formatYearOverYearRate(
+            shipping.total.orders,
+            previousYear.orders
+        )} · 권수 ${formatYearOverYearRate(
+            shipping.total.books,
+            previousYear.books
+        )}`
     ];
 
     const appendSection =
@@ -1663,13 +1736,23 @@ function createWeeklyHtml() {
     const shipping =
         getWeeklyTextbookShippingTotal();
 
+    const previousYear =
+        getWeeklyPreviousYearShippingTotal();
+
     const blocks = [
         `<div>교재팀: ${formatNumber(shipping.textbookTeam.orders)}건`
             + `·${formatNumber(shipping.textbookTeam.books)}권</div>`,
         `<div>(주)모아: ${formatNumber(shipping.moa.orders)}건`
             + `·${formatNumber(shipping.moa.books)}권</div>`,
         `<div>교재 총 ${formatNumber(shipping.total.orders)}건`
-            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)</div>`
+            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)</div>`,
+        `<div>전년대비 건수 ${formatYearOverYearRate(
+            shipping.total.orders,
+            previousYear.orders
+        )} · 권수 ${formatYearOverYearRate(
+            shipping.total.books,
+            previousYear.books
+        )}</div>`
     ];
 
     const appendSection =
@@ -2205,7 +2288,9 @@ async function applyLatestShippingProgress(rows) {
                     textbookShipping:
                         calculateTextbookShipping(
                             latestRow
-                        )
+                        ),
+                    shippingComparison:
+                        latestRow?.comparison || null
                 };
             } catch (error) {
                 console.error(
