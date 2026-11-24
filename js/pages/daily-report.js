@@ -1563,7 +1563,7 @@ function getWeeklyPreviousYearShippingTotal() {
     );
 }
 
-function formatYearOverYearRate(
+function getYearOverYearRateData(
     currentValue,
     previousValue
 ) {
@@ -1571,15 +1571,64 @@ function formatYearOverYearRate(
     const previous = getNumber(previousValue);
 
     if (previous <= 0) {
-        return "비교불가";
+        return {
+            text: "비교불가",
+            direction: "neutral"
+        };
     }
 
     const rate =
         ((current - previous) / previous) * 100;
 
-    const sign = rate > 0 ? "+" : "";
+    if (rate > 0) {
+        return {
+            text: `${Math.abs(rate).toFixed(1)}% ▲`,
+            direction: "up"
+        };
+    }
 
-    return `${sign}${rate.toFixed(1)}%`;
+    if (rate < 0) {
+        return {
+            text: `${Math.abs(rate).toFixed(1)}% ▼`,
+            direction: "down"
+        };
+    }
+
+    return {
+        text: "0.0%",
+        direction: "neutral"
+    };
+}
+
+function formatYearOverYearRate(
+    currentValue,
+    previousValue
+) {
+    return getYearOverYearRateData(
+        currentValue,
+        previousValue
+    ).text;
+}
+
+function yearOverYearRateHtml(
+    currentValue,
+    previousValue
+) {
+    const result =
+        getYearOverYearRateData(
+            currentValue,
+            previousValue
+        );
+
+    const className =
+        result.direction === "up"
+            ? "is-positive"
+            : result.direction === "down"
+                ? "is-negative"
+                : "is-neutral";
+
+    return `<span class="daily-report-weekly-yoy ${className}">`
+        + `${escapeHtml(result.text)}</span>`;
 }
 
 function getWeeklyReportGroups() {
@@ -1746,10 +1795,10 @@ function createWeeklyHtml() {
             + `·${formatNumber(shipping.moa.books)}권</div>`,
         `<div>교재 총 ${formatNumber(shipping.total.orders)}건`
             + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)</div>`,
-        `<div>전년대비 건수 ${formatYearOverYearRate(
+        `<div>전년대비 건수 ${yearOverYearRateHtml(
             shipping.total.orders,
             previousYear.orders
-        )} · 권수 ${formatYearOverYearRate(
+        )} · 권수 ${yearOverYearRateHtml(
             shipping.total.books,
             previousYear.books
         )}</div>`
