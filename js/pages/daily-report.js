@@ -1462,6 +1462,63 @@ function normalizeStoredTextbookShipping(value) {
     };
 }
 
+function getWeeklyTextbookShippingTotal() {
+    return loadedReports.reduce(
+        (total, report) => {
+            const shipping =
+                normalizeStoredTextbookShipping(
+                    report?.textbookShipping
+                );
+
+            total.textbookTeam.orders +=
+                getNumber(
+                    shipping?.textbookTeam?.orders
+                );
+
+            total.textbookTeam.books +=
+                getNumber(
+                    shipping?.textbookTeam?.books
+                );
+
+            total.moa.orders +=
+                getNumber(
+                    shipping?.moa?.orders
+                );
+
+            total.moa.books +=
+                getNumber(
+                    shipping?.moa?.books
+                );
+
+            total.total.orders +=
+                getNumber(
+                    shipping?.total?.orders
+                );
+
+            total.total.books +=
+                getNumber(
+                    shipping?.total?.books
+                );
+
+            return total;
+        },
+        {
+            textbookTeam: {
+                orders: 0,
+                books: 0
+            },
+            moa: {
+                orders: 0,
+                books: 0
+            },
+            total: {
+                orders: 0,
+                books: 0
+            }
+        }
+    );
+}
+
 function getWeeklyReportGroups() {
     const reservations = [];
     const works = [];
@@ -1547,7 +1604,17 @@ function createWeeklyPlainText() {
         events
     } = getWeeklyReportGroups();
 
-    const lines = [];
+    const shipping =
+        getWeeklyTextbookShippingTotal();
+
+    const lines = [
+        `교재팀: ${formatNumber(shipping.textbookTeam.orders)}건`
+            + `·${formatNumber(shipping.textbookTeam.books)}권`,
+        `(주)모아: ${formatNumber(shipping.moa.orders)}건`
+            + `·${formatNumber(shipping.moa.books)}권`,
+        `교재 총 ${formatNumber(shipping.total.orders)}건`
+            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)`
+    ];
 
     const appendSection =
         (title, rows) => {
@@ -1593,7 +1660,17 @@ function createWeeklyHtml() {
         events
     } = getWeeklyReportGroups();
 
-    const blocks = [];
+    const shipping =
+        getWeeklyTextbookShippingTotal();
+
+    const blocks = [
+        `<div>교재팀: ${formatNumber(shipping.textbookTeam.orders)}건`
+            + `·${formatNumber(shipping.textbookTeam.books)}권</div>`,
+        `<div>(주)모아: ${formatNumber(shipping.moa.orders)}건`
+            + `·${formatNumber(shipping.moa.books)}권</div>`,
+        `<div>교재 총 ${formatNumber(shipping.total.orders)}건`
+            + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)</div>`
+    ];
 
     const appendSection =
         (title, rows) => {
