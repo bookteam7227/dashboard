@@ -3077,3 +3077,22 @@ background: #eef3f8;
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+
+/* v24 weekly YoY direction colors */
+.daily-report-weekly-yoy {
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.daily-report-weekly-yoy.is-positive {
+    color: #dc2626;
+}
+
+.daily-report-weekly-yoy.is-negative {
+    color: #2563eb;
+}
+
+.daily-report-weekly-yoy.is-neutral {
+    color: inherit;
+}
