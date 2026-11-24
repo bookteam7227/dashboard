@@ -2186,6 +2186,40 @@ function reportCardMarkup(report) {
     `;
 }
 
+async function applyLatestShippingProgress(rows) {
+    return Promise.all(
+        rows.map(async (report) => {
+            try {
+                const latestRow =
+                    await getDocumentRow(
+                        "shippingProgress",
+                        report.id
+                    );
+
+                if (!latestRow) {
+                    return report;
+                }
+
+                return {
+                    ...report,
+                    textbookShipping:
+                        calculateTextbookShipping(
+                            latestRow
+                        )
+                };
+            } catch (error) {
+                console.error(
+                    "[daily-report:latest-shipping]",
+                    report?.id,
+                    error
+                );
+
+                return report;
+            }
+        })
+    );
+}
+
 async function searchReports() {
     const startDate = document.getElementById("dailyReportStartDate").value;
     const endDate = document.getElementById("dailyReportEndDate").value;
@@ -2202,7 +2236,7 @@ async function searchReports() {
 
     try {
         closeWeeklyReport();
-        setStatus("일일보고를 불러오고 있습니다.");
+        setStatus("일일보고와 최신 교재 발송 수치를 불러오고 있습니다.");
 
         const rows = await getCollectionRowsByDocumentIdRange(
             REPORT_COLLECTION,
@@ -2218,11 +2252,20 @@ async function searchReports() {
             String(a.id).localeCompare(String(b.id))
         );
 
-        loadedReports = sortedRows;
+        const latestRows =
+            await applyLatestShippingProgress(
+                sortedRows
+            );
+
+        if (!active) {
+            return;
+        }
+
+        loadedReports = latestRows;
 
         const container = document.getElementById("dailyReportResults");
 
-        if (!sortedRows.length) {
+        if (!latestRows.length) {
             loadedReports = [];
 
             container.innerHTML = `
@@ -2234,8 +2277,14 @@ async function searchReports() {
             return;
         }
 
-        container.innerHTML = sortedRows.map(reportCardMarkup).join("");
-        setStatus(`${startDate} ~ ${endDate} · ${sortedRows.length}건`);
+        container.innerHTML =
+            latestRows
+                .map(reportCardMarkup)
+                .join("");
+
+        setStatus(
+            `${startDate} ~ ${endDate} · ${latestRows.length}건`
+        );
     } catch (error) {
         console.error("[daily-report:search]", error);
         setStatus(
