@@ -1729,7 +1729,7 @@ function createWeeklyPlainText() {
             + `·${formatNumber(shipping.moa.books)}권`,
         `교재 총 ${formatNumber(shipping.total.orders)}건`
             + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)`,
-        `전년대비 건수 ${formatYearOverYearRate(
+        `전년 동기간 대비 건수 ${formatYearOverYearRate(
             shipping.total.orders,
             previousYear.orders
         )} · 권수 ${formatYearOverYearRate(
