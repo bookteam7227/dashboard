@@ -1795,7 +1795,7 @@ function createWeeklyHtml() {
             + `·${formatNumber(shipping.moa.books)}권</div>`,
         `<div>교재 총 ${formatNumber(shipping.total.orders)}건`
             + `·${formatNumber(shipping.total.books)}권 발송(교재팀·모아 합계)</div>`,
-        `<div>전년대비 건수 ${yearOverYearRateHtml(
+        `<div>전년 동기간 대비 건수 ${yearOverYearRateHtml(
             shipping.total.orders,
             previousYear.orders
         )} · 권수 ${yearOverYearRateHtml(
